@@ -54,7 +54,8 @@ export type CharacterData = {
   animationSet: AnimationSet;
 };
 
-const SHEET = { frameWidth: 128, frameHeight: 128, frames: 4 } as const;
+// 4 frames per sprite sheet row for smooth 60fps arcade step animation
+const SHEET = { frameWidth: 256, frameHeight: 144, frames: 4 } as const;
 
 function clip(
   id: string,
@@ -74,17 +75,17 @@ function clip(
 
 function makeSet(id: string): AnimationSet {
   return {
-    idle: clip(id, "idle", 6, -1),
+    idle: clip(id, "idle", 8, -1),
     run: clip(id, "run", 10, -1),
     jump: clip(id, "jump", 8, 0),
-    hurt: clip(id, "hurt", 8, 0),
+    hurt: clip(id, "hurt", 10, 0),
     light: clip(id, "light", 14, 0),
-    heavy: clip(id, "heavy", 11, 0),
+    heavy: clip(id, "heavy", 12, 0),
     kick: clip(id, "kick", 12, 0),
     special1: clip(id, "special1", 12, 0),
     special2: clip(id, "special2", 12, 0),
     special3: clip(id, "special3", 12, 0),
-    finisher: clip(id, "finisher", 10, 0),
+    finisher: clip(id, "finisher", 12, 0),
   };
 }
 
@@ -97,179 +98,94 @@ function move(
 export const JAV: CharacterData = {
   id: "jav",
   name: "JAV",
-  title: "Street Crown",
-  tagline: "Move smart. Hit clean.",
+  title: "South Florida Champion",
+  tagline: "Move smart. Hit clean. Rule the coast.",
   portrait: "/game/sprites/characters/jav/portrait.png",
   accent: "royal",
-  health: 110,
+  health: 120,
   ki: 100,
-  movementSpeed: 275,
-  attackPower: 12,
+  movementSpeed: 300,
+  attackPower: 15,
   attacks: [
     move({
       id: "jav-light",
-      name: "Light Punch",
+      name: "Street Jab",
       anim: "light",
-      damage: 8,
-      durationMs: 280,
+      damage: 10,
+      durationMs: 240,
       effect: "melee",
-      description: "Quick jab that starts the string.",
+      description: "Quick straight punch that initiates combo strings.",
     }),
     move({
       id: "jav-heavy",
-      name: "Heavy Punch",
+      name: "Royal Haymaker",
       anim: "heavy",
-      damage: 14,
-      durationMs: 420,
+      damage: 22,
+      durationMs: 380,
       effect: "melee",
-      description: "Committed haymaker, second hit of the combo.",
+      description: "Committed heavy punch with high knockback.",
     }),
     move({
       id: "jav-kick",
-      name: "Kick",
+      name: "Crescent Sweep",
       anim: "kick",
-      damage: 12,
-      durationMs: 400,
+      damage: 18,
+      durationMs: 340,
       effect: "melee",
-      description: "Roundhouse that closes the three-hit string.",
+      description: "Low sweeping roundhouse that knocks down opponents.",
     }),
   ],
   specials: [
     move({
       id: "jav-chain",
-      name: "Chain Slash",
+      name: "Neon Chain Lash",
       anim: "special1",
-      damage: 16,
+      damage: 28,
       kiCost: 25,
-      durationMs: 480,
+      durationMs: 460,
       effect: "melee",
-      description: "Whip a short purple chain from the lead fist.",
+      description: "Unleash a purple energy chain whip that launches enemies.",
     }),
     move({
       id: "jav-wave",
-      name: "Energy Wave",
+      name: "Crown Plasma Wave",
       anim: "special2",
-      damage: 18,
+      damage: 32,
       kiCost: 30,
-      durationMs: 500,
+      durationMs: 480,
       effect: "projectile",
-      description: "Fire a royal-purple ki bolt down the boardwalk.",
+      description: "Fire a royal-purple ki plasma wave down the boardwalk.",
     }),
     move({
       id: "jav-step",
-      name: "Shadow Step",
+      name: "Shadow Blitz",
       anim: "special3",
-      damage: 10,
+      damage: 24,
       kiCost: 20,
-      durationMs: 340,
+      durationMs: 320,
       effect: "dash",
-      description: "Blink-dash through a lane of space.",
+      description: "Invulnerable phantom dash through enemy lines.",
     }),
   ],
   finisher: move({
     id: "jav-hood",
-    name: "Hood Legend",
+    name: "Seismic Crown Slam",
     anim: "finisher",
-    damage: 32,
+    damage: 65,
     kiCost: 100,
-    durationMs: 780,
+    durationMs: 720,
     effect: "finisher",
-    description: "Drop low and detonate a crown shockwave.",
+    description: "Leap skyward and detonate a massive royal ground-rupture.",
   }),
   animationSet: makeSet("jav"),
 };
 
-export const KENO: CharacterData = {
-  id: "keno",
-  name: "KENO",
-  title: "Alley Phantom",
-  tagline: "Silent, hits true, leaves only whispers.",
-  portrait: "/game/sprites/characters/keno/portrait.png",
-  accent: "night",
-  health: 90,
-  ki: 100,
-  movementSpeed: 325,
-  attackPower: 14,
-  attacks: [
-    move({
-      id: "keno-light",
-      name: "Light Slash",
-      anim: "light",
-      damage: 8,
-      durationMs: 260,
-      effect: "melee",
-      description: "Short katana cut that starts the string.",
-    }),
-    move({
-      id: "keno-heavy",
-      name: "Heavy Slash",
-      anim: "heavy",
-      damage: 15,
-      durationMs: 440,
-      effect: "melee",
-      description: "Overhead commit, second hit of the combo.",
-    }),
-    move({
-      id: "keno-kick",
-      name: "Spin Cut",
-      anim: "kick",
-      damage: 13,
-      durationMs: 400,
-      effect: "melee",
-      description: "Turning slash that closes the three-hit string.",
-    }),
-  ],
-  specials: [
-    move({
-      id: "keno-dash",
-      name: "Shadow Dash",
-      anim: "special1",
-      damage: 12,
-      kiCost: 20,
-      durationMs: 320,
-      effect: "dash",
-      description: "Slip forward in a blade-first blur.",
-    }),
-    move({
-      id: "keno-clone",
-      name: "Shadow Clone",
-      anim: "special2",
-      damage: 8,
-      kiCost: 30,
-      durationMs: 500,
-      effect: "clone",
-      description: "Leave a whispering afterimage in place.",
-    }),
-    move({
-      id: "keno-stalker",
-      name: "Night Stalker",
-      anim: "special3",
-      damage: 20,
-      kiCost: 30,
-      durationMs: 520,
-      effect: "melee",
-      description: "Leaping overhead pounce from the dark.",
-    }),
-  ],
-  finisher: move({
-    id: "keno-phantom",
-    name: "Alley Phantom",
-    anim: "finisher",
-    damage: 32,
-    kiCost: 100,
-    durationMs: 780,
-    effect: "finisher",
-    description: "Shadow fire erupts as the finishing stance hits.",
-  }),
-  animationSet: makeSet("keno"),
-};
-
-export const CHARACTERS: CharacterData[] = [JAV, KENO];
+export const CHARACTERS: CharacterData[] = [JAV];
 
 export const PLAYABLE_CHARACTERS = CHARACTERS;
 
-export function getCharacter(id: string): CharacterData {
-  return CHARACTERS.find((c) => c.id === id) ?? JAV;
+export function getCharacter(id?: string): CharacterData {
+  return JAV;
 }
 
 export function allClips(character: CharacterData): AnimationClip[] {
@@ -277,5 +193,5 @@ export function allClips(character: CharacterData): AnimationClip[] {
 }
 
 export function allRosterClips(): AnimationClip[] {
-  return CHARACTERS.flatMap(allClips);
+  return [JAV].flatMap(allClips);
 }

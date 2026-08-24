@@ -1,12 +1,12 @@
 import { audioManager } from "../audio/AudioManager";
 import { useGameStore } from "../systems/gameStore";
-import { Play, Shield, Sparkles, Swords, Zap } from "lucide-react";
+import { MapPin, Play, Shield, Sparkles, Zap } from "lucide-react";
 
 export function TitleOverlay() {
   const start = () => {
     audioManager.unlock();
     audioManager.roundAnnounce();
-    useGameStore.getState().setScreen("select");
+    useGameStore.getState().setScreen("city-select");
   };
 
   return (
@@ -16,41 +16,48 @@ export function TitleOverlay() {
         <div className="flex items-center justify-center gap-2">
           <span className="h-1.5 w-1.5 rounded-full bg-coral animate-ping" />
           <p className="font-sans text-[0.68rem] font-black uppercase tracking-[0.32em] text-sand">
-            South Florida Boardwalk
+            5-City Florida Championship
           </p>
         </div>
 
         {/* Title */}
         <h1 className="mt-1 font-display text-6xl leading-none tracking-wide text-foam drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
-          SAMURAI FIGHTER
+          SOUTH FLORIDA
         </h1>
+        <h2 className="font-display text-5xl leading-none tracking-widest text-gold -mt-1 drop-shadow-[0_0_20px_rgba(232,196,90,0.6)]">
+          FIGHTER
+        </h2>
 
         <div className="mx-auto my-3 flex max-w-xs items-center justify-center gap-4 text-xs font-bold text-foam/80 border-y border-foam/10 py-1.5 font-mono">
-          <span className="flex items-center gap-1">
-            <Zap className="size-3.5 text-gold" /> 2D FRAME ENGINE
+          <span className="flex items-center gap-1 text-gold">
+            <Zap className="size-3.5" /> 5 CITIES
           </span>
           <span>·</span>
-          <span className="flex items-center gap-1">
-            <Shield className="size-3.5 text-cyan-400" /> JUST PARRY
+          <span className="flex items-center gap-1 text-cyan-400">
+            <Shield className="size-3.5" /> JUST PARRY
+          </span>
+          <span>·</span>
+          <span className="flex items-center gap-1 text-coral">
+            <Sparkles className="size-3.5" /> BOSS RAID
           </span>
         </div>
 
         <p className="mx-auto mt-2 max-w-sm font-sans text-xs leading-relaxed text-muted">
-          Master high/low mixups, frame-1 parries, combo cancels, and 808-powered super finishers on the Fort Lauderdale coast.
+          Fight across Fort Lauderdale, Tampa, Palm Beach, Miami, and Miami Beach. Master frame-1 parries, combo juggles, and seismic finishers.
         </p>
 
-        {/* Deploy Button */}
+        {/* Enter Circuit Button */}
         <button
           type="button"
           onClick={start}
           className="mt-5 inline-flex h-13 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-coral via-sand to-gold px-8 font-sans text-base font-black uppercase tracking-[0.18em] text-ink shadow-[0_0_25px_rgba(232,93,76,0.6)] transition-all hover:scale-[1.02] active:scale-[0.98]"
         >
-          <Play className="size-5 fill-ink" />
-          <span>Enter Roster</span>
+          <MapPin className="size-5 fill-ink" />
+          <span>Enter Florida Circuit</span>
           <Sparkles className="size-4.5 text-ink" />
         </button>
 
-        {/* Controls Quick Reference Table */}
+        {/* Controls Quick Reference */}
         <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl border border-foam/10 bg-ink-2/60 p-2.5 text-left font-sans text-[0.62rem] text-foam/75">
           <div>
             <span className="font-bold text-sand uppercase block mb-0.5">Keyboard</span>
@@ -61,12 +68,12 @@ export function TitleOverlay() {
             <span>F: Parry · S: Guard · E: Dash</span>
           </div>
           <div>
-            <span className="font-bold text-sand uppercase block mb-0.5">Specials & Touch</span>
+            <span className="font-bold text-sand uppercase block mb-0.5">Specials & Mobile</span>
             <span>U/I/O: Specials 1-3</span>
             <br />
             <span>P / 4: Super Finisher</span>
             <br />
-            <span>On-Screen Touch D-Pad</span>
+            <span>Touch Controls + Swipe</span>
           </div>
         </div>
       </div>

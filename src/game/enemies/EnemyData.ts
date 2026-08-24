@@ -13,11 +13,12 @@ export type EnemyClip = {
 
 export type EnemyAnimationSet = Record<EnemyAnimName, EnemyClip>;
 
-export type EnemyBehavior = "melee" | "fast";
+export type EnemyBehavior = "melee" | "fast" | "boss";
 
 export type EnemyData = {
   id: string;
   name: string;
+  title: string;
   health: number;
   speed: number;
   damage: number;
@@ -30,10 +31,11 @@ export type EnemyData = {
   xp: number;
   kiReward: number;
   behaviorType: EnemyBehavior;
+  hasSuperArmor?: boolean;
   animationSet: EnemyAnimationSet;
 };
 
-const SHEET = { frameWidth: 128, frameHeight: 128, frames: 4 } as const;
+const SHEET = { frameWidth: 256, frameHeight: 144, frames: 4 } as const;
 
 function clip(
   id: string,
@@ -54,52 +56,77 @@ function clip(
 function makeSet(id: string): EnemyAnimationSet {
   return {
     idle: clip(id, "idle", 6, -1),
-    run: clip(id, "run", 10, -1),
-    attack: clip(id, "attack", 12, 0),
+    run: clip(id, "run", 8, -1),
+    attack: clip(id, "attack", 10, 0),
     hurt: clip(id, "hurt", 10, 0),
   };
 }
 
-export const THUG: EnemyData = {
-  id: "thug",
+export const BRUISER: EnemyData = {
+  id: "bruiser",
   name: "Boardwalk Bruiser",
-  health: 32,
-  speed: 92,
-  damage: 8,
-  attackRange: 72,
-  aggroRange: 360,
-  attackDurationMs: 520,
-  attackCooldownMs: 1100,
-  attackDelayMs: 180,
-  knockback: 300,
-  xp: 8,
-  kiReward: 10,
+  title: "Heavy Street Enforcer",
+  health: 45,
+  speed: 88,
+  damage: 12,
+  attackRange: 76,
+  aggroRange: 380,
+  attackDurationMs: 480,
+  attackCooldownMs: 1200,
+  attackDelayMs: 160,
+  knockback: 320,
+  xp: 12,
+  kiReward: 14,
   behaviorType: "melee",
-  animationSet: makeSet("thug"),
+  hasSuperArmor: true,
+  animationSet: makeSet("bruiser"),
 };
 
-export const RAT: EnemyData = {
-  id: "rat",
-  name: "Skate Rat",
-  health: 18,
-  speed: 170,
-  damage: 6,
-  attackRange: 80,
-  aggroRange: 440,
-  attackDurationMs: 400,
-  attackCooldownMs: 820,
-  attackDelayMs: 120,
-  knockback: 240,
-  xp: 6,
-  kiReward: 8,
+export const BLADE: EnemyData = {
+  id: "blade",
+  name: "Ybor Blade",
+  title: "Agile Knife Duelist",
+  health: 28,
+  speed: 180,
+  damage: 8,
+  attackRange: 82,
+  aggroRange: 460,
+  attackDurationMs: 360,
+  attackCooldownMs: 800,
+  attackDelayMs: 100,
+  knockback: 220,
+  xp: 10,
+  kiReward: 12,
   behaviorType: "fast",
-  animationSet: makeSet("rat"),
+  animationSet: makeSet("blade"),
 };
 
-export const ENEMIES: EnemyData[] = [THUG, RAT];
+export const BOSS: EnemyData = {
+  id: "boss",
+  name: "Syndicate Kingpin",
+  title: "Vice Underworld Boss",
+  health: 160,
+  speed: 95,
+  damage: 22,
+  attackRange: 95,
+  aggroRange: 550,
+  attackDurationMs: 640,
+  attackCooldownMs: 1000,
+  attackDelayMs: 200,
+  knockback: 480,
+  xp: 50,
+  kiReward: 40,
+  behaviorType: "boss",
+  hasSuperArmor: true,
+  animationSet: makeSet("boss"),
+};
+
+export const ENEMIES: EnemyData[] = [BRUISER, BLADE, BOSS];
 
 export function getEnemy(id: string): EnemyData {
-  return ENEMIES.find((e) => e.id === id) ?? THUG;
+  if (id === "thug") return BRUISER;
+  if (id === "rat") return BLADE;
+  return ENEMIES.find((e) => e.id === id) ?? BRUISER;
 }
 
 export function allEnemyClips(): EnemyClip[] {

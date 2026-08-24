@@ -82,19 +82,6 @@ var createLucideIcon = (iconName, iconNode) => {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
-var ArrowLeft = createLucideIcon("arrow-left", [["path", {
-	d: "m12 19-7-7 7-7",
-	key: "1l729n"
-}], ["path", {
-	d: "M19 12H5",
-	key: "x3x0zl"
-}]]);
-/**
-* @license lucide-react v0.510.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
 var ArrowUp = createLucideIcon("arrow-up", [["path", {
 	d: "m5 12 7-7 7 7",
 	key: "hav0vg"
@@ -138,9 +125,55 @@ var Flame = createLucideIcon("flame", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Lock = createLucideIcon("lock", [["rect", {
+	width: "18",
+	height: "11",
+	x: "3",
+	y: "11",
+	rx: "2",
+	ry: "2",
+	key: "1w4ew1"
+}], ["path", {
+	d: "M7 11V7a5 5 0 0 1 10 0v4",
+	key: "fwvmzm"
+}]]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var MapPin = createLucideIcon("map-pin", [["path", {
+	d: "M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0",
+	key: "1r0f0z"
+}], ["circle", {
+	cx: "12",
+	cy: "10",
+	r: "3",
+	key: "ilqhr7"
+}]]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Play = createLucideIcon("play", [["polygon", {
 	points: "6 3 20 12 6 21 6 3",
 	key: "1oa8hb"
+}]]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var RotateCcw = createLucideIcon("rotate-ccw", [["path", {
+	d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8",
+	key: "1357e3"
+}], ["path", {
+	d: "M3 3v5h5",
+	key: "1xhq8a"
 }]]);
 /**
 * @license lucide-react v0.510.0 - ISC
@@ -290,4 +323,4 @@ var Zap = createLucideIcon("zap", [["path", {
 	key: "1xq2db"
 }]]);
 //#endregion
-export { Sword as a, Play as c, ChevronLeft as d, ArrowUp as f, TriangleAlert as i, Flame as l, VolumeX as n, Sparkles as o, ArrowLeft as p, Volume2 as r, Shield as s, Zap as t, ChevronRight as u };
+export { Sword as a, RotateCcw as c, Lock as d, Flame as f, ArrowUp as h, TriangleAlert as i, Play as l, ChevronLeft as m, VolumeX as n, Sparkles as o, ChevronRight as p, Volume2 as r, Shield as s, Zap as t, MapPin as u };

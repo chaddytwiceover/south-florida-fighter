@@ -1,55 +1,6 @@
-import { a as approach, c as getCharacter, i as useGameStore, l as registerGame, n as getFrameKit, o as audioManager, r as inputManager, s as allRosterClips, u as unregisterGame } from "./routes-CZ-0mNJF.mjs";
+import { C as WORLD_WIDTH, S as WORLD_HEIGHT, _ as GAME_HEIGHT, a as getLevel, b as PLAYER_BODY, c as allRosterClips, d as unregisterGame, f as CAMERA, g as ENEMY_DISPLAY_SCALE, h as ENEMY_BODY, i as SOUTH_FLORIDA_LEVELS, l as getCharacter, n as inputManager, o as approach, p as COMBAT, r as useGameStore, s as audioManager, u as registerGame, v as JUMP, x as PLAYER_DISPLAY_SCALE, y as MOVE } from "./routes-BHug610o.mjs";
 import { t as phaser_esm_exports } from "../_libs/phaser.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/createGame-HD5vrhMw.js
-var GAME_HEIGHT = 1280;
-var WORLD_WIDTH = 4800;
-var WORLD_HEIGHT = GAME_HEIGHT;
-var JUMP = {
-	velocity: -560,
-	cutMultiplier: .45,
-	coyoteMs: 110,
-	bufferMs: 130,
-	riseGravity: 1450,
-	fallGravity: 2550,
-	apexHang: .55,
-	apexWindow: 70,
-	terminal: 980
-};
-var MOVE = {
-	accel: 2800,
-	airAccel: 1700,
-	friction: 2600,
-	airFriction: 400
-};
-var CAMERA = {
-	lerpX: .14,
-	lerpY: .12,
-	deadzoneW: 64,
-	deadzoneH: 88,
-	lookAhead: 86,
-	lookY: 220
-};
-var PLAYER_DISPLAY_SCALE = 1.18;
-var PLAYER_BODY = {
-	width: 38,
-	height: 86,
-	offsetX: 45,
-	offsetY: 40
-};
-var ENEMY_DISPLAY_SCALE = 1.12;
-var ENEMY_BODY = {
-	width: 34,
-	height: 80,
-	offsetX: 47,
-	offsetY: 44
-};
-var COMBAT = {
-	hitstopMs: 48,
-	playerIFramesMs: 780,
-	enemyIFramesMs: 170,
-	shake: .007,
-	comboWindow: .46
-};
+//#region node_modules/.nitro/vite/services/ssr/assets/createGame-CysCI2YK.js
 function prefersReducedMotion() {
 	return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -151,9 +102,11 @@ var Enemy = class {
 		this.id = `${data.id}-${Math.round(x)}-${Math.round(Math.random() * 999)}`;
 		this.health = data.health;
 		this.homeX = x;
+		const isBoss = data.behaviorType === "boss";
+		const scale = isBoss ? ENEMY_DISPLAY_SCALE * 1.3 : ENEMY_DISPLAY_SCALE;
 		this.sprite = scene.physics.add.sprite(x, y, data.animationSet.idle.textureKey, 0);
 		this.sprite.setOrigin(.5, 1);
-		this.sprite.setScale(ENEMY_DISPLAY_SCALE);
+		this.sprite.setScale(scale);
 		this.sprite.setDepth(18);
 		this.sprite.setData("enemy", this);
 		const body = this.sprite.body;
@@ -163,12 +116,13 @@ var Enemy = class {
 		body.setDrag(0, 0);
 		body.setFriction(0, 0);
 		body.setBounce(0, 0);
-		body.setSize(ENEMY_BODY.width, ENEMY_BODY.height);
-		body.setOffset(ENEMY_BODY.offsetX, ENEMY_BODY.offsetY);
+		body.setSize(isBoss ? ENEMY_BODY.width * 1.4 : ENEMY_BODY.width, isBoss ? ENEMY_BODY.height * 1.3 : ENEMY_BODY.height);
+		body.setOffset(isBoss ? ENEMY_BODY.offsetX * 1.2 : ENEMY_BODY.offsetX, isBoss ? ENEMY_BODY.offsetY * 1.2 : ENEMY_BODY.offsetY);
 		body.pushable = false;
 		body.moves = false;
-		this.hpBg = scene.add.rectangle(x, y - 118, 42, 6, 793124, .8).setDepth(26);
-		this.hpFill = scene.add.rectangle(x - 19, y - 118, 38, 4, 15228236, 1).setOrigin(0, .5).setDepth(27);
+		const hpW = isBoss ? 70 : 42;
+		this.hpBg = scene.add.rectangle(x, y - 128, hpW + 4, 7, 793124, .85).setDepth(26);
+		this.hpFill = scene.add.rectangle(x - hpW / 2, y - 128, hpW, 5, isBoss ? 15254618 : 15228236, 1).setOrigin(0, .5).setDepth(27);
 		this.sprite.play(data.animationSet.idle.key);
 	}
 	get x() {
@@ -180,13 +134,13 @@ var Enemy = class {
 	takeHit(damage, knockbackX, knockbackY = -80) {
 		if (this.dead || this.iFrames > 0) return false;
 		this.health = Math.max(0, this.health - damage);
-		this.iFrames = .17;
-		this.hurtLock = .28;
+		this.iFrames = this.data.behaviorType === "boss" ? .25 : .17;
+		this.hurtLock = this.data.behaviorType === "boss" ? .18 : .28;
 		this.attackLock = 0;
 		this.state = "hurt";
 		this.cooldown = Math.max(this.cooldown, .35);
-		this.sprite.body.setVelocity(knockbackX, knockbackY);
-		flashSprite(this.sprite, 16777215);
+		this.sprite.body.setVelocity(this.data.behaviorType === "boss" ? knockbackX * .4 : knockbackX, this.data.behaviorType === "boss" ? -40 : knockbackY);
+		flashSprite(this.sprite, this.data.behaviorType === "boss" ? 16711935 : 16777215);
 		this.playClip("hurt");
 		this.refreshHp();
 		audioManager.hurt();
@@ -195,8 +149,10 @@ var Enemy = class {
 	}
 	update(dt, playerX, playerY, combat) {
 		if (!this.sprite.active) return;
-		this.hpBg.setPosition(this.x, this.y - 118);
-		this.hpFill.setPosition(this.x - 19, this.y - 118);
+		const hpOffset = this.data.behaviorType === "boss" ? -145 : -128;
+		this.hpBg.setPosition(this.x, this.y + hpOffset);
+		const hpW = this.data.behaviorType === "boss" ? 70 : 42;
+		this.hpFill.setPosition(this.x - hpW / 2, this.y + hpOffset);
 		if (this.iFrames > 0) this.iFrames = Math.max(0, this.iFrames - dt);
 		if (this.hurtLock > 0) this.hurtLock = Math.max(0, this.hurtLock - dt);
 		if (this.attackLock > 0) this.attackLock = Math.max(0, this.attackLock - dt);
@@ -222,8 +178,10 @@ var Enemy = class {
 			body.updateFromGameObject();
 			return;
 		}
+		const dist = Math.hypot(playerX - this.x, playerY - this.y);
+		const dir = playerX > this.x ? 1 : -1;
 		if (this.attackLock > 0) {
-			const vx = approach(body.velocity.x, 0, 2200 * dt);
+			const vx = approach(body.velocity.x, 0, 1800 * dt);
 			this.sprite.x += vx * dt;
 			this.sprite.y += vy * dt;
 			if (onFloor && this.sprite.y > 980) this.sprite.y = 980;
@@ -231,108 +189,100 @@ var Enemy = class {
 			body.updateFromGameObject();
 			return;
 		}
-		const dx = playerX - this.x;
-		const dist = Math.abs(dx);
-		const verticalOk = Math.abs(playerY - this.y) < 140;
-		let vx = body.velocity.x;
-		if (dist < this.data.aggroRange && verticalOk) {
-			this.facing = dx >= 0 ? 1 : -1;
-			this.sprite.setFlipX(this.facing < 0);
-			if (dist <= this.data.attackRange && this.cooldown <= 0 && onFloor) {
-				this.startAttack(combat);
-				body.setVelocity(0, vy);
-				body.updateFromGameObject();
-				return;
-			}
+		if (dist < this.data.attackRange && this.cooldown <= 0) {
+			this.facing = dir;
+			this.startAttack(combat);
+			return;
+		}
+		if (dist < this.data.aggroRange) {
 			this.state = "chase";
-			vx = approach(vx, this.facing * this.data.speed, 1600 * dt);
+			this.facing = dir;
+			const targetVx = dir * this.data.speed;
+			const vx = approach(body.velocity.x, targetVx, 1600 * dt);
 			this.sprite.x += vx * dt;
 			this.sprite.y += vy * dt;
 			if (onFloor && this.sprite.y > 980) this.sprite.y = 980;
 			body.setVelocity(vx, vy);
 			body.updateFromGameObject();
-			this.playLoop("run");
+			this.sprite.setFlipX(this.facing < 0);
+			this.playClip("run");
 			return;
 		}
 		this.state = "patrol";
-		if (this.x > this.homeX + 160) this.patrolDir = -1;
-		if (this.x < this.homeX - 160) this.patrolDir = 1;
+		const deltaHome = this.homeX - this.x;
+		if (Math.abs(deltaHome) > 160) this.patrolDir = deltaHome > 0 ? 1 : -1;
 		this.facing = this.patrolDir;
-		this.sprite.setFlipX(this.facing < 0);
-		vx = approach(vx, this.patrolDir * this.data.speed * .55, 900 * dt);
+		const vx = approach(body.velocity.x, this.patrolDir * (this.data.speed * .45), 800 * dt);
 		this.sprite.x += vx * dt;
 		this.sprite.y += vy * dt;
 		if (onFloor && this.sprite.y > 980) this.sprite.y = 980;
 		body.setVelocity(vx, vy);
 		body.updateFromGameObject();
-		this.playLoop("run");
+		this.sprite.setFlipX(this.facing < 0);
+		this.playClip("idle");
 	}
 	startAttack(combat) {
 		this.state = "attack";
 		this.attackLock = this.data.attackDurationMs / 1e3;
 		this.cooldown = this.data.attackCooldownMs / 1e3;
 		this.struck = false;
-		this.sprite.body.setVelocityX(0);
+		this.sprite.setFlipX(this.facing < 0);
 		this.playClip("attack");
-		audioManager.attack();
+		const isBoss = this.data.behaviorType === "boss";
 		this.sprite.scene.time.delayedCall(this.data.attackDelayMs, () => {
-			if (this.dead || !this.sprite.active || this.struck) return;
-			this.struck = true;
+			if (this.dead || this.hurtLock > 0) return;
+			audioManager.swing(isBoss ? .7 : 1.1);
 			combat.spawnHit({
-				x: this.x + this.facing * 54,
-				y: this.y - 50,
-				width: this.data.behaviorType === "fast" ? 78 : 70,
-				height: 62,
+				x: this.x + this.facing * (isBoss ? 58 : 42),
+				y: this.y - 48,
+				width: isBoss ? 110 : 78,
+				height: isBoss ? 96 : 74,
 				damage: this.data.damage,
 				knockback: this.data.knockback,
 				faction: "enemy",
-				durationMs: 120
+				level: isBoss ? "overhead" : "mid",
+				durationMs: 140,
+				follow: this.sprite,
+				followOffsetX: this.facing * (isBoss ? 58 : 42),
+				followOffsetY: -48
 			});
 		});
+	}
+	playClip(action) {
+		const clip = this.data.animationSet[action];
+		if (this.sprite.anims.currentAnim?.key === clip.key) return;
+		this.sprite.anims.stop();
+		this.sprite.setTexture(clip.textureKey, 0);
+		this.sprite.play(clip.key, true);
+	}
+	refreshHp() {
+		const hpW = this.data.behaviorType === "boss" ? 70 : 42;
+		const pct = Math.max(0, this.health / this.data.health);
+		this.hpFill.setSize(Math.round(hpW * pct), 5);
 	}
 	defeat() {
 		this.dead = true;
 		this.state = "dead";
-		const body = this.sprite.body;
-		body.enable = false;
-		this.playClip("hurt");
-		audioManager.defeat();
-		this.sprite.scene.tweens.add({
-			targets: [
-				this.sprite,
-				this.hpBg,
-				this.hpFill
-			],
-			alpha: 0,
-			y: `+=24`,
-			duration: 420,
-			ease: "Quad.easeIn",
-			onComplete: () => this.destroy()
-		});
-	}
-	refreshHp() {
-		const pct = this.health / Math.max(1, this.data.health);
-		this.hpFill.width = 38 * pct;
-	}
-	playLoop(name) {
-		const key = this.data.animationSet[name].key;
-		if (this.sprite.anims.currentAnim?.key !== key || !this.sprite.anims.isPlaying) this.sprite.play(key, true);
-	}
-	playClip(name) {
-		const clip = this.data.animationSet[name];
-		this.sprite.anims.stop();
-		this.sprite.setTexture(clip.textureKey, 0);
-		this.sprite.play(clip.key);
-	}
-	destroy() {
 		this.hpBg.destroy();
 		this.hpFill.destroy();
-		this.sprite.destroy();
+		this.playClip("hurt");
+		this.sprite.body.setVelocity(this.facing * -240, -180);
+		this.sprite.scene.tweens.add({
+			targets: this.sprite,
+			alpha: 0,
+			y: this.sprite.y + 20,
+			duration: 520,
+			delay: 200,
+			ease: "Quad.easeIn",
+			onComplete: () => {
+				this.sprite.destroy();
+			}
+		});
 	}
 };
 var SHEET = {
-	frameWidth: 128,
-	frameHeight: 128,
+	frameWidth: 256,
+	frameHeight: 144,
 	frames: 4
 };
 function clip(id, action, frameRate, repeat) {
@@ -348,47 +298,75 @@ function clip(id, action, frameRate, repeat) {
 function makeSet(id) {
 	return {
 		idle: clip(id, "idle", 6, -1),
-		run: clip(id, "run", 10, -1),
-		attack: clip(id, "attack", 12, 0),
+		run: clip(id, "run", 8, -1),
+		attack: clip(id, "attack", 10, 0),
 		hurt: clip(id, "hurt", 10, 0)
 	};
 }
-var THUG = {
-	id: "thug",
+var BRUISER = {
+	id: "bruiser",
 	name: "Boardwalk Bruiser",
-	health: 32,
-	speed: 92,
-	damage: 8,
-	attackRange: 72,
-	aggroRange: 360,
-	attackDurationMs: 520,
-	attackCooldownMs: 1100,
-	attackDelayMs: 180,
-	knockback: 300,
-	xp: 8,
-	kiReward: 10,
+	title: "Heavy Street Enforcer",
+	health: 45,
+	speed: 88,
+	damage: 12,
+	attackRange: 76,
+	aggroRange: 380,
+	attackDurationMs: 480,
+	attackCooldownMs: 1200,
+	attackDelayMs: 160,
+	knockback: 320,
+	xp: 12,
+	kiReward: 14,
 	behaviorType: "melee",
-	animationSet: makeSet("thug")
+	hasSuperArmor: true,
+	animationSet: makeSet("bruiser")
 };
-var ENEMIES = [THUG, {
-	id: "rat",
-	name: "Skate Rat",
-	health: 18,
-	speed: 170,
-	damage: 6,
-	attackRange: 80,
-	aggroRange: 440,
-	attackDurationMs: 400,
-	attackCooldownMs: 820,
-	attackDelayMs: 120,
-	knockback: 240,
-	xp: 6,
-	kiReward: 8,
+var BLADE = {
+	id: "blade",
+	name: "Ybor Blade",
+	title: "Agile Knife Duelist",
+	health: 28,
+	speed: 180,
+	damage: 8,
+	attackRange: 82,
+	aggroRange: 460,
+	attackDurationMs: 360,
+	attackCooldownMs: 800,
+	attackDelayMs: 100,
+	knockback: 220,
+	xp: 10,
+	kiReward: 12,
 	behaviorType: "fast",
-	animationSet: makeSet("rat")
-}];
+	animationSet: makeSet("blade")
+};
+var ENEMIES = [
+	BRUISER,
+	BLADE,
+	{
+		id: "boss",
+		name: "Syndicate Kingpin",
+		title: "Vice Underworld Boss",
+		health: 160,
+		speed: 95,
+		damage: 22,
+		attackRange: 95,
+		aggroRange: 550,
+		attackDurationMs: 640,
+		attackCooldownMs: 1e3,
+		attackDelayMs: 200,
+		knockback: 480,
+		xp: 50,
+		kiReward: 40,
+		behaviorType: "boss",
+		hasSuperArmor: true,
+		animationSet: makeSet("boss")
+	}
+];
 function getEnemy(id) {
-	return ENEMIES.find((e) => e.id === id) ?? THUG;
+	if (id === "thug") return BRUISER;
+	if (id === "rat") return BLADE;
+	return ENEMIES.find((e) => e.id === id) ?? BRUISER;
 }
 function allEnemyClips() {
 	return ENEMIES.flatMap((enemy) => Object.values(enemy.animationSet));
@@ -684,166 +662,6 @@ var CombatSystem = class {
 		}
 	}
 };
-var FORT_LAUDERDALE = {
-	id: "fort-lauderdale",
-	name: "Fort Lauderdale",
-	worldWidth: WORLD_WIDTH,
-	worldHeight: WORLD_HEIGHT,
-	groundY: 980,
-	spawn: {
-		x: 220,
-		y: 980
-	},
-	platforms: [
-		{
-			x: 1680,
-			y: 870,
-			width: 220,
-			height: 22
-		},
-		{
-			x: 2280,
-			y: 780,
-			width: 180,
-			height: 22
-		},
-		{
-			x: 2860,
-			y: 870,
-			width: 220,
-			height: 22
-		}
-	],
-	props: [
-		{
-			key: "palm",
-			x: 360,
-			y: 988,
-			scale: 1.35,
-			depth: 8
-		},
-		{
-			key: "palm",
-			x: 700,
-			y: 988,
-			scale: 1.15,
-			flipX: true,
-			depth: 6
-		},
-		{
-			key: "tower",
-			x: 1080,
-			y: 986,
-			scale: 1.2,
-			depth: 7
-		},
-		{
-			key: "palm",
-			x: 1480,
-			y: 988,
-			scale: 1.4,
-			depth: 8
-		},
-		{
-			key: "palm",
-			x: 1940,
-			y: 988,
-			scale: 1.05,
-			flipX: true,
-			depth: 5
-		},
-		{
-			key: "palm",
-			x: 2420,
-			y: 988,
-			scale: 1.3,
-			depth: 8
-		},
-		{
-			key: "tower",
-			x: 2980,
-			y: 986,
-			scale: 1.15,
-			depth: 7
-		},
-		{
-			key: "palm",
-			x: 3360,
-			y: 988,
-			scale: 1.25,
-			flipX: true,
-			depth: 6
-		},
-		{
-			key: "palm",
-			x: 3820,
-			y: 988,
-			scale: 1.45,
-			depth: 8
-		},
-		{
-			key: "palm",
-			x: 4280,
-			y: 988,
-			scale: 1.1,
-			depth: 5
-		},
-		{
-			key: "tower",
-			x: 4580,
-			y: 986,
-			scale: 1.25,
-			depth: 7
-		},
-		{
-			key: "palm",
-			x: 4760,
-			y: 988,
-			scale: 1.2,
-			depth: 6
-		}
-	],
-	enemies: [
-		{
-			id: "thug",
-			x: 620
-		},
-		{
-			id: "rat",
-			x: 980
-		},
-		{
-			id: "thug",
-			x: 1480
-		},
-		{
-			id: "rat",
-			x: 1980
-		},
-		{
-			id: "thug",
-			x: 2520
-		},
-		{
-			id: "rat",
-			x: 3080
-		},
-		{
-			id: "thug",
-			x: 3620
-		},
-		{
-			id: "rat",
-			x: 4180
-		}
-	],
-	parallax: {
-		sky: "/game/backgrounds/fort-lauderdale/sky-portrait.jpg",
-		far: "/game/backgrounds/fort-lauderdale/far.jpg",
-		mid: "/game/backgrounds/fort-lauderdale/mid.jpg",
-		ground: "/game/backgrounds/fort-lauderdale/ground.jpg"
-	}
-};
 function attachControlsTest(player, getEnemyCount) {
 	if (typeof window === "undefined") return;
 	window.__controlsTest = {
@@ -914,6 +732,153 @@ var CharacterStateMachine = class {
 		return this.currentState === "ATTACK_ACTIVE" || this.currentState === "ATTACK_RECOVERY";
 	}
 };
+var JAV_FRAME_KIT = {
+	light: {
+		id: "jav-light",
+		name: "Street Jab",
+		level: "high",
+		startupFrames: 4,
+		activeFrames: 3,
+		recoveryFrames: 8,
+		damage: 10,
+		chipDamage: 0,
+		blockStunFrames: 6,
+		hitStunFrames: 14,
+		hitReaction: "light",
+		knockbackX: 120,
+		knockbackY: -40,
+		hitstopFrames: 5,
+		cancelableTo: ["special", "finisher"],
+		kiGainOnHit: 12
+	},
+	heavy: {
+		id: "jav-heavy",
+		name: "Royal Haymaker",
+		level: "mid",
+		startupFrames: 8,
+		activeFrames: 4,
+		recoveryFrames: 14,
+		damage: 22,
+		chipDamage: 4,
+		blockStunFrames: 10,
+		hitStunFrames: 22,
+		hitReaction: "heavy",
+		knockbackX: 280,
+		knockbackY: -80,
+		hitstopFrames: 9,
+		cancelableTo: ["special", "finisher"],
+		kiGainOnHit: 18
+	},
+	kick: {
+		id: "jav-kick",
+		name: "Boardwalk Crescent",
+		level: "low",
+		startupFrames: 7,
+		activeFrames: 4,
+		recoveryFrames: 12,
+		damage: 18,
+		chipDamage: 3,
+		blockStunFrames: 8,
+		hitStunFrames: 18,
+		hitReaction: "knockdown",
+		knockbackX: 320,
+		knockbackY: -180,
+		hitstopFrames: 8,
+		cancelableTo: ["special", "finisher"],
+		kiGainOnHit: 15
+	},
+	special1: {
+		id: "jav-chain",
+		name: "Neon Chain Strike",
+		level: "mid",
+		startupFrames: 9,
+		activeFrames: 5,
+		recoveryFrames: 16,
+		damage: 28,
+		chipDamage: 6,
+		blockStunFrames: 12,
+		hitStunFrames: 26,
+		hitReaction: "launch",
+		knockbackX: 220,
+		knockbackY: -380,
+		hitstopFrames: 10,
+		cancelableTo: ["finisher"],
+		kiCost: 25,
+		kiGainOnHit: 8
+	},
+	special2: {
+		id: "jav-wave",
+		name: "Crown Plasma Wave",
+		level: "high",
+		startupFrames: 12,
+		activeFrames: 8,
+		recoveryFrames: 18,
+		damage: 32,
+		chipDamage: 8,
+		blockStunFrames: 14,
+		hitStunFrames: 24,
+		hitReaction: "heavy",
+		knockbackX: 360,
+		knockbackY: -60,
+		hitstopFrames: 10,
+		cancelableTo: ["finisher"],
+		kiCost: 30,
+		kiGainOnHit: 6
+	},
+	special3: {
+		id: "jav-step",
+		name: "Shadow Blitz",
+		level: "overhead",
+		startupFrames: 6,
+		activeFrames: 6,
+		recoveryFrames: 10,
+		damage: 24,
+		chipDamage: 5,
+		blockStunFrames: 12,
+		hitStunFrames: 22,
+		hitReaction: "wallbounce",
+		knockbackX: 420,
+		knockbackY: -120,
+		hitstopFrames: 9,
+		cancelableTo: ["finisher"],
+		kiCost: 20,
+		iFrames: 6,
+		kiGainOnHit: 8
+	},
+	finisher: {
+		id: "jav-hood",
+		name: "South Florida Legend",
+		level: "unblockable",
+		startupFrames: 14,
+		activeFrames: 10,
+		recoveryFrames: 24,
+		damage: 65,
+		chipDamage: 30,
+		blockStunFrames: 20,
+		hitStunFrames: 45,
+		hitReaction: "launch",
+		knockbackX: 580,
+		knockbackY: -480,
+		hitstopFrames: 18,
+		cancelableTo: [],
+		kiCost: 100,
+		iFrames: 14
+	},
+	parry: {
+		startupFrames: 2,
+		activeFrames: 6,
+		recoveryFrames: 14,
+		advantageFrames: 16
+	},
+	dash: {
+		durationFrames: 14,
+		iFrames: 8,
+		speed: 720
+	}
+};
+function getFrameKit(characterId) {
+	return JAV_FRAME_KIT;
+}
 var InputBuffer = class {
 	history = [];
 	bufferQueue = [];
@@ -1455,7 +1420,6 @@ var PlayScene = class extends Phaser$2.Scene {
 	player;
 	combat;
 	far;
-	mid;
 	platforms;
 	fpsTimer = 0;
 	constructor() {
@@ -1465,11 +1429,8 @@ var PlayScene = class extends Phaser$2.Scene {
 		this.fpsTimer = 0;
 	}
 	preload() {
-		const level = FORT_LAUDERDALE;
-		this.load.image("sky", level.parallax.sky);
-		this.load.image("far", level.parallax.far);
-		this.load.image("mid", level.parallax.mid);
-		this.load.image("ground", level.parallax.ground);
+		for (const lvl of SOUTH_FLORIDA_LEVELS) if (!this.textures.exists(`bg-${lvl.id}`)) this.load.image(`bg-${lvl.id}`, lvl.parallax.far);
+		this.load.image("ground", "/game/backgrounds/fort-lauderdale/ground.jpg");
 		this.load.image("palm", "/game/sprites/props/palm.png");
 		this.load.image("tower", "/game/sprites/props/tower.png");
 		this.load.spritesheet("slash-fx", "/game/sprites/fx/slash.png", {
@@ -1494,7 +1455,8 @@ var PlayScene = class extends Phaser$2.Scene {
 		});
 	}
 	create() {
-		const level = FORT_LAUDERDALE;
+		const levelId = useGameStore.getState().currentLevelId || "fort-lauderdale";
+		const level = getLevel(levelId);
 		const debug = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("debug");
 		this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 		this.physics.world.gravity.y = 0;
@@ -1502,11 +1464,13 @@ var PlayScene = class extends Phaser$2.Scene {
 			this.physics.world.createDebugGraphic();
 			this.physics.world.drawDebug = true;
 		}
-		useGameStore.setState({ debug });
-		this.add.image(360, GAME_HEIGHT / 2, "sky").setDisplaySize(720, GAME_HEIGHT).setScrollFactor(0).setDepth(0);
-		this.far = this.add.tileSprite(0, 430, 720, 420, "far").setOrigin(0).setScrollFactor(0).setDepth(1);
-		this.mid = this.add.tileSprite(0, 520, 720, 380, "mid").setOrigin(0).setScrollFactor(0).setAlpha(.26).setDepth(2);
-		const groundH = WORLD_HEIGHT - level.groundY + 90;
+		useGameStore.setState({
+			debug,
+			location: `${level.city} · ${level.name}`
+		});
+		const bgKey = this.textures.exists(`bg-${level.id}`) ? `bg-${level.id}` : "bg-fort-lauderdale";
+		this.far = this.add.tileSprite(0, 0, 720, GAME_HEIGHT, bgKey).setOrigin(0, 0).setDisplaySize(720, GAME_HEIGHT).setScrollFactor(0).setDepth(0);
+		const groundH = WORLD_HEIGHT - level.groundY + 120;
 		this.add.tileSprite(WORLD_WIDTH / 2, level.groundY, WORLD_WIDTH, groundH, "ground").setOrigin(.5, 0).setDepth(4);
 		for (const prop of level.props) this.add.image(prop.x, prop.y, prop.key).setOrigin(.5, 1).setScale(prop.scale).setFlipX(Boolean(prop.flipX)).setDepth(prop.depth);
 		this.platforms = this.physics.add.staticGroup();
@@ -1561,7 +1525,7 @@ var PlayScene = class extends Phaser$2.Scene {
 		const actions = inputManager.poll();
 		if (actions.pausePressed && useGameStore.getState().playing) {
 			inputManager.enabled = false;
-			useGameStore.getState().setScreen("select");
+			useGameStore.getState().setScreen("city-select");
 		}
 		if (this.combat.isFrozen()) {
 			this.combat.tickFreeze(dt);
@@ -1575,13 +1539,22 @@ var PlayScene = class extends Phaser$2.Scene {
 		const current = cam.followOffset.x;
 		cam.setFollowOffset(current + (look - current) * Math.min(1, 4 * dt), CAMERA.lookY);
 		const scrollX = cam.scrollX;
-		this.far.tilePositionX = scrollX * .22;
-		this.mid.tilePositionX = scrollX * .42;
+		this.far.tilePositionX = scrollX * .18;
 		this.fpsTimer += dt;
 		if (this.fpsTimer > .25) {
 			this.fpsTimer = 0;
 			useGameStore.getState().setFps(Math.round(this.game.loop.actualFps));
 			useGameStore.getState().setAliveEnemies(this.combat.aliveCount());
+			if (this.combat.aliveCount() === 0) {
+				const store = useGameStore.getState();
+				if (store.screen === "play" && !store.flash.includes("VICTORY")) {
+					store.setFlash("STAGE COMPLETE!");
+					this.time.delayedCall(1200, () => {
+						store.markLevelComplete(store.currentLevelId);
+						store.setScreen("victory");
+					});
+				}
+			}
 		}
 	}
 };

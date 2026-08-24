@@ -11,7 +11,7 @@ import {
 } from "../config";
 import { allEnemyClips } from "../enemies/EnemyData";
 import { inputManager } from "../input/InputManager";
-import { FORT_LAUDERDALE } from "../levels/fortLauderdale";
+import { getLevel, SOUTH_FLORIDA_LEVELS } from "../levels/LevelRegistry";
 import { createFxAnimations } from "../systems/CombatFx";
 import { attachControlsTest, detachControlsTest } from "../systems/controlsTest";
 import { useGameStore } from "../systems/gameStore";
@@ -23,7 +23,6 @@ export class PlayScene extends Phaser.Scene {
   private player!: Player;
   private combat!: CombatSystem;
   private far!: Phaser.GameObjects.TileSprite;
-  private mid!: Phaser.GameObjects.TileSprite;
   private platforms!: Phaser.Physics.Arcade.StaticGroup;
   private fpsTimer = 0;
 
@@ -36,13 +35,17 @@ export class PlayScene extends Phaser.Scene {
   }
 
   preload() {
-    const level = FORT_LAUDERDALE;
-    this.load.image("sky", level.parallax.sky);
-    this.load.image("far", level.parallax.far);
-    this.load.image("mid", level.parallax.mid);
-    this.load.image("ground", level.parallax.ground);
+    // Preload all 5 South Florida city backgrounds
+    for (const lvl of SOUTH_FLORIDA_LEVELS) {
+      if (!this.textures.exists(`bg-${lvl.id}`)) {
+        this.load.image(`bg-${lvl.id}`, lvl.parallax.far);
+      }
+    }
+
+    this.load.image("ground", "/game/backgrounds/fort-lauderdale/ground.jpg");
     this.load.image("palm", "/game/sprites/props/palm.png");
     this.load.image("tower", "/game/sprites/props/tower.png");
+
     this.load.spritesheet("slash-fx", "/game/sprites/fx/slash.png", {
       frameWidth: 128,
       frameHeight: 128,
@@ -71,7 +74,8 @@ export class PlayScene extends Phaser.Scene {
   }
 
   create() {
-    const level = FORT_LAUDERDALE;
+    const levelId = useGameStore.getState().currentLevelId || "fort-lauderdale";
+    const level = getLevel(levelId);
     const debug =
       typeof window !== "undefined" &&
       new URLSearchParams(window.location.search).has(DEBUG_QUERY);
@@ -82,33 +86,28 @@ export class PlayScene extends Phaser.Scene {
       this.physics.world.createDebugGraphic();
       this.physics.world.drawDebug = true;
     }
-    useGameStore.setState({ debug });
+    useGameStore.setState({ debug, location: `${level.city} · ${level.name}` });
 
-    this.add
-      .image(GAME_WIDTH / 2, GAME_HEIGHT / 2, "sky")
+    // Sky & Parallax Skyline Layer
+    const bgKey = this.textures.exists(`bg-${level.id}`)
+      ? `bg-${level.id}`
+      : "bg-fort-lauderdale";
+
+    this.far = this.add
+      .tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, bgKey)
+      .setOrigin(0, 0)
       .setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
       .setScrollFactor(0)
       .setDepth(0);
 
-    this.far = this.add
-      .tileSprite(0, 430, GAME_WIDTH, 420, "far")
-      .setOrigin(0)
-      .setScrollFactor(0)
-      .setDepth(1);
-
-    this.mid = this.add
-      .tileSprite(0, 520, GAME_WIDTH, 380, "mid")
-      .setOrigin(0)
-      .setScrollFactor(0)
-      .setAlpha(0.26)
-      .setDepth(2);
-
-    const groundH = WORLD_HEIGHT - level.groundY + 90;
+    // Ground Walkway
+    const groundH = WORLD_HEIGHT - level.groundY + 120;
     this.add
       .tileSprite(WORLD_WIDTH / 2, level.groundY, WORLD_WIDTH, groundH, "ground")
       .setOrigin(0.5, 0)
       .setDepth(4);
 
+    // Stage Props
     for (const prop of level.props) {
       this.add
         .image(prop.x, prop.y, prop.key)
@@ -118,6 +117,7 @@ export class PlayScene extends Phaser.Scene {
         .setDepth(prop.depth);
     }
 
+    // Platforms & Collision Floor
     this.platforms = this.physics.add.staticGroup();
     const floor = this.add
       .rectangle(0, level.groundY, WORLD_WIDTH + 40, 72, 0x000000, 0)
@@ -140,6 +140,7 @@ export class PlayScene extends Phaser.Scene {
     }
     this.platforms.refresh();
 
+    // Create Animations
     for (const clip of allRosterClips()) {
       if (this.anims.exists(clip.key)) continue;
       this.anims.create({
@@ -155,10 +156,12 @@ export class PlayScene extends Phaser.Scene {
     createFxAnimations(this);
     CombatSystem.preloadAnims(this);
 
+    // Player Spawn
     const character = getCharacter(useGameStore.getState().characterId);
     this.player = new Player(this, level.spawn.x, level.spawn.y, character);
     this.physics.add.collider(this.player.sprite, this.platforms);
 
+    // Combat System & Enemies Spawn
     this.combat = new CombatSystem(this, debug);
     this.combat.bindPlayer(this.player);
     for (const spawn of level.enemies) {
@@ -166,8 +169,14 @@ export class PlayScene extends Phaser.Scene {
       this.physics.add.collider(enemy.sprite, this.platforms);
     }
 
+    // Camera follow
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-    this.cameras.main.startFollow(this.player.sprite, true, CAMERA.lerpX, CAMERA.lerpY);
+    this.cameras.main.startFollow(
+      this.player.sprite,
+      true,
+      CAMERA.lerpX,
+      CAMERA.lerpY,
+    );
     this.cameras.main.setDeadzone(CAMERA.deadzoneW, CAMERA.deadzoneH);
     this.cameras.main.setFollowOffset(-CAMERA.lookAhead, CAMERA.lookY);
     this.cameras.main.setRoundPixels(true);
@@ -188,7 +197,7 @@ export class PlayScene extends Phaser.Scene {
     const actions = inputManager.poll();
     if (actions.pausePressed && useGameStore.getState().playing) {
       inputManager.enabled = false;
-      useGameStore.getState().setScreen("select");
+      useGameStore.getState().setScreen("city-select");
     }
 
     if (this.combat.isFrozen()) {
@@ -202,17 +211,31 @@ export class PlayScene extends Phaser.Scene {
     const look = -this.player.facing * CAMERA.lookAhead;
     const cam = this.cameras.main;
     const current = cam.followOffset.x;
-    cam.setFollowOffset(current + (look - current) * Math.min(1, 4 * dt), CAMERA.lookY);
+    cam.setFollowOffset(
+      current + (look - current) * Math.min(1, 4 * dt),
+      CAMERA.lookY,
+    );
 
     const scrollX = cam.scrollX;
-    this.far.tilePositionX = scrollX * 0.22;
-    this.mid.tilePositionX = scrollX * 0.42;
+    this.far.tilePositionX = scrollX * 0.18;
 
     this.fpsTimer += dt;
     if (this.fpsTimer > 0.25) {
       this.fpsTimer = 0;
       useGameStore.getState().setFps(Math.round(this.game.loop.actualFps));
       useGameStore.getState().setAliveEnemies(this.combat.aliveCount());
+
+      // Check Victory condition
+      if (this.combat.aliveCount() === 0) {
+        const store = useGameStore.getState();
+        if (store.screen === "play" && !store.flash.includes("VICTORY")) {
+          store.setFlash("STAGE COMPLETE!");
+          this.time.delayedCall(1200, () => {
+            store.markLevelComplete(store.currentLevelId);
+            store.setScreen("victory");
+          });
+        }
+      }
     }
   }
 }

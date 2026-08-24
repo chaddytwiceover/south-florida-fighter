@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { inputManager } from "../input/InputManager";
 import { useGameStore } from "../systems/gameStore";
-import { CharacterSelect } from "./CharacterSelect";
+import { CitySelectMap } from "./CitySelectMap";
 import { Hud } from "./Hud";
 import { Preloader } from "./Preloader";
 import { RotateHint } from "./RotateHint";
 import { TitleOverlay } from "./TitleOverlay";
 import { TouchControls } from "./TouchControls";
+import { VictoryScreen } from "./VictoryScreen";
 import { initIframeBridge, postToParent } from "../utils/iframeBridge";
 
 export function GameApp() {
@@ -85,7 +86,8 @@ export function GameApp() {
             {screen === "play" ? <Hud /> : null}
             {screen === "play" && touchReady ? <TouchControls /> : null}
             {screen === "title" ? <TitleOverlay /> : null}
-            {screen === "select" ? <CharacterSelect /> : null}
+            {screen === "city-select" ? <CitySelectMap /> : null}
+            {screen === "victory" ? <VictoryScreen /> : null}
           </>
         )}
 

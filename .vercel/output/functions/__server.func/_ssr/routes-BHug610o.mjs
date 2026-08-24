@@ -1,10 +1,10 @@
 import { i as __toESM } from "../_runtime.mjs";
 import { I as require_jsx_runtime, L as require_react } from "../_libs/@tanstack/react-router+[...].mjs";
 import { t as create } from "../_libs/zustand.mjs";
-import { a as Sword, c as Play, d as ChevronLeft, f as ArrowUp, l as Flame, n as VolumeX, o as Sparkles, p as ArrowLeft, r as Volume2, s as Shield, t as Zap, u as ChevronRight } from "../_libs/lucide-react.mjs";
+import { a as Sword, c as RotateCcw, d as Lock, f as Flame, h as ArrowUp, l as Play, m as ChevronLeft, n as VolumeX, o as Sparkles, p as ChevronRight, r as Volume2, s as Shield, t as Zap, u as MapPin } from "../_libs/lucide-react.mjs";
 import { t as clsx } from "../_libs/clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-CZ-0mNJF.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-BHug610o.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var __defProp = Object.defineProperty;
@@ -16,6 +16,55 @@ var __exportAll = (all, no_symbols) => {
 	});
 	if (!no_symbols) __defProp(target, Symbol.toStringTag, { value: "Module" });
 	return target;
+};
+var GAME_HEIGHT = 1280;
+var WORLD_WIDTH = 4800;
+var WORLD_HEIGHT = GAME_HEIGHT;
+var JUMP = {
+	velocity: -560,
+	cutMultiplier: .45,
+	coyoteMs: 110,
+	bufferMs: 130,
+	riseGravity: 1450,
+	fallGravity: 2550,
+	apexHang: .55,
+	apexWindow: 70,
+	terminal: 980
+};
+var MOVE = {
+	accel: 2800,
+	airAccel: 1700,
+	friction: 2600,
+	airFriction: 400
+};
+var CAMERA = {
+	lerpX: .14,
+	lerpY: .12,
+	deadzoneW: 64,
+	deadzoneH: 88,
+	lookAhead: 86,
+	lookY: 220
+};
+var PLAYER_DISPLAY_SCALE = 1.18;
+var PLAYER_BODY = {
+	width: 38,
+	height: 86,
+	offsetX: 45,
+	offsetY: 40
+};
+var ENEMY_DISPLAY_SCALE = 1.12;
+var ENEMY_BODY = {
+	width: 34,
+	height: 80,
+	offsetX: 47,
+	offsetY: 44
+};
+var COMBAT = {
+	hitstopMs: 48,
+	playerIFramesMs: 780,
+	enemyIFramesMs: 170,
+	shake: .007,
+	comboWindow: .46
 };
 var current = null;
 var restartTimer = null;
@@ -35,8 +84,8 @@ function restartPlayScene() {
 	}, 50);
 }
 var SHEET = {
-	frameWidth: 128,
-	frameHeight: 128,
+	frameWidth: 256,
+	frameHeight: 144,
 	frames: 4
 };
 function clip(id, action, frameRate, repeat) {
@@ -51,17 +100,17 @@ function clip(id, action, frameRate, repeat) {
 }
 function makeSet(id) {
 	return {
-		idle: clip(id, "idle", 6, -1),
+		idle: clip(id, "idle", 8, -1),
 		run: clip(id, "run", 10, -1),
 		jump: clip(id, "jump", 8, 0),
-		hurt: clip(id, "hurt", 8, 0),
+		hurt: clip(id, "hurt", 10, 0),
 		light: clip(id, "light", 14, 0),
-		heavy: clip(id, "heavy", 11, 0),
+		heavy: clip(id, "heavy", 12, 0),
 		kick: clip(id, "kick", 12, 0),
 		special1: clip(id, "special1", 12, 0),
 		special2: clip(id, "special2", 12, 0),
 		special3: clip(id, "special3", 12, 0),
-		finisher: clip(id, "finisher", 10, 0)
+		finisher: clip(id, "finisher", 12, 0)
 	};
 }
 function move(partial) {
@@ -73,179 +122,95 @@ function move(partial) {
 var JAV = {
 	id: "jav",
 	name: "JAV",
-	title: "Street Crown",
-	tagline: "Move smart. Hit clean.",
+	title: "South Florida Champion",
+	tagline: "Move smart. Hit clean. Rule the coast.",
 	portrait: "/game/sprites/characters/jav/portrait.png",
 	accent: "royal",
-	health: 110,
+	health: 120,
 	ki: 100,
-	movementSpeed: 275,
-	attackPower: 12,
+	movementSpeed: 300,
+	attackPower: 15,
 	attacks: [
 		move({
 			id: "jav-light",
-			name: "Light Punch",
+			name: "Street Jab",
 			anim: "light",
-			damage: 8,
-			durationMs: 280,
+			damage: 10,
+			durationMs: 240,
 			effect: "melee",
-			description: "Quick jab that starts the string."
+			description: "Quick straight punch that initiates combo strings."
 		}),
 		move({
 			id: "jav-heavy",
-			name: "Heavy Punch",
+			name: "Royal Haymaker",
 			anim: "heavy",
-			damage: 14,
-			durationMs: 420,
+			damage: 22,
+			durationMs: 380,
 			effect: "melee",
-			description: "Committed haymaker, second hit of the combo."
+			description: "Committed heavy punch with high knockback."
 		}),
 		move({
 			id: "jav-kick",
-			name: "Kick",
+			name: "Crescent Sweep",
 			anim: "kick",
-			damage: 12,
-			durationMs: 400,
+			damage: 18,
+			durationMs: 340,
 			effect: "melee",
-			description: "Roundhouse that closes the three-hit string."
+			description: "Low sweeping roundhouse that knocks down opponents."
 		})
 	],
 	specials: [
 		move({
 			id: "jav-chain",
-			name: "Chain Slash",
+			name: "Neon Chain Lash",
 			anim: "special1",
-			damage: 16,
+			damage: 28,
 			kiCost: 25,
-			durationMs: 480,
+			durationMs: 460,
 			effect: "melee",
-			description: "Whip a short purple chain from the lead fist."
+			description: "Unleash a purple energy chain whip that launches enemies."
 		}),
 		move({
 			id: "jav-wave",
-			name: "Energy Wave",
+			name: "Crown Plasma Wave",
 			anim: "special2",
-			damage: 18,
+			damage: 32,
 			kiCost: 30,
-			durationMs: 500,
+			durationMs: 480,
 			effect: "projectile",
-			description: "Fire a royal-purple ki bolt down the boardwalk."
+			description: "Fire a royal-purple ki plasma wave down the boardwalk."
 		}),
 		move({
 			id: "jav-step",
-			name: "Shadow Step",
+			name: "Shadow Blitz",
 			anim: "special3",
-			damage: 10,
+			damage: 24,
 			kiCost: 20,
-			durationMs: 340,
+			durationMs: 320,
 			effect: "dash",
-			description: "Blink-dash through a lane of space."
+			description: "Invulnerable phantom dash through enemy lines."
 		})
 	],
 	finisher: move({
 		id: "jav-hood",
-		name: "Hood Legend",
+		name: "Seismic Crown Slam",
 		anim: "finisher",
-		damage: 32,
+		damage: 65,
 		kiCost: 100,
-		durationMs: 780,
+		durationMs: 720,
 		effect: "finisher",
-		description: "Drop low and detonate a crown shockwave."
+		description: "Leap skyward and detonate a massive royal ground-rupture."
 	}),
 	animationSet: makeSet("jav")
 };
-var CHARACTERS = [JAV, {
-	id: "keno",
-	name: "KENO",
-	title: "Alley Phantom",
-	tagline: "Silent, hits true, leaves only whispers.",
-	portrait: "/game/sprites/characters/keno/portrait.png",
-	accent: "night",
-	health: 90,
-	ki: 100,
-	movementSpeed: 325,
-	attackPower: 14,
-	attacks: [
-		move({
-			id: "keno-light",
-			name: "Light Slash",
-			anim: "light",
-			damage: 8,
-			durationMs: 260,
-			effect: "melee",
-			description: "Short katana cut that starts the string."
-		}),
-		move({
-			id: "keno-heavy",
-			name: "Heavy Slash",
-			anim: "heavy",
-			damage: 15,
-			durationMs: 440,
-			effect: "melee",
-			description: "Overhead commit, second hit of the combo."
-		}),
-		move({
-			id: "keno-kick",
-			name: "Spin Cut",
-			anim: "kick",
-			damage: 13,
-			durationMs: 400,
-			effect: "melee",
-			description: "Turning slash that closes the three-hit string."
-		})
-	],
-	specials: [
-		move({
-			id: "keno-dash",
-			name: "Shadow Dash",
-			anim: "special1",
-			damage: 12,
-			kiCost: 20,
-			durationMs: 320,
-			effect: "dash",
-			description: "Slip forward in a blade-first blur."
-		}),
-		move({
-			id: "keno-clone",
-			name: "Shadow Clone",
-			anim: "special2",
-			damage: 8,
-			kiCost: 30,
-			durationMs: 500,
-			effect: "clone",
-			description: "Leave a whispering afterimage in place."
-		}),
-		move({
-			id: "keno-stalker",
-			name: "Night Stalker",
-			anim: "special3",
-			damage: 20,
-			kiCost: 30,
-			durationMs: 520,
-			effect: "melee",
-			description: "Leaping overhead pounce from the dark."
-		})
-	],
-	finisher: move({
-		id: "keno-phantom",
-		name: "Alley Phantom",
-		anim: "finisher",
-		damage: 32,
-		kiCost: 100,
-		durationMs: 780,
-		effect: "finisher",
-		description: "Shadow fire erupts as the finishing stance hits."
-	}),
-	animationSet: makeSet("keno")
-}];
 function getCharacter(id) {
-	return CHARACTERS.find((c) => c.id === id) ?? JAV;
+	return JAV;
 }
 function allClips(character) {
 	return Object.values(character.animationSet);
 }
 function allRosterClips() {
-	return CHARACTERS.flatMap(allClips);
+	return [JAV].flatMap(allClips);
 }
 /**
 * Modern 2D Fighter WebAudio DSP Sound Engine
@@ -551,31 +516,591 @@ function approach(current, target, maxDelta) {
 	if (current > target) return Math.max(current - maxDelta, target);
 	return target;
 }
-function persistCharacter(id) {
+var FORT_LAUDERDALE = {
+	id: "fort-lauderdale",
+	name: "A1A Ocean Boardwalk",
+	city: "Fort Lauderdale",
+	tagline: "Las Olas luxury marina and sunlit oceanfront boardwalk.",
+	worldWidth: WORLD_WIDTH,
+	worldHeight: WORLD_HEIGHT,
+	groundY: 980,
+	spawn: {
+		x: 220,
+		y: 980
+	},
+	platforms: [
+		{
+			x: 1480,
+			y: 870,
+			width: 220,
+			height: 22
+		},
+		{
+			x: 2180,
+			y: 780,
+			width: 180,
+			height: 22
+		},
+		{
+			x: 2960,
+			y: 870,
+			width: 220,
+			height: 22
+		}
+	],
+	props: [
+		{
+			key: "palm",
+			x: 360,
+			y: 988,
+			scale: 1.35,
+			depth: 8
+		},
+		{
+			key: "palm",
+			x: 700,
+			y: 988,
+			scale: 1.15,
+			flipX: true,
+			depth: 6
+		},
+		{
+			key: "tower",
+			x: 1080,
+			y: 986,
+			scale: 1.2,
+			depth: 7
+		},
+		{
+			key: "palm",
+			x: 1680,
+			y: 988,
+			scale: 1.4,
+			depth: 8
+		},
+		{
+			key: "palm",
+			x: 2420,
+			y: 988,
+			scale: 1.3,
+			depth: 8
+		},
+		{
+			key: "tower",
+			x: 3280,
+			y: 986,
+			scale: 1.15,
+			depth: 7
+		},
+		{
+			key: "palm",
+			x: 4160,
+			y: 988,
+			scale: 1.25,
+			flipX: true,
+			depth: 6
+		}
+	],
+	enemies: [
+		{
+			id: "bruiser",
+			x: 680
+		},
+		{
+			id: "blade",
+			x: 1100
+		},
+		{
+			id: "bruiser",
+			x: 1750
+		},
+		{
+			id: "blade",
+			x: 2300
+		},
+		{
+			id: "bruiser",
+			x: 2950
+		},
+		{
+			id: "blade",
+			x: 3600
+		},
+		{
+			id: "bruiser",
+			x: 4200
+		}
+	],
+	parallax: {
+		sky: "/game/backgrounds/fort-lauderdale/far.jpg",
+		far: "/game/backgrounds/fort-lauderdale/far.jpg",
+		mid: "/game/backgrounds/fort-lauderdale/far.jpg",
+		ground: "/game/backgrounds/fort-lauderdale/ground.jpg"
+	}
+};
+var SOUTH_FLORIDA_LEVELS = [
+	FORT_LAUDERDALE,
+	{
+		id: "tampa",
+		name: "Ybor City Neon Strip",
+		city: "Tampa",
+		tagline: "Historic red brick cigar factories and warm gas-lit balconies.",
+		worldWidth: WORLD_WIDTH,
+		worldHeight: WORLD_HEIGHT,
+		groundY: 980,
+		spawn: {
+			x: 220,
+			y: 980
+		},
+		platforms: [
+			{
+				x: 1380,
+				y: 860,
+				width: 240,
+				height: 24
+			},
+			{
+				x: 2050,
+				y: 770,
+				width: 200,
+				height: 24
+			},
+			{
+				x: 2800,
+				y: 850,
+				width: 260,
+				height: 24
+			}
+		],
+		props: [
+			{
+				key: "palm",
+				x: 420,
+				y: 988,
+				scale: 1.2,
+				depth: 7
+			},
+			{
+				key: "tower",
+				x: 1200,
+				y: 986,
+				scale: 1.3,
+				depth: 8
+			},
+			{
+				key: "palm",
+				x: 1890,
+				y: 988,
+				scale: 1.15,
+				flipX: true,
+				depth: 6
+			},
+			{
+				key: "tower",
+				x: 2600,
+				y: 986,
+				scale: 1.25,
+				depth: 7
+			},
+			{
+				key: "palm",
+				x: 3450,
+				y: 988,
+				scale: 1.35,
+				depth: 8
+			}
+		],
+		enemies: [
+			{
+				id: "blade",
+				x: 720
+			},
+			{
+				id: "bruiser",
+				x: 1250
+			},
+			{
+				id: "blade",
+				x: 1800
+			},
+			{
+				id: "blade",
+				x: 2450
+			},
+			{
+				id: "bruiser",
+				x: 3100
+			},
+			{
+				id: "blade",
+				x: 3800
+			}
+		],
+		parallax: {
+			sky: "/game/backgrounds/tampa/far.jpg",
+			far: "/game/backgrounds/tampa/far.jpg",
+			mid: "/game/backgrounds/tampa/far.jpg",
+			ground: "/game/backgrounds/fort-lauderdale/ground.jpg"
+		}
+	},
+	{
+		id: "palm-beach",
+		name: "Worth Avenue Promenade",
+		city: "Palm Beach",
+		tagline: "Mediterranean stone archways, high-society estates, and golden sunset.",
+		worldWidth: WORLD_WIDTH,
+		worldHeight: WORLD_HEIGHT,
+		groundY: 980,
+		spawn: {
+			x: 220,
+			y: 980
+		},
+		platforms: [
+			{
+				x: 1500,
+				y: 870,
+				width: 230,
+				height: 22
+			},
+			{
+				x: 2250,
+				y: 790,
+				width: 200,
+				height: 22
+			},
+			{
+				x: 3100,
+				y: 860,
+				width: 250,
+				height: 22
+			}
+		],
+		props: [
+			{
+				key: "palm",
+				x: 380,
+				y: 988,
+				scale: 1.45,
+				depth: 8
+			},
+			{
+				key: "palm",
+				x: 890,
+				y: 988,
+				scale: 1.3,
+				flipX: true,
+				depth: 6
+			},
+			{
+				key: "tower",
+				x: 1650,
+				y: 986,
+				scale: 1.2,
+				depth: 7
+			},
+			{
+				key: "palm",
+				x: 2500,
+				y: 988,
+				scale: 1.4,
+				depth: 8
+			},
+			{
+				key: "palm",
+				x: 3380,
+				y: 988,
+				scale: 1.35,
+				flipX: true,
+				depth: 6
+			}
+		],
+		enemies: [
+			{
+				id: "bruiser",
+				x: 650
+			},
+			{
+				id: "blade",
+				x: 1150
+			},
+			{
+				id: "bruiser",
+				x: 1700
+			},
+			{
+				id: "bruiser",
+				x: 2350
+			},
+			{
+				id: "blade",
+				x: 3e3
+			},
+			{
+				id: "bruiser",
+				x: 3750
+			}
+		],
+		parallax: {
+			sky: "/game/backgrounds/palm-beach/far.jpg",
+			far: "/game/backgrounds/palm-beach/far.jpg",
+			mid: "/game/backgrounds/palm-beach/far.jpg",
+			ground: "/game/backgrounds/fort-lauderdale/ground.jpg"
+		}
+	},
+	{
+		id: "miami",
+		name: "Wynwood Graffiti District",
+		city: "Miami",
+		tagline: "Vibrant warehouse murals, neon club alleyways, and downtown skyline.",
+		worldWidth: WORLD_WIDTH,
+		worldHeight: WORLD_HEIGHT,
+		groundY: 980,
+		spawn: {
+			x: 220,
+			y: 980
+		},
+		platforms: [
+			{
+				x: 1400,
+				y: 860,
+				width: 240,
+				height: 24
+			},
+			{
+				x: 2150,
+				y: 770,
+				width: 190,
+				height: 24
+			},
+			{
+				x: 2950,
+				y: 850,
+				width: 250,
+				height: 24
+			}
+		],
+		props: [
+			{
+				key: "palm",
+				x: 500,
+				y: 988,
+				scale: 1.25,
+				depth: 7
+			},
+			{
+				key: "tower",
+				x: 1300,
+				y: 986,
+				scale: 1.35,
+				depth: 8
+			},
+			{
+				key: "palm",
+				x: 2100,
+				y: 988,
+				scale: 1.15,
+				flipX: true,
+				depth: 6
+			},
+			{
+				key: "tower",
+				x: 2850,
+				y: 986,
+				scale: 1.3,
+				depth: 7
+			},
+			{
+				key: "palm",
+				x: 3700,
+				y: 988,
+				scale: 1.4,
+				depth: 8
+			}
+		],
+		enemies: [
+			{
+				id: "blade",
+				x: 600
+			},
+			{
+				id: "bruiser",
+				x: 1050
+			},
+			{
+				id: "blade",
+				x: 1550
+			},
+			{
+				id: "bruiser",
+				x: 2100
+			},
+			{
+				id: "blade",
+				x: 2750
+			},
+			{
+				id: "bruiser",
+				x: 3400
+			},
+			{
+				id: "blade",
+				x: 4050
+			}
+		],
+		parallax: {
+			sky: "/game/backgrounds/miami/far.jpg",
+			far: "/game/backgrounds/miami/far.jpg",
+			mid: "/game/backgrounds/miami/far.jpg",
+			ground: "/game/backgrounds/fort-lauderdale/ground.jpg"
+		}
+	},
+	{
+		id: "miami-beach",
+		name: "Ocean Drive Art Deco Strip",
+		city: "Miami Beach",
+		tagline: "Pastel neon hotels, midnight ocean breeze, and the Syndicate Boss finale.",
+		worldWidth: WORLD_WIDTH,
+		worldHeight: WORLD_HEIGHT,
+		groundY: 980,
+		spawn: {
+			x: 220,
+			y: 980
+		},
+		platforms: [
+			{
+				x: 1450,
+				y: 870,
+				width: 220,
+				height: 22
+			},
+			{
+				x: 2100,
+				y: 780,
+				width: 180,
+				height: 22
+			},
+			{
+				x: 2850,
+				y: 870,
+				width: 220,
+				height: 22
+			}
+		],
+		props: [
+			{
+				key: "palm",
+				x: 350,
+				y: 988,
+				scale: 1.4,
+				depth: 8
+			},
+			{
+				key: "tower",
+				x: 950,
+				y: 986,
+				scale: 1.25,
+				depth: 7
+			},
+			{
+				key: "palm",
+				x: 1650,
+				y: 988,
+				scale: 1.3,
+				flipX: true,
+				depth: 6
+			},
+			{
+				key: "tower",
+				x: 2450,
+				y: 986,
+				scale: 1.2,
+				depth: 7
+			},
+			{
+				key: "palm",
+				x: 3200,
+				y: 988,
+				scale: 1.45,
+				depth: 8
+			}
+		],
+		enemies: [
+			{
+				id: "bruiser",
+				x: 620
+			},
+			{
+				id: "blade",
+				x: 1100
+			},
+			{
+				id: "bruiser",
+				x: 1680
+			},
+			{
+				id: "blade",
+				x: 2250
+			},
+			{
+				id: "bruiser",
+				x: 2900
+			},
+			{
+				id: "boss",
+				x: 3800
+			}
+		],
+		boss: {
+			id: "boss",
+			name: "Syndicate Kingpin",
+			spawnX: 3800
+		},
+		parallax: {
+			sky: "/game/backgrounds/miami-beach/far.jpg",
+			far: "/game/backgrounds/miami-beach/far.jpg",
+			mid: "/game/backgrounds/miami-beach/far.jpg",
+			ground: "/game/backgrounds/fort-lauderdale/ground.jpg"
+		}
+	}
+];
+function getLevel(id) {
+	return SOUTH_FLORIDA_LEVELS.find((l) => l.id === id) ?? FORT_LAUDERDALE;
+}
+function readUnlockedLevels() {
+	if (typeof window === "undefined") return ["fort-lauderdale"];
+	try {
+		const saved = window.localStorage.getItem("sfs.unlockedLevels");
+		if (saved) return JSON.parse(saved);
+	} catch {}
+	return ["fort-lauderdale"];
+}
+function saveUnlockedLevels(levels) {
 	if (typeof window === "undefined") return;
-	window.localStorage.setItem("sfs.characterId", id);
+	try {
+		window.localStorage.setItem("sfs.unlockedLevels", JSON.stringify(levels));
+	} catch {}
 }
-function readSavedCharacter() {
-	if (typeof window === "undefined") return JAV.id;
-	return window.localStorage.getItem("sfs.characterId") ?? JAV.id;
-}
-var initial = getCharacter(readSavedCharacter());
+var initialChar = JAV;
+var initialLevel = getLevel("fort-lauderdale");
 var useGameStore = create((set, get) => ({
 	screen: "title",
 	playing: false,
-	characterId: initial.id,
-	characterName: initial.name,
-	portrait: initial.portrait,
-	health: initial.health,
-	maxHealth: initial.health,
-	energy: 55,
-	maxEnergy: initial.ki,
+	characterId: initialChar.id,
+	characterName: initialChar.name,
+	portrait: initialChar.portrait,
+	health: initialChar.health,
+	maxHealth: initialChar.health,
+	energy: 50,
+	maxEnergy: initialChar.ki,
 	xp: 0,
 	coins: 0,
 	kos: 0,
 	comboHits: 0,
+	maxCombo: 0,
 	aliveEnemies: 0,
-	location: "Fort Lauderdale Beach",
+	currentLevelId: initialLevel.id,
+	unlockedLevels: readUnlockedLevels(),
+	location: `${initialLevel.city} · ${initialLevel.name}`,
 	fps: 0,
 	debug: false,
 	currentMove: "",
@@ -586,30 +1111,34 @@ var useGameStore = create((set, get) => ({
 		screen,
 		playing: screen === "play"
 	}),
+	setCurrentLevel: (levelId) => {
+		const lvl = getLevel(levelId);
+		set({
+			currentLevelId: lvl.id,
+			location: `${lvl.city} · ${lvl.name}`,
+			health: initialChar.health,
+			energy: 50,
+			comboHits: 0,
+			maxCombo: 0,
+			kos: 0,
+			currentMove: "",
+			flash: ""
+		});
+	},
+	markLevelComplete: (levelId) => {
+		const current = get().unlockedLevels;
+		const all = SOUTH_FLORIDA_LEVELS.map((l) => l.id);
+		const nextLevelId = all[all.indexOf(levelId) + 1];
+		if (nextLevelId && !current.includes(nextLevelId)) {
+			const updated = [...current, nextLevelId];
+			saveUnlockedLevels(updated);
+			set({ unlockedLevels: updated });
+		}
+	},
 	setFps: (fps) => set({ fps }),
 	setHealth: (health) => set({ health }),
 	setAliveEnemies: (aliveEnemies) => set({ aliveEnemies }),
 	setFlash: (flash) => set({ flash }),
-	applyCharacter: (id) => {
-		const character = getCharacter(id);
-		persistCharacter(character.id);
-		set({
-			characterId: character.id,
-			characterName: character.name,
-			portrait: character.portrait,
-			health: character.health,
-			maxHealth: character.health,
-			maxEnergy: character.ki,
-			energy: 55,
-			xp: 0,
-			kos: 0,
-			comboHits: 0,
-			aliveEnemies: 0,
-			currentMove: "",
-			specialIndex: 0,
-			flash: ""
-		});
-	},
 	rechargeKi: (amount) => {
 		const { energy, maxEnergy, currentMove } = get();
 		if (currentMove) return;
@@ -627,12 +1156,24 @@ var useGameStore = create((set, get) => ({
 		const { xp } = get();
 		set({ xp: Math.min(100, xp + amount) });
 	},
-	addKo: () => set({
-		kos: get().kos + 1,
-		comboHits: get().comboHits
-	}),
-	addComboHit: () => set({ comboHits: get().comboHits + 1 }),
-	resetCombo: () => set({ comboHits: 0 })
+	addKo: () => set({ kos: get().kos + 1 }),
+	addComboHit: () => {
+		const newHits = get().comboHits + 1;
+		set({
+			comboHits: newHits,
+			maxCombo: Math.max(get().maxCombo, newHits)
+		});
+	},
+	resetCombo: () => set({ comboHits: 0 }),
+	resetRunStats: () => set({
+		health: initialChar.health,
+		energy: 50,
+		kos: 0,
+		comboHits: 0,
+		maxCombo: 0,
+		currentMove: "",
+		flash: ""
+	})
 }));
 var GAME_CODES = /* @__PURE__ */ new Set([
 	"ArrowLeft",
@@ -889,477 +1430,144 @@ var InputManagerImpl = class {
 	}
 };
 var inputManager = new InputManagerImpl();
-var JAV_FRAME_KIT = {
-	light: {
-		id: "jav-light",
-		name: "Street Jab",
-		level: "high",
-		startupFrames: 4,
-		activeFrames: 3,
-		recoveryFrames: 8,
-		damage: 10,
-		chipDamage: 0,
-		blockStunFrames: 6,
-		hitStunFrames: 14,
-		hitReaction: "light",
-		knockbackX: 120,
-		knockbackY: -40,
-		hitstopFrames: 5,
-		cancelableTo: ["special", "finisher"],
-		kiGainOnHit: 12
-	},
-	heavy: {
-		id: "jav-heavy",
-		name: "Royal Haymaker",
-		level: "mid",
-		startupFrames: 8,
-		activeFrames: 4,
-		recoveryFrames: 14,
-		damage: 22,
-		chipDamage: 4,
-		blockStunFrames: 10,
-		hitStunFrames: 22,
-		hitReaction: "heavy",
-		knockbackX: 280,
-		knockbackY: -80,
-		hitstopFrames: 9,
-		cancelableTo: ["special", "finisher"],
-		kiGainOnHit: 18
-	},
-	kick: {
-		id: "jav-kick",
-		name: "Boardwalk Crescent",
-		level: "low",
-		startupFrames: 7,
-		activeFrames: 4,
-		recoveryFrames: 12,
-		damage: 18,
-		chipDamage: 3,
-		blockStunFrames: 8,
-		hitStunFrames: 18,
-		hitReaction: "knockdown",
-		knockbackX: 320,
-		knockbackY: -180,
-		hitstopFrames: 8,
-		cancelableTo: ["special", "finisher"],
-		kiGainOnHit: 15
-	},
-	special1: {
-		id: "jav-chain",
-		name: "Neon Chain Strike",
-		level: "mid",
-		startupFrames: 9,
-		activeFrames: 5,
-		recoveryFrames: 16,
-		damage: 28,
-		chipDamage: 6,
-		blockStunFrames: 12,
-		hitStunFrames: 26,
-		hitReaction: "launch",
-		knockbackX: 220,
-		knockbackY: -380,
-		hitstopFrames: 10,
-		cancelableTo: ["finisher"],
-		kiCost: 25,
-		kiGainOnHit: 8
-	},
-	special2: {
-		id: "jav-wave",
-		name: "Crown Plasma Wave",
-		level: "high",
-		startupFrames: 12,
-		activeFrames: 8,
-		recoveryFrames: 18,
-		damage: 32,
-		chipDamage: 8,
-		blockStunFrames: 14,
-		hitStunFrames: 24,
-		hitReaction: "heavy",
-		knockbackX: 360,
-		knockbackY: -60,
-		hitstopFrames: 10,
-		cancelableTo: ["finisher"],
-		kiCost: 30,
-		kiGainOnHit: 6
-	},
-	special3: {
-		id: "jav-step",
-		name: "Shadow Blitz",
-		level: "overhead",
-		startupFrames: 6,
-		activeFrames: 6,
-		recoveryFrames: 10,
-		damage: 24,
-		chipDamage: 5,
-		blockStunFrames: 12,
-		hitStunFrames: 22,
-		hitReaction: "wallbounce",
-		knockbackX: 420,
-		knockbackY: -120,
-		hitstopFrames: 9,
-		cancelableTo: ["finisher"],
-		kiCost: 20,
-		iFrames: 6,
-		kiGainOnHit: 8
-	},
-	finisher: {
-		id: "jav-hood",
-		name: "South Florida Legend",
-		level: "unblockable",
-		startupFrames: 14,
-		activeFrames: 10,
-		recoveryFrames: 24,
-		damage: 65,
-		chipDamage: 30,
-		blockStunFrames: 20,
-		hitStunFrames: 45,
-		hitReaction: "launch",
-		knockbackX: 580,
-		knockbackY: -480,
-		hitstopFrames: 18,
-		cancelableTo: [],
-		kiCost: 100,
-		iFrames: 14
-	},
-	parry: {
-		startupFrames: 2,
-		activeFrames: 6,
-		recoveryFrames: 14,
-		advantageFrames: 16
-	},
-	dash: {
-		durationFrames: 14,
-		iFrames: 8,
-		speed: 720
-	}
-};
-var KENO_FRAME_KIT = {
-	light: {
-		id: "keno-light",
-		name: "Phantom Edge",
-		level: "high",
-		startupFrames: 3,
-		activeFrames: 3,
-		recoveryFrames: 6,
-		damage: 9,
-		chipDamage: 0,
-		blockStunFrames: 5,
-		hitStunFrames: 12,
-		hitReaction: "light",
-		knockbackX: 100,
-		knockbackY: -30,
-		hitstopFrames: 4,
-		cancelableTo: ["special", "finisher"],
-		kiGainOnHit: 14
-	},
-	heavy: {
-		id: "keno-heavy",
-		name: "Obsidian Slice",
-		level: "mid",
-		startupFrames: 7,
-		activeFrames: 4,
-		recoveryFrames: 12,
-		damage: 24,
-		chipDamage: 5,
-		blockStunFrames: 9,
-		hitStunFrames: 20,
-		hitReaction: "heavy",
-		knockbackX: 260,
-		knockbackY: -70,
-		hitstopFrames: 8,
-		cancelableTo: ["special", "finisher"],
-		kiGainOnHit: 18
-	},
-	kick: {
-		id: "keno-kick",
-		name: "Cyclone Sweep",
-		level: "low",
-		startupFrames: 6,
-		activeFrames: 4,
-		recoveryFrames: 10,
-		damage: 16,
-		chipDamage: 3,
-		blockStunFrames: 7,
-		hitStunFrames: 16,
-		hitReaction: "knockdown",
-		knockbackX: 300,
-		knockbackY: -160,
-		hitstopFrames: 7,
-		cancelableTo: ["special", "finisher"],
-		kiGainOnHit: 16
-	},
-	special1: {
-		id: "keno-dash",
-		name: "Ghost Flash",
-		level: "mid",
-		startupFrames: 5,
-		activeFrames: 6,
-		recoveryFrames: 12,
-		damage: 26,
-		chipDamage: 5,
-		blockStunFrames: 11,
-		hitStunFrames: 24,
-		hitReaction: "launch",
-		knockbackX: 240,
-		knockbackY: -360,
-		hitstopFrames: 9,
-		cancelableTo: ["finisher"],
-		kiCost: 20,
-		iFrames: 5,
-		kiGainOnHit: 8
-	},
-	special2: {
-		id: "keno-clone",
-		name: "Shadow Mirage",
-		level: "overhead",
-		startupFrames: 8,
-		activeFrames: 8,
-		recoveryFrames: 14,
-		damage: 30,
-		chipDamage: 6,
-		blockStunFrames: 12,
-		hitStunFrames: 22,
-		hitReaction: "wallbounce",
-		knockbackX: 380,
-		knockbackY: -100,
-		hitstopFrames: 9,
-		cancelableTo: ["finisher"],
-		kiCost: 30,
-		kiGainOnHit: 10
-	},
-	special3: {
-		id: "keno-stalker",
-		name: "Abyssal Descent",
-		level: "overhead",
-		startupFrames: 10,
-		activeFrames: 6,
-		recoveryFrames: 16,
-		damage: 34,
-		chipDamage: 8,
-		blockStunFrames: 14,
-		hitStunFrames: 28,
-		hitReaction: "launch",
-		knockbackX: 300,
-		knockbackY: -420,
-		hitstopFrames: 11,
-		cancelableTo: ["finisher"],
-		kiCost: 30,
-		kiGainOnHit: 8
-	},
-	finisher: {
-		id: "keno-phantom",
-		name: "Thousand Shadow Lotus",
-		level: "unblockable",
-		startupFrames: 12,
-		activeFrames: 12,
-		recoveryFrames: 22,
-		damage: 68,
-		chipDamage: 30,
-		blockStunFrames: 20,
-		hitStunFrames: 50,
-		hitReaction: "launch",
-		knockbackX: 600,
-		knockbackY: -500,
-		hitstopFrames: 20,
-		cancelableTo: [],
-		kiCost: 100,
-		iFrames: 14
-	},
-	parry: {
-		startupFrames: 2,
-		activeFrames: 6,
-		recoveryFrames: 12,
-		advantageFrames: 18
-	},
-	dash: {
-		durationFrames: 12,
-		iFrames: 9,
-		speed: 800
-	}
-};
-function getFrameKit(characterId) {
-	return characterId === "keno" ? KENO_FRAME_KIT : JAV_FRAME_KIT;
-}
 function cn(...inputs) {
 	return twMerge(clsx(inputs));
 }
-function MoveBadge({ name, level, cost }) {
-	const getLevelColor = (lvl) => {
-		if (lvl === "overhead") return "text-purple-300 bg-purple-900/40 border-purple-500/30";
-		if (lvl === "low") return "text-cyan-300 bg-cyan-900/40 border-cyan-500/30";
-		if (lvl === "unblockable") return "text-amber-300 bg-amber-900/50 border-amber-400 animate-pulse";
-		return "text-foam/80 bg-ink-2/60 border-foam/10";
+function CitySelectMap() {
+	const currentLevelId = useGameStore((s) => s.currentLevelId);
+	const unlockedLevels = useGameStore((s) => s.unlockedLevels);
+	const selectedLevel = getLevel(currentLevelId);
+	const handleSelectCity = (levelId) => {
+		if (!unlockedLevels.includes(levelId)) {
+			audioManager.hitLight();
+			return;
+		}
+		audioManager.swing(1.2);
+		useGameStore.getState().setCurrentLevel(levelId);
 	};
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: cn("flex items-center justify-between rounded-lg border px-2 py-1 text-[0.62rem]", getLevelColor(level)),
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-			className: "font-bold truncate",
-			children: name
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "flex items-center gap-1",
-			children: [cost ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-				className: "font-mono text-gold",
-				children: [cost, " KI"]
-			}) : null, /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-				className: "font-mono uppercase text-[0.55rem] tracking-wider opacity-75",
-				children: level
-			})]
-		})]
-	});
-}
-function CharacterSelect() {
-	const selected = getCharacter(useGameStore((s) => s.characterId));
-	const frameKit = getFrameKit(selected.id);
-	const confirm = () => {
+	const handleDeploy = () => {
 		audioManager.unlock();
 		audioManager.roundAnnounce();
-		useGameStore.getState().applyCharacter(selected.id);
+		useGameStore.getState().resetRunStats();
 		useGameStore.getState().setScreen("play");
 		window.setTimeout(() => restartPlayScene(), 80);
 	};
-	const handleSelect = (id) => {
-		audioManager.unlock();
-		audioManager.swing(1.2);
-		useGameStore.getState().applyCharacter(id);
-	};
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-		className: "absolute inset-0 z-30 flex items-stretch justify-center bg-ink/90 px-3 py-3 select-none backdrop-blur-md",
+		className: "absolute inset-0 z-30 flex items-stretch justify-center bg-ink/90 px-3 py-4 select-none backdrop-blur-md",
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "flex h-full w-full max-w-md flex-col justify-between gap-2.5",
+			className: "flex h-full w-full max-w-md flex-col justify-between gap-3",
 			children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "flex items-center gap-2",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-1.5 w-1.5 rounded-full bg-coral animate-ping" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-						className: "font-sans text-[0.62rem] font-bold uppercase tracking-[0.24em] text-sand",
-						children: "Select Combatant"
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-between",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-2",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-2 w-2 rounded-full bg-coral animate-ping" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "font-sans text-[0.62rem] font-bold uppercase tracking-[0.26em] text-sand",
+							children: "South Florida Circuit"
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+						className: "font-display text-4xl leading-none text-foam",
+						children: "Choose Your Arena"
+					})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						type: "button",
+						onClick: () => useGameStore.getState().setScreen("title"),
+						className: "rounded-full border border-foam/20 bg-ink/80 px-3 py-1 font-sans text-xs font-bold uppercase tracking-wider text-foam/80 hover:bg-ink active:scale-95",
+						children: "Title"
 					})]
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
-					className: "font-display text-4xl leading-none text-foam",
-					children: "Choose Your Fighter"
-				})] }),
+				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: "grid grid-cols-2 gap-2.5",
-					children: CHARACTERS.map((char) => {
-						const isSelected = char.id === selected.id;
+					className: "flex-1 overflow-y-auto space-y-2 pr-1",
+					children: SOUTH_FLORIDA_LEVELS.map((lvl, index) => {
+						const isUnlocked = unlockedLevels.includes(lvl.id);
+						const isSelected = lvl.id === selectedLevel.id;
 						return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							type: "button",
-							"data-testid": `fighter-${char.id}`,
-							onClick: () => handleSelect(char.id),
-							className: cn("relative flex flex-col overflow-hidden rounded-2xl border p-2.5 text-left transition-all duration-200", isSelected ? "border-gold bg-ink/95 shadow-[0_0_20px_rgba(232,196,90,0.35)] ring-2 ring-gold scale-[1.02]" : "border-foam/15 bg-ink/70 hover:border-foam/40 hover:bg-ink/80"),
-							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "relative mb-2 size-18 overflow-hidden rounded-xl border border-foam/20 bg-ocean",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
-										src: char.portrait,
-										alt: "",
-										className: "size-full object-cover object-top",
-										draggable: false
-									}), isSelected ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-										className: "absolute top-1 right-1 rounded-full bg-gold p-1 shadow",
-										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-3 text-ink" })
-									}) : null]
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-									className: "font-display text-2xl leading-none text-foam",
-									children: char.name
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-									className: "font-sans text-[0.6rem] font-bold uppercase tracking-wider text-sand truncate",
-									children: char.title
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "mt-2 grid grid-cols-3 gap-1 border-t border-foam/10 pt-1.5 text-center font-mono text-[0.58rem] text-foam/70",
-									children: [
-										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-											className: "block opacity-60",
-											children: "HP"
-										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-											className: "font-bold text-coral",
-											children: char.health
-										})] }),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-											className: "block opacity-60",
-											children: "SPD"
-										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-											className: "font-bold text-cyan-400",
-											children: char.movementSpeed
-										})] }),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-											className: "block opacity-60",
-											children: "ATK"
-										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-											className: "font-bold text-gold",
-											children: char.attackPower
-										})] })
-									]
-								})
-							]
-						}, char.id);
+							disabled: !isUnlocked,
+							onClick: () => handleSelectCity(lvl.id),
+							className: cn("relative flex w-full items-center gap-3 rounded-2xl border p-2.5 text-left transition-all duration-200", isSelected && isUnlocked ? "border-gold bg-ink/95 shadow-[0_0_20px_rgba(232,196,90,0.3)] ring-2 ring-gold" : isUnlocked ? "border-foam/15 bg-ink/75 hover:border-foam/40 hover:bg-ink/85" : "border-foam/10 bg-ink/40 opacity-55 cursor-not-allowed"),
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "relative size-16 shrink-0 overflow-hidden rounded-xl border border-foam/20 bg-ocean",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+									src: lvl.parallax.far,
+									alt: "",
+									className: "size-full object-cover",
+									draggable: false
+								}), !isUnlocked ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "absolute inset-0 bg-ink/80 flex items-center justify-center",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "size-6 text-foam/60" })
+								}) : isSelected ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "absolute top-1 right-1 rounded-full bg-gold p-0.5 shadow",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-3 text-ink" })
+								}) : null]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "min-w-0 flex-1",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-center gap-1.5",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+											className: "font-mono text-[0.6rem] font-black text-coral",
+											children: ["STAGE ", index + 1]
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+											className: "font-sans text-[0.62rem] font-bold text-sand/80 uppercase",
+											children: ["· ", lvl.city]
+										})]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+										className: "font-display text-2xl leading-none text-foam truncate",
+										children: lvl.name
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+										className: "mt-0.5 font-sans text-[0.65rem] text-muted line-clamp-1",
+										children: lvl.tagline
+									})
+								]
+							})]
+						}, lvl.id);
 					})
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "flex-1 overflow-y-auto rounded-2xl border border-foam/15 bg-ink/80 p-3 shadow-inner",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "mb-2 flex items-center justify-between",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-							className: "font-sans text-[0.68rem] font-black uppercase tracking-wider text-sand",
-							children: [selected.name, " · Frame Data Kit"]
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-							className: "text-[0.6rem] font-medium text-foam/60",
-							children: selected.tagline
-						})]
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "space-y-1.5",
-						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MoveBadge, {
-								name: frameKit.light.name,
-								level: frameKit.light.level
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MoveBadge, {
-								name: frameKit.heavy.name,
-								level: frameKit.heavy.level
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MoveBadge, {
-								name: frameKit.kick.name,
-								level: frameKit.kick.level
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MoveBadge, {
-								name: frameKit.special1.name,
-								level: frameKit.special1.level,
-								cost: frameKit.special1.kiCost
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MoveBadge, {
-								name: frameKit.special2.name,
-								level: frameKit.special2.level,
-								cost: frameKit.special2.kiCost
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MoveBadge, {
-								name: frameKit.special3.name,
-								level: frameKit.special3.level,
-								cost: frameKit.special3.kiCost
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MoveBadge, {
-								name: frameKit.finisher.name,
-								level: frameKit.finisher.level,
-								cost: frameKit.finisher.kiCost
-							})
-						]
-					})]
+					className: "rounded-2xl border border-foam/20 bg-ink-2/85 p-3 shadow-inner",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center justify-between",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "font-sans text-[0.7rem] font-black uppercase tracking-wider text-sand",
+								children: [selectedLevel.city, " · Fight Briefing"]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "font-mono text-[0.62rem] text-foam/60",
+								children: selectedLevel.boss ? "★ BOSS STAGE" : "STANDARD ARENA"
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-1 font-sans text-xs text-foam/85 leading-relaxed",
+							children: selectedLevel.tagline
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "mt-2 flex items-center gap-3 border-t border-foam/10 pt-1.5 font-mono text-[0.62rem] text-foam/70",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+									"Enemies: ",
+									selectedLevel.enemies.length,
+									" Fighters"
+								] }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "·" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-gold",
+									children: "Reward: +100 XP"
+								})
+							]
+						})
+					]
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "flex items-center gap-2",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-						type: "button",
-						onClick: () => useGameStore.getState().setScreen("title"),
-						className: "flex h-12 items-center justify-center gap-1.5 rounded-xl border border-foam/20 px-4 font-sans text-xs font-bold uppercase tracking-wider text-foam hover:bg-ink active:scale-95",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowLeft, { className: "size-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Title" })]
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-						type: "button",
-						"data-testid": "confirm-fighter",
-						onClick: confirm,
-						className: "flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-coral via-sand to-gold px-6 font-sans text-sm font-black uppercase tracking-[0.16em] text-ink shadow-[0_0_20px_rgba(232,93,76,0.5)] transition-all hover:scale-[1.01] active:scale-[0.98]",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Play, { className: "size-4.5 fill-ink" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["Deploy ", selected.name] })]
-					})]
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+					type: "button",
+					onClick: handleDeploy,
+					className: "flex h-13 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-coral via-sand to-gold px-8 font-sans text-base font-black uppercase tracking-[0.18em] text-ink shadow-[0_0_25px_rgba(232,93,76,0.6)] transition-all hover:scale-[1.01] active:scale-[0.98]",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Play, { className: "size-5 fill-ink" }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["Fight in ", selectedLevel.city] }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-4.5 text-ink" })
+					]
 				})
 			]
 		})
@@ -1388,7 +1596,7 @@ function getComboRank(hits) {
 	};
 }
 function Hud() {
-	const characterId = useGameStore((s) => s.characterId);
+	useGameStore((s) => s.characterId);
 	const characterName = useGameStore((s) => s.characterName);
 	const portrait = useGameStore((s) => s.portrait);
 	const health = useGameStore((s) => s.health);
@@ -1414,7 +1622,6 @@ function Hud() {
 			return () => clearTimeout(timer);
 		} else setGhostHp(health);
 	}, [health, ghostHp]);
-	getCharacter(characterId);
 	const hpPct = Math.max(0, Math.min(100, health / Math.max(1, maxHealth) * 100));
 	const ghostHpPct = Math.max(0, Math.min(100, ghostHp / Math.max(1, maxHealth) * 100));
 	const kiPct = Math.max(0, Math.min(100, energy / Math.max(1, maxEnergy) * 100));
@@ -1475,7 +1682,7 @@ function Hud() {
 								className: "flex items-center justify-between text-[0.58rem] font-extrabold uppercase tracking-wider",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 									className: finisherReady ? "text-gold animate-pulse" : "text-foam/70",
-									children: finisherReady ? "★ SUPER FINISHER READY" : "KI GAUGE"
+									children: finisherReady ? "★ SEISMIC CROWN SLAM READY" : "KI GAUGE"
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 									className: "font-mono text-foam/60",
 									children: [Math.round(energy), "%"]
@@ -1501,15 +1708,15 @@ function Hud() {
 							className: "pointer-events-auto flex size-7 items-center justify-center rounded-full border border-foam/20 bg-ink/80 text-foam/80 hover:bg-ink hover:text-foam active:scale-95",
 							"aria-label": muted ? "Unmute sound" : "Mute sound",
 							children: muted ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(VolumeX, { className: "size-3.5" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Volume2, { className: "size-3.5" })
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							type: "button",
-							"data-testid": "roster-button",
-							className: "pointer-events-auto rounded-full border border-foam/20 bg-ink/80 px-2.5 py-1 font-sans text-[0.62rem] font-black uppercase tracking-wider text-foam/90 hover:bg-ink active:scale-95",
+							"data-testid": "circuit-map-button",
+							className: "pointer-events-auto flex items-center gap-1 rounded-full border border-foam/20 bg-ink/80 px-2.5 py-1 font-sans text-[0.62rem] font-black uppercase tracking-wider text-foam/90 hover:bg-ink active:scale-95",
 							onClick: () => {
 								inputManager.enabled = false;
-								useGameStore.getState().setScreen("select");
+								useGameStore.getState().setScreen("city-select");
 							},
-							children: "Fighters"
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "size-3 text-sand" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Map" })]
 						})]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
@@ -1523,7 +1730,7 @@ function Hud() {
 							kos,
 							" · ",
 							aliveEnemies,
-							" REMAINING"
+							" LEFT"
 						]
 					}),
 					currentMove ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
@@ -1696,7 +1903,7 @@ function TitleOverlay() {
 	const start = () => {
 		audioManager.unlock();
 		audioManager.roundAnnounce();
-		useGameStore.getState().setScreen("select");
+		useGameStore.getState().setScreen("city-select");
 	};
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 		className: "absolute inset-0 z-30 flex items-end justify-center bg-ink/40 px-4 pb-[max(1.4rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] select-none backdrop-blur-[2px]",
@@ -1707,38 +1914,47 @@ function TitleOverlay() {
 					className: "flex items-center justify-center gap-2",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-1.5 w-1.5 rounded-full bg-coral animate-ping" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 						className: "font-sans text-[0.68rem] font-black uppercase tracking-[0.32em] text-sand",
-						children: "South Florida Boardwalk"
+						children: "5-City Florida Championship"
 					})]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
 					className: "mt-1 font-display text-6xl leading-none tracking-wide text-foam drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]",
-					children: "SAMURAI FIGHTER"
+					children: "SOUTH FLORIDA"
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+					className: "font-display text-5xl leading-none tracking-widest text-gold -mt-1 drop-shadow-[0_0_20px_rgba(232,196,90,0.6)]",
+					children: "FIGHTER"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "mx-auto my-3 flex max-w-xs items-center justify-center gap-4 text-xs font-bold text-foam/80 border-y border-foam/10 py-1.5 font-mono",
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-							className: "flex items-center gap-1",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Zap, { className: "size-3.5 text-gold" }), " 2D FRAME ENGINE"]
+							className: "flex items-center gap-1 text-gold",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Zap, { className: "size-3.5" }), " 5 CITIES"]
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "·" }),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-							className: "flex items-center gap-1",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Shield, { className: "size-3.5 text-cyan-400" }), " JUST PARRY"]
+							className: "flex items-center gap-1 text-cyan-400",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Shield, { className: "size-3.5" }), " JUST PARRY"]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "·" }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "flex items-center gap-1 text-coral",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-3.5" }), " BOSS RAID"]
 						})
 					]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 					className: "mx-auto mt-2 max-w-sm font-sans text-xs leading-relaxed text-muted",
-					children: "Master high/low mixups, frame-1 parries, combo cancels, and 808-powered super finishers on the Fort Lauderdale coast."
+					children: "Fight across Fort Lauderdale, Tampa, Palm Beach, Miami, and Miami Beach. Master frame-1 parries, combo juggles, and seismic finishers."
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 					type: "button",
 					onClick: start,
 					className: "mt-5 inline-flex h-13 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-coral via-sand to-gold px-8 font-sans text-base font-black uppercase tracking-[0.18em] text-ink shadow-[0_0_25px_rgba(232,93,76,0.6)] transition-all hover:scale-[1.02] active:scale-[0.98]",
 					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Play, { className: "size-5 fill-ink" }),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Enter Roster" }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "size-5 fill-ink" }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Enter Florida Circuit" }),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-4.5 text-ink" })
 					]
 				}),
@@ -1757,13 +1973,13 @@ function TitleOverlay() {
 					] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 							className: "font-bold text-sand uppercase block mb-0.5",
-							children: "Specials & Touch"
+							children: "Specials & Mobile"
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "U/I/O: Specials 1-3" }),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "P / 4: Super Finisher" }),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "On-Screen Touch D-Pad" })
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Touch Controls + Swipe" })
 					] })]
 				})
 			]
@@ -1912,6 +2128,146 @@ function TouchControls() {
 		})]
 	});
 }
+function VictoryScreen() {
+	const currentLevelId = useGameStore((s) => s.currentLevelId);
+	const health = useGameStore((s) => s.health);
+	const maxHealth = useGameStore((s) => s.maxHealth);
+	const maxCombo = useGameStore((s) => s.maxCombo);
+	const kos = useGameStore((s) => s.kos);
+	const level = getLevel(currentLevelId);
+	const hpPct = Math.round(health / Math.max(1, maxHealth) * 100);
+	const getGrade = () => {
+		if (hpPct >= 80 && maxCombo >= 10) return {
+			grade: "S",
+			label: "FLAWLESS CHAMPION",
+			color: "text-amber-300"
+		};
+		if (hpPct >= 60 || maxCombo >= 6) return {
+			grade: "A",
+			label: "DOMINANT VICTORY",
+			color: "text-emerald-300"
+		};
+		if (hpPct >= 30) return {
+			grade: "B",
+			label: "CLEAN VICTORY",
+			color: "text-cyan-300"
+		};
+		return {
+			grade: "C",
+			label: "SURVIVED THE GAUNTLET",
+			color: "text-sand"
+		};
+	};
+	const gradeInfo = getGrade();
+	const allLevels = SOUTH_FLORIDA_LEVELS.map((l) => l.id);
+	const nextLevelId = allLevels[allLevels.indexOf(currentLevelId) + 1] ?? null;
+	const isFinalStage = !nextLevelId;
+	const handleNextCity = () => {
+		if (!nextLevelId) {
+			useGameStore.getState().setScreen("city-select");
+			return;
+		}
+		audioManager.unlock();
+		audioManager.roundAnnounce();
+		useGameStore.getState().setCurrentLevel(nextLevelId);
+		useGameStore.getState().setScreen("play");
+		window.setTimeout(() => restartPlayScene(), 80);
+	};
+	const handleReplay = () => {
+		audioManager.unlock();
+		audioManager.roundAnnounce();
+		useGameStore.getState().resetRunStats();
+		useGameStore.getState().setScreen("play");
+		window.setTimeout(() => restartPlayScene(), 80);
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "absolute inset-0 z-30 flex items-center justify-center bg-ink/90 px-4 py-6 select-none backdrop-blur-lg",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "w-full max-w-md rounded-[2rem] border border-foam/20 bg-ink/95 p-6 text-center shadow-[0_24px_80px_rgba(0,0,0,0.7)]",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-center gap-2",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-4 text-gold animate-spin" }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+							className: "font-sans text-[0.68rem] font-black uppercase tracking-[0.32em] text-sand",
+							children: [level.city, " · Area Secured"]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-4 text-gold animate-spin" })
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+					className: "mt-1 font-display text-5xl tracking-wide text-foam drop-shadow",
+					children: isFinalStage ? "CIRCUIT CHAMPION!" : "STAGE COMPLETE!"
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "my-4 flex items-center justify-center gap-4 rounded-2xl border border-gold/30 bg-gradient-to-b from-amber-500/10 to-ink p-4 shadow-inner",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "flex size-18 items-center justify-center rounded-2xl border-2 border-gold bg-ink font-display text-6xl text-gold shadow-[0_0_20px_rgba(232,196,90,0.5)]",
+						children: gradeInfo.grade
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "text-left",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "font-mono text-xs font-bold text-sand/80 uppercase",
+							children: "Performance Grade"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: `font-display text-2xl leading-tight drop-shadow ${gradeInfo.color}`,
+							children: gradeInfo.label
+						})]
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "grid grid-cols-3 gap-2 rounded-2xl border border-foam/10 bg-ink-2/70 p-3 font-mono",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "block text-[0.62rem] text-foam/60 uppercase",
+							children: "Max Combo"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "font-display text-2xl text-coral",
+							children: [maxCombo, " HITS"]
+						})] }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "block text-[0.62rem] text-foam/60 uppercase",
+							children: "Remaining HP"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "font-display text-2xl text-cyan-300",
+							children: [hpPct, "%"]
+						})] }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "block text-[0.62rem] text-foam/60 uppercase",
+							children: "K.O. Count"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "font-display text-2xl text-gold",
+							children: kos
+						})] })
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-5 flex flex-col gap-2.5",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						type: "button",
+						onClick: handleNextCity,
+						className: "flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-coral via-sand to-gold px-8 font-sans text-base font-black uppercase tracking-[0.16em] text-ink shadow-[0_0_25px_rgba(232,93,76,0.6)] transition-all hover:scale-[1.01] active:scale-[0.98]",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: isFinalStage ? "View Circuit Map" : "Advance to Next City" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, { className: "size-5" })]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "grid grid-cols-2 gap-2",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: handleReplay,
+							className: "flex h-11 items-center justify-center gap-1.5 rounded-xl border border-foam/20 bg-ink-2/80 font-sans text-xs font-bold uppercase tracking-wider text-foam hover:bg-ink active:scale-95",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RotateCcw, { className: "size-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Retry Stage" })]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => useGameStore.getState().setScreen("city-select"),
+							className: "flex h-11 items-center justify-center gap-1.5 rounded-xl border border-foam/20 bg-ink-2/80 font-sans text-xs font-bold uppercase tracking-wider text-sand hover:bg-ink active:scale-95",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "size-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Circuit Map" })]
+						})]
+					})]
+				})
+			]
+		})
+	});
+}
 /**
 * Iframe Embedding & Host Website Communication Bridge
 * Enables seamless two-way postMessage communication when hosted on Vercel
@@ -1969,7 +2325,7 @@ function GameApp() {
 		if (!host) return;
 		let game = null;
 		let cancelled = false;
-		import("./createGame-HD5vrhMw.mjs").then(({ createGame }) => {
+		import("./createGame-CysCI2YK.mjs").then(({ createGame }) => {
 			if (cancelled || !host) return;
 			game = createGame(host);
 		});
@@ -2007,7 +2363,8 @@ function GameApp() {
 					screen === "play" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Hud, {}) : null,
 					screen === "play" && touchReady ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TouchControls, {}) : null,
 					screen === "title" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TitleOverlay, {}) : null,
-					screen === "select" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CharacterSelect, {}) : null
+					screen === "city-select" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CitySelectMap, {}) : null,
+					screen === "victory" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(VictoryScreen, {}) : null
 				] }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RotateHint, {})
 			]
@@ -2019,4 +2376,4 @@ function Home() {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(GameApp, {});
 }
 //#endregion
-export { approach as a, getCharacter as c, useGameStore as i, registerGame as l, getFrameKit as n, audioManager as o, inputManager as r, allRosterClips as s, routes_exports as t, unregisterGame as u };
+export { WORLD_WIDTH as C, WORLD_HEIGHT as S, GAME_HEIGHT as _, getLevel as a, PLAYER_BODY as b, allRosterClips as c, unregisterGame as d, CAMERA as f, ENEMY_DISPLAY_SCALE as g, ENEMY_BODY as h, SOUTH_FLORIDA_LEVELS as i, getCharacter as l, inputManager as n, approach as o, COMBAT as p, useGameStore as r, audioManager as s, routes_exports as t, registerGame as u, JUMP as v, PLAYER_DISPLAY_SCALE as x, MOVE as y };

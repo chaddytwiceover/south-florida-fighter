@@ -1,5 +1,5 @@
 import type { CombatSystem } from "../combat/CombatSystem";
-import { flashSprite } from "../combat/Juice";
+import { flashSprite, spawnHitSparks } from "../combat/Juice";
 import { ENEMY_BODY, ENEMY_DISPLAY_SCALE, GROUND_Y, JUMP } from "../config";
 import { audioManager } from "../audio/AudioManager";
 import type { EnemyData } from "./EnemyData";
@@ -32,9 +32,17 @@ export class Enemy {
     this.health = data.health;
     this.homeX = x;
 
-    this.sprite = scene.physics.add.sprite(x, y, data.animationSet.idle.textureKey, 0);
+    const isBoss = data.behaviorType === "boss";
+    const scale = isBoss ? ENEMY_DISPLAY_SCALE * 1.3 : ENEMY_DISPLAY_SCALE;
+
+    this.sprite = scene.physics.add.sprite(
+      x,
+      y,
+      data.animationSet.idle.textureKey,
+      0,
+    );
     this.sprite.setOrigin(0.5, 1);
-    this.sprite.setScale(ENEMY_DISPLAY_SCALE);
+    this.sprite.setScale(scale);
     this.sprite.setDepth(18);
     this.sprite.setData("enemy", this);
 
@@ -45,13 +53,25 @@ export class Enemy {
     body.setDrag(0, 0);
     body.setFriction(0, 0);
     body.setBounce(0, 0);
-    body.setSize(ENEMY_BODY.width, ENEMY_BODY.height);
-    body.setOffset(ENEMY_BODY.offsetX, ENEMY_BODY.offsetY);
+    body.setSize(
+      isBoss ? ENEMY_BODY.width * 1.4 : ENEMY_BODY.width,
+      isBoss ? ENEMY_BODY.height * 1.3 : ENEMY_BODY.height,
+    );
+    body.setOffset(
+      isBoss ? ENEMY_BODY.offsetX * 1.2 : ENEMY_BODY.offsetX,
+      isBoss ? ENEMY_BODY.offsetY * 1.2 : ENEMY_BODY.offsetY,
+    );
     body.pushable = false;
     body.moves = false;
 
-    this.hpBg = scene.add.rectangle(x, y - 118, 42, 6, 0x0c1a24, 0.8).setDepth(26);
-    this.hpFill = scene.add.rectangle(x - 19, y - 118, 38, 4, 0xe85d4c, 1).setOrigin(0, 0.5).setDepth(27);
+    const hpW = isBoss ? 70 : 42;
+    this.hpBg = scene.add
+      .rectangle(x, y - 128, hpW + 4, 7, 0x0c1a24, 0.85)
+      .setDepth(26);
+    this.hpFill = scene.add
+      .rectangle(x - hpW / 2, y - 128, hpW, 5, isBoss ? 0xe8c45a : 0xe85d4c, 1)
+      .setOrigin(0, 0.5)
+      .setDepth(27);
 
     this.sprite.play(data.animationSet.idle.key);
   }
@@ -67,15 +87,21 @@ export class Enemy {
   takeHit(damage: number, knockbackX: number, knockbackY = -80) {
     if (this.dead || this.iFrames > 0) return false;
     this.health = Math.max(0, this.health - damage);
-    this.iFrames = 0.17;
-    this.hurtLock = 0.28;
+    this.iFrames = this.data.behaviorType === "boss" ? 0.25 : 0.17;
+    this.hurtLock = this.data.behaviorType === "boss" ? 0.18 : 0.28;
     this.attackLock = 0;
     this.state = "hurt";
     this.cooldown = Math.max(this.cooldown, 0.35);
 
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;
-    body.setVelocity(knockbackX, knockbackY);
-    flashSprite(this.sprite, 0xffffff);
+    body.setVelocity(
+      this.data.behaviorType === "boss" ? knockbackX * 0.4 : knockbackX,
+      this.data.behaviorType === "boss" ? -40 : knockbackY,
+    );
+    flashSprite(
+      this.sprite,
+      this.data.behaviorType === "boss" ? 0xff00ff : 0xffffff,
+    );
     this.playClip("hurt");
     this.refreshHp();
     audioManager.hurt();
@@ -86,8 +112,10 @@ export class Enemy {
 
   update(dt: number, playerX: number, playerY: number, combat: CombatSystem) {
     if (!this.sprite.active) return;
-    this.hpBg.setPosition(this.x, this.y - 118);
-    this.hpFill.setPosition(this.x - 19, this.y - 118);
+    const hpOffset = this.data.behaviorType === "boss" ? -145 : -128;
+    this.hpBg.setPosition(this.x, this.y + hpOffset);
+    const hpW = this.data.behaviorType === "boss" ? 70 : 42;
+    this.hpFill.setPosition(this.x - hpW / 2, this.y + hpOffset);
 
     if (this.iFrames > 0) this.iFrames = Math.max(0, this.iFrames - dt);
     if (this.hurtLock > 0) this.hurtLock = Math.max(0, this.hurtLock - dt);
@@ -99,7 +127,9 @@ export class Enemy {
     const onFloor =
       body.blocked.down ||
       body.touching.down ||
-      (vyNow >= -12 && this.sprite.y >= GROUND_Y - 4 && this.sprite.y <= GROUND_Y + 18);
+      (vyNow >= -12 &&
+        this.sprite.y >= GROUND_Y - 4 &&
+        this.sprite.y <= GROUND_Y + 18);
     let vy = vyNow;
     vy = Math.min(vy + JUMP.fallGravity * dt, JUMP.terminal);
     if (onFloor && vy > 0) vy = 0;
@@ -121,8 +151,11 @@ export class Enemy {
       return;
     }
 
+    const dist = Math.hypot(playerX - this.x, playerY - this.y);
+    const dir = playerX > this.x ? 1 : -1;
+
     if (this.attackLock > 0) {
-      const vx = approach(body.velocity.x, 0, 2200 * dt);
+      const vx = approach(body.velocity.x, 0, 1800 * dt);
       this.sprite.x += vx * dt;
       this.sprite.y += vy * dt;
       if (onFloor && this.sprite.y > GROUND_Y) this.sprite.y = GROUND_Y;
@@ -131,43 +164,46 @@ export class Enemy {
       return;
     }
 
-    const dx = playerX - this.x;
-    const dist = Math.abs(dx);
-    const verticalOk = Math.abs(playerY - this.y) < 140;
+    if (dist < this.data.attackRange && this.cooldown <= 0) {
+      this.facing = dir;
+      this.startAttack(combat);
+      return;
+    }
 
-    let vx = body.velocity.x;
-    if (dist < this.data.aggroRange && verticalOk) {
-      this.facing = dx >= 0 ? 1 : -1;
-      this.sprite.setFlipX(this.facing < 0);
-      if (dist <= this.data.attackRange && this.cooldown <= 0 && onFloor) {
-        this.startAttack(combat);
-        body.setVelocity(0, vy);
-        body.updateFromGameObject();
-        return;
-      }
+    if (dist < this.data.aggroRange) {
       this.state = "chase";
-      vx = approach(vx, this.facing * this.data.speed, 1600 * dt);
+      this.facing = dir;
+      const targetVx = dir * this.data.speed;
+      const vx = approach(body.velocity.x, targetVx, 1600 * dt);
       this.sprite.x += vx * dt;
       this.sprite.y += vy * dt;
       if (onFloor && this.sprite.y > GROUND_Y) this.sprite.y = GROUND_Y;
       body.setVelocity(vx, vy);
       body.updateFromGameObject();
-      this.playLoop("run");
+      this.sprite.setFlipX(this.facing < 0);
+      this.playClip("run");
       return;
     }
 
+    // Patrol home
     this.state = "patrol";
-    if (this.x > this.homeX + 160) this.patrolDir = -1;
-    if (this.x < this.homeX - 160) this.patrolDir = 1;
+    const deltaHome = this.homeX - this.x;
+    if (Math.abs(deltaHome) > 160) {
+      this.patrolDir = deltaHome > 0 ? 1 : -1;
+    }
     this.facing = this.patrolDir;
-    this.sprite.setFlipX(this.facing < 0);
-    vx = approach(vx, this.patrolDir * this.data.speed * 0.55, 900 * dt);
+    const vx = approach(
+      body.velocity.x,
+      this.patrolDir * (this.data.speed * 0.45),
+      800 * dt,
+    );
     this.sprite.x += vx * dt;
     this.sprite.y += vy * dt;
     if (onFloor && this.sprite.y > GROUND_Y) this.sprite.y = GROUND_Y;
     body.setVelocity(vx, vy);
     body.updateFromGameObject();
-    this.playLoop("run");
+    this.sprite.setFlipX(this.facing < 0);
+    this.playClip("idle");
   }
 
   private startAttack(combat: CombatSystem) {
@@ -175,66 +211,64 @@ export class Enemy {
     this.attackLock = this.data.attackDurationMs / 1000;
     this.cooldown = this.data.attackCooldownMs / 1000;
     this.struck = false;
-    const body = this.sprite.body as Phaser.Physics.Arcade.Body;
-    body.setVelocityX(0);
+    this.sprite.setFlipX(this.facing < 0);
     this.playClip("attack");
-    audioManager.attack();
 
+    const isBoss = this.data.behaviorType === "boss";
     this.sprite.scene.time.delayedCall(this.data.attackDelayMs, () => {
-      if (this.dead || !this.sprite.active || this.struck) return;
-      this.struck = true;
+      if (this.dead || this.hurtLock > 0) return;
+      audioManager.swing(isBoss ? 0.7 : 1.1);
       combat.spawnHit({
-        x: this.x + this.facing * 54,
-        y: this.y - 50,
-        width: this.data.behaviorType === "fast" ? 78 : 70,
-        height: 62,
+        x: this.x + this.facing * (isBoss ? 58 : 42),
+        y: this.y - 48,
+        width: isBoss ? 110 : 78,
+        height: isBoss ? 96 : 74,
         damage: this.data.damage,
         knockback: this.data.knockback,
         faction: "enemy",
-        durationMs: 120,
+        level: isBoss ? "overhead" : "mid",
+        durationMs: 140,
+        follow: this.sprite,
+        followOffsetX: this.facing * (isBoss ? 58 : 42),
+        followOffsetY: -48,
       });
     });
+  }
+
+  private playClip(action: "idle" | "run" | "attack" | "hurt") {
+    const clip = this.data.animationSet[action];
+    if (this.sprite.anims.currentAnim?.key === clip.key) return;
+    this.sprite.anims.stop();
+    this.sprite.setTexture(clip.textureKey, 0);
+    this.sprite.play(clip.key, true);
+  }
+
+  private refreshHp() {
+    const hpW = this.data.behaviorType === "boss" ? 70 : 42;
+    const pct = Math.max(0, this.health / this.data.health);
+    this.hpFill.setSize(Math.round(hpW * pct), 5);
   }
 
   private defeat() {
     this.dead = true;
     this.state = "dead";
-    const body = this.sprite.body as Phaser.Physics.Arcade.Body;
-    body.enable = false;
-    this.playClip("hurt");
-    audioManager.defeat();
-    this.sprite.scene.tweens.add({
-      targets: [this.sprite, this.hpBg, this.hpFill],
-      alpha: 0,
-      y: `+=24`,
-      duration: 420,
-      ease: "Quad.easeIn",
-      onComplete: () => this.destroy(),
-    });
-  }
-
-  private refreshHp() {
-    const pct = this.health / Math.max(1, this.data.health);
-    this.hpFill.width = 38 * pct;
-  }
-
-  private playLoop(name: "idle" | "run") {
-    const key = this.data.animationSet[name].key;
-    if (this.sprite.anims.currentAnim?.key !== key || !this.sprite.anims.isPlaying) {
-      this.sprite.play(key, true);
-    }
-  }
-
-  private playClip(name: "attack" | "hurt") {
-    const clip = this.data.animationSet[name];
-    this.sprite.anims.stop();
-    this.sprite.setTexture(clip.textureKey, 0);
-    this.sprite.play(clip.key);
-  }
-
-  destroy() {
     this.hpBg.destroy();
     this.hpFill.destroy();
-    this.sprite.destroy();
+    this.playClip("hurt");
+
+    const body = this.sprite.body as Phaser.Physics.Arcade.Body;
+    body.setVelocity(this.facing * -240, -180);
+
+    this.sprite.scene.tweens.add({
+      targets: this.sprite,
+      alpha: 0,
+      y: this.sprite.y + 20,
+      duration: 520,
+      delay: 200,
+      ease: "Quad.easeIn",
+      onComplete: () => {
+        this.sprite.destroy();
+      },
+    });
   }
 }

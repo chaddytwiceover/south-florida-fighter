@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { getCharacter, JAV } from "../characters/CharacterData";
+import { getLevel, SOUTH_FLORIDA_LEVELS } from "../levels/LevelRegistry";
 
-export type GameScreen = "title" | "select" | "play";
+export type GameScreen = "title" | "city-select" | "play" | "victory";
 
 type GameStore = {
   screen: GameScreen;
@@ -17,8 +18,11 @@ type GameStore = {
   coins: number;
   kos: number;
   comboHits: number;
+  maxCombo: number;
   aliveEnemies: number;
   location: string;
+  currentLevelId: string;
+  unlockedLevels: string[];
   fps: number;
   debug: boolean;
   currentMove: string;
@@ -26,10 +30,11 @@ type GameStore = {
   flash: string;
   setPlaying: (playing: boolean) => void;
   setScreen: (screen: GameScreen) => void;
+  setCurrentLevel: (levelId: string) => void;
+  markLevelComplete: (levelId: string) => void;
   setFps: (fps: number) => void;
   setHealth: (health: number) => void;
   setAliveEnemies: (n: number) => void;
-  applyCharacter: (id: string) => void;
   rechargeKi: (amount: number) => void;
   spendKi: (amount: number) => void;
   gainKi: (amount: number) => void;
@@ -38,85 +43,128 @@ type GameStore = {
   addComboHit: () => void;
   resetCombo: () => void;
   setFlash: (flash: string) => void;
+  resetRunStats: () => void;
 };
 
-function persistCharacter(id: string) {
+function readUnlockedLevels(): string[] {
+  if (typeof window === "undefined") return ["fort-lauderdale"];
+  try {
+    const saved = window.localStorage.getItem("sfs.unlockedLevels");
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return ["fort-lauderdale"];
+}
+
+function saveUnlockedLevels(levels: string[]) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem("sfs.characterId", id);
+  try {
+    window.localStorage.setItem("sfs.unlockedLevels", JSON.stringify(levels));
+  } catch {}
 }
 
-function readSavedCharacter() {
-  if (typeof window === "undefined") return JAV.id;
-  return window.localStorage.getItem("sfs.characterId") ?? JAV.id;
-}
-
-const initial = getCharacter(readSavedCharacter());
+const initialChar = JAV;
+const initialLevel = getLevel("fort-lauderdale");
 
 export const useGameStore = create<GameStore>((set, get) => ({
   screen: "title",
   playing: false,
-  characterId: initial.id,
-  characterName: initial.name,
-  portrait: initial.portrait,
-  health: initial.health,
-  maxHealth: initial.health,
-  energy: 55,
-  maxEnergy: initial.ki,
+  characterId: initialChar.id,
+  characterName: initialChar.name,
+  portrait: initialChar.portrait,
+  health: initialChar.health,
+  maxHealth: initialChar.health,
+  energy: 50,
+  maxEnergy: initialChar.ki,
   xp: 0,
   coins: 0,
   kos: 0,
   comboHits: 0,
+  maxCombo: 0,
   aliveEnemies: 0,
-  location: "Fort Lauderdale Beach",
+  currentLevelId: initialLevel.id,
+  unlockedLevels: readUnlockedLevels(),
+  location: `${initialLevel.city} · ${initialLevel.name}`,
   fps: 0,
   debug: false,
   currentMove: "",
   specialIndex: 0,
   flash: "",
+
   setPlaying: (playing) => set({ playing }),
   setScreen: (screen) => set({ screen, playing: screen === "play" }),
+
+  setCurrentLevel: (levelId) => {
+    const lvl = getLevel(levelId);
+    set({
+      currentLevelId: lvl.id,
+      location: `${lvl.city} · ${lvl.name}`,
+      health: initialChar.health,
+      energy: 50,
+      comboHits: 0,
+      maxCombo: 0,
+      kos: 0,
+      currentMove: "",
+      flash: "",
+    });
+  },
+
+  markLevelComplete: (levelId) => {
+    const current = get().unlockedLevels;
+    const all = SOUTH_FLORIDA_LEVELS.map((l) => l.id);
+    const currentIndex = all.indexOf(levelId);
+    const nextLevelId = all[currentIndex + 1];
+
+    if (nextLevelId && !current.includes(nextLevelId)) {
+      const updated = [...current, nextLevelId];
+      saveUnlockedLevels(updated);
+      set({ unlockedLevels: updated });
+    }
+  },
+
   setFps: (fps) => set({ fps }),
   setHealth: (health) => set({ health }),
   setAliveEnemies: (aliveEnemies) => set({ aliveEnemies }),
   setFlash: (flash) => set({ flash }),
-  applyCharacter: (id) => {
-    const character = getCharacter(id);
-    persistCharacter(character.id);
-    set({
-      characterId: character.id,
-      characterName: character.name,
-      portrait: character.portrait,
-      health: character.health,
-      maxHealth: character.health,
-      maxEnergy: character.ki,
-      energy: 55,
-      xp: 0,
-      kos: 0,
-      comboHits: 0,
-      aliveEnemies: 0,
-      currentMove: "",
-      specialIndex: 0,
-      flash: "",
-    });
-  },
+
   rechargeKi: (amount) => {
     const { energy, maxEnergy, currentMove } = get();
     if (currentMove) return;
     set({ energy: Math.min(maxEnergy, energy + amount) });
   },
+
   spendKi: (amount) => {
     const { energy } = get();
     set({ energy: Math.max(0, energy - amount) });
   },
+
   gainKi: (amount) => {
     const { energy, maxEnergy } = get();
     set({ energy: Math.min(maxEnergy, energy + amount) });
   },
+
   gainXp: (amount) => {
     const { xp } = get();
     set({ xp: Math.min(100, xp + amount) });
   },
-  addKo: () => set({ kos: get().kos + 1, comboHits: get().comboHits }),
-  addComboHit: () => set({ comboHits: get().comboHits + 1 }),
+
+  addKo: () => set({ kos: get().kos + 1 }),
+
+  addComboHit: () => {
+    const newHits = get().comboHits + 1;
+    const maxCombo = Math.max(get().maxCombo, newHits);
+    set({ comboHits: newHits, maxCombo });
+  },
+
   resetCombo: () => set({ comboHits: 0 }),
+
+  resetRunStats: () =>
+    set({
+      health: initialChar.health,
+      energy: 50,
+      kos: 0,
+      comboHits: 0,
+      maxCombo: 0,
+      currentMove: "",
+      flash: "",
+    }),
 }));

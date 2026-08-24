@@ -3,7 +3,7 @@ import { getCharacter } from "../characters/CharacterData";
 import { inputManager } from "../input/InputManager";
 import { useGameStore } from "../systems/gameStore";
 import { audioManager } from "../audio/AudioManager";
-import { Volume2, VolumeX, Shield, Zap, Sparkles } from "lucide-react";
+import { Volume2, VolumeX, Shield, Zap, Sparkles, MapPin } from "lucide-react";
 
 function getComboRank(hits: number) {
   if (hits >= 15) return { label: "LEGENDARY!", color: "text-amber-300 bg-amber-500/20 border-amber-400" };
@@ -107,7 +107,7 @@ export function Hud() {
             <div className="space-y-0.5">
               <div className="flex items-center justify-between text-[0.58rem] font-extrabold uppercase tracking-wider">
                 <span className={finisherReady ? "text-gold animate-pulse" : "text-foam/70"}>
-                  {finisherReady ? "★ SUPER FINISHER READY" : "KI GAUGE"}
+                  {finisherReady ? "★ SEISMIC CROWN SLAM READY" : "KI GAUGE"}
                 </span>
                 <span className="font-mono text-foam/60">{Math.round(energy)}%</span>
               </div>
@@ -125,7 +125,7 @@ export function Hud() {
           </div>
         </div>
 
-        {/* Right Side: Combos, Location & Match Badges */}
+        {/* Right Side: Combos, Location & Circuit Buttons */}
         <div className="flex shrink-0 flex-col items-end gap-1.5">
           <div className="flex items-center gap-1.5">
             <button
@@ -138,14 +138,15 @@ export function Hud() {
             </button>
             <button
               type="button"
-              data-testid="roster-button"
-              className="pointer-events-auto rounded-full border border-foam/20 bg-ink/80 px-2.5 py-1 font-sans text-[0.62rem] font-black uppercase tracking-wider text-foam/90 hover:bg-ink active:scale-95"
+              data-testid="circuit-map-button"
+              className="pointer-events-auto flex items-center gap-1 rounded-full border border-foam/20 bg-ink/80 px-2.5 py-1 font-sans text-[0.62rem] font-black uppercase tracking-wider text-foam/90 hover:bg-ink active:scale-95"
               onClick={() => {
                 inputManager.enabled = false;
-                useGameStore.getState().setScreen("select");
+                useGameStore.getState().setScreen("city-select");
               }}
             >
-              Fighters
+              <MapPin className="size-3 text-sand" />
+              <span>Map</span>
             </button>
           </div>
 
@@ -153,7 +154,7 @@ export function Hud() {
             {location}
           </p>
           <p className="rounded-full border border-foam/15 bg-ink/80 px-2.5 py-0.5 font-sans text-[0.58rem] font-bold uppercase tracking-wider text-foam">
-            KO {kos} · {aliveEnemies} REMAINING
+            KO {kos} · {aliveEnemies} LEFT
           </p>
 
           {currentMove ? (

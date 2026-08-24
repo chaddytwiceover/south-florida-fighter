@@ -338,6 +338,6 @@ export const KENO_FRAME_KIT: CharacterFrameKit = {
   },
 };
 
-export function getFrameKit(characterId: string): CharacterFrameKit {
-  return characterId === "keno" ? KENO_FRAME_KIT : JAV_FRAME_KIT;
+export function getFrameKit(characterId?: string): CharacterFrameKit {
+  return JAV_FRAME_KIT;
 }
