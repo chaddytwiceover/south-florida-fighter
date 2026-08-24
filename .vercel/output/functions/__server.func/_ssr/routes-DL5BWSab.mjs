@@ -4,7 +4,7 @@ import { t as create } from "../_libs/zustand.mjs";
 import { a as Sword, c as RotateCcw, d as Flame, f as ChevronRight, l as Play, m as ArrowUp, n as VolumeX, o as Sparkles, p as ChevronLeft, r as Volume2, s as Shield, t as Zap, u as MapPin } from "../_libs/lucide-react.mjs";
 import { t as clsx } from "../_libs/clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-BMZl-e95.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-DL5BWSab.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var __defProp = Object.defineProperty;
@@ -2165,17 +2165,17 @@ function VictoryScreen() {
 	const level = getLevel(currentLevelId);
 	const hpPct = Math.round(health / Math.max(1, maxHealth) * 100);
 	const getGrade = () => {
-		if (hpPct >= 80 && maxCombo >= 10) return {
+		if (hpPct >= 80 && maxCombo >= 8) return {
 			grade: "S",
 			label: "FLAWLESS CHAMPION",
 			color: "text-amber-300"
 		};
-		if (hpPct >= 60 || maxCombo >= 6) return {
+		if (hpPct >= 50 || maxCombo >= 5) return {
 			grade: "A",
 			label: "DOMINANT VICTORY",
 			color: "text-emerald-300"
 		};
-		if (hpPct >= 30) return {
+		if (hpPct >= 20) return {
 			grade: "B",
 			label: "CLEAN VICTORY",
 			color: "text-cyan-300"
@@ -2189,6 +2189,7 @@ function VictoryScreen() {
 	const gradeInfo = getGrade();
 	const allLevels = SOUTH_FLORIDA_LEVELS.map((l) => l.id);
 	const nextLevelId = allLevels[allLevels.indexOf(currentLevelId) + 1] ?? null;
+	const nextLevel = nextLevelId ? getLevel(nextLevelId) : null;
 	const isFinalStage = !nextLevelId;
 	const handleNextCity = () => {
 		if (!nextLevelId) {
@@ -2211,7 +2212,7 @@ function VictoryScreen() {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 		className: "absolute inset-0 z-30 flex items-center justify-center bg-ink/90 px-4 py-6 select-none backdrop-blur-lg",
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "w-full max-w-md rounded-[2rem] border border-foam/20 bg-ink/95 p-6 text-center shadow-[0_24px_80px_rgba(0,0,0,0.7)]",
+			className: "w-full max-w-md rounded-[2rem] border border-foam/20 bg-ink/95 p-6 text-center shadow-[0_24px_80px_rgba(0,0,0,0.8)]",
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "flex items-center justify-center gap-2",
@@ -2219,17 +2220,17 @@ function VictoryScreen() {
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-4 text-gold animate-spin" }),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
 							className: "font-sans text-[0.68rem] font-black uppercase tracking-[0.32em] text-sand",
-							children: [level.city, " · Area Secured"]
+							children: [level.city, " · Stage Cleared"]
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-4 text-gold animate-spin" })
 					]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
 					className: "mt-1 font-display text-5xl tracking-wide text-foam drop-shadow",
-					children: isFinalStage ? "CIRCUIT CHAMPION!" : "STAGE COMPLETE!"
+					children: isFinalStage ? "CIRCUIT CHAMPION!" : "VICTORY!"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "my-4 flex items-center justify-center gap-4 rounded-2xl border border-gold/30 bg-gradient-to-b from-amber-500/10 to-ink p-4 shadow-inner",
+					className: "my-4 flex items-center justify-center gap-4 rounded-2xl border border-gold/30 bg-gradient-to-b from-amber-500/15 to-ink p-4 shadow-inner",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 						className: "flex size-18 items-center justify-center rounded-2xl border-2 border-gold bg-ink font-display text-6xl text-gold shadow-[0_0_20px_rgba(232,196,90,0.5)]",
 						children: gradeInfo.grade
@@ -2275,15 +2276,15 @@ function VictoryScreen() {
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 						type: "button",
 						onClick: handleNextCity,
-						className: "flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-coral via-sand to-gold px-8 font-sans text-base font-black uppercase tracking-[0.16em] text-ink shadow-[0_0_25px_rgba(232,93,76,0.6)] transition-all hover:scale-[1.01] active:scale-[0.98]",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: isFinalStage ? "View Circuit Map" : "Advance to Next City" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, { className: "size-5" })]
+						className: "flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-coral via-sand to-gold px-8 font-sans text-base font-black uppercase tracking-[0.16em] text-ink shadow-[0_0_25px_rgba(232,93,76,0.7)] transition-all hover:scale-[1.01] active:scale-[0.98]",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: isFinalStage ? "View Circuit Map" : `Next: ${nextLevel?.city ?? "Next City"}` }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, { className: "size-5" })]
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "grid grid-cols-2 gap-2",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							type: "button",
 							onClick: handleReplay,
 							className: "flex h-11 items-center justify-center gap-1.5 rounded-xl border border-foam/20 bg-ink-2/80 font-sans text-xs font-bold uppercase tracking-wider text-foam hover:bg-ink active:scale-95",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RotateCcw, { className: "size-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Retry Stage" })]
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RotateCcw, { className: "size-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Replay Stage" })]
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							type: "button",
 							onClick: () => useGameStore.getState().setScreen("city-select"),
@@ -2353,7 +2354,7 @@ function GameApp() {
 		if (!host) return;
 		let game = null;
 		let cancelled = false;
-		import("./createGame-PpgsuosN.mjs").then(({ createGame }) => {
+		import("./createGame-CRmrPSij.mjs").then(({ createGame }) => {
 			if (cancelled || !host) return;
 			game = createGame(host);
 		});

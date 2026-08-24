@@ -16,6 +16,8 @@ import { createFxAnimations } from "../systems/CombatFx";
 import { attachControlsTest, detachControlsTest } from "../systems/controlsTest";
 import { useGameStore } from "../systems/gameStore";
 import { Player } from "../systems/Player";
+import { floatText } from "../combat/Juice";
+import { audioManager } from "../audio/AudioManager";
 
 const Phaser = (PhaserNS as { default?: typeof PhaserNS }).default ?? PhaserNS;
 
@@ -26,6 +28,7 @@ export class PlayScene extends Phaser.Scene {
   private platforms!: Phaser.Physics.Arcade.StaticGroup;
   private bgScale = 1;
   private fpsTimer = 0;
+  private isStageCleared = false;
 
   constructor() {
     super({ key: "play" });
@@ -33,6 +36,7 @@ export class PlayScene extends Phaser.Scene {
 
   init() {
     this.fpsTimer = 0;
+    this.isStageCleared = false;
   }
 
   preload() {
@@ -75,6 +79,7 @@ export class PlayScene extends Phaser.Scene {
   }
 
   create() {
+    this.isStageCleared = false;
     const levelId = useGameStore.getState().currentLevelId || "fort-lauderdale";
     const level = getLevel(levelId);
     const debug =
@@ -87,7 +92,11 @@ export class PlayScene extends Phaser.Scene {
       this.physics.world.createDebugGraphic();
       this.physics.world.drawDebug = true;
     }
-    useGameStore.setState({ debug, location: `${level.city} · ${level.name}` });
+    useGameStore.setState({
+      debug,
+      location: `${level.city} · ${level.name}`,
+      aliveEnemies: level.enemies.length,
+    });
 
     // Sky & Parallax Skyline Layer without vertical repetition
     const bgKey = this.textures.exists(`bg-${level.id}`)
@@ -176,6 +185,11 @@ export class PlayScene extends Phaser.Scene {
       this.physics.add.collider(enemy.sprite, this.platforms);
     }
 
+    // Direct Victory Callback
+    this.combat.setOnVictory(() => {
+      this.handleStageClear();
+    });
+
     // Camera follow
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     this.cameras.main.startFollow(
@@ -196,6 +210,29 @@ export class PlayScene extends Phaser.Scene {
     this.events.once("shutdown", () => {
       this.combat.shutdown();
       detachControlsTest();
+    });
+  }
+
+  handleStageClear() {
+    if (this.isStageCleared) return;
+    this.isStageCleared = true;
+
+    const store = useGameStore.getState();
+    store.setFlash("STAGE COMPLETE!");
+    audioManager.roundAnnounce();
+
+    floatText(
+      this,
+      this.cameras.main.scrollX + GAME_WIDTH / 2,
+      420,
+      "STAGE CLEAR!",
+      "#e8c45a",
+      "54px",
+    );
+
+    this.time.delayedCall(1200, () => {
+      store.markLevelComplete(store.currentLevelId);
+      store.setScreen("victory");
     });
   }
 
@@ -229,19 +266,13 @@ export class PlayScene extends Phaser.Scene {
     this.fpsTimer += dt;
     if (this.fpsTimer > 0.25) {
       this.fpsTimer = 0;
+      const alive = this.combat.aliveCount();
       useGameStore.getState().setFps(Math.round(this.game.loop.actualFps));
-      useGameStore.getState().setAliveEnemies(this.combat.aliveCount());
+      useGameStore.getState().setAliveEnemies(alive);
 
-      // Check Victory condition
-      if (this.combat.aliveCount() === 0) {
-        const store = useGameStore.getState();
-        if (store.screen === "play" && !store.flash.includes("VICTORY")) {
-          store.setFlash("STAGE COMPLETE!");
-          this.time.delayedCall(1200, () => {
-            store.markLevelComplete(store.currentLevelId);
-            store.setScreen("victory");
-          });
-        }
+      // Check Victory fallback
+      if (!this.isStageCleared && alive === 0 && this.combat.enemies.length > 0) {
+        this.handleStageClear();
       }
     }
   }

@@ -38,6 +38,7 @@ export type AttackResolution =
   | { type: "invulnerable" };
 
 export class Player {
+  readonly id: string = "player";
   readonly sprite: Phaser.Physics.Arcade.Sprite;
   readonly character: CharacterData;
   readonly frameKit: CharacterFrameKit;

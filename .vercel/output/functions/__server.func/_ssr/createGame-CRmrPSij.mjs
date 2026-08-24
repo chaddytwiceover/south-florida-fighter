@@ -1,6 +1,102 @@
-import { C as WORLD_WIDTH, S as WORLD_HEIGHT, _ as GAME_HEIGHT, a as getLevel, b as PLAYER_BODY, c as allRosterClips, d as unregisterGame, f as CAMERA, g as ENEMY_DISPLAY_SCALE, h as ENEMY_BODY, i as SOUTH_FLORIDA_LEVELS, l as getCharacter, n as inputManager, o as approach, p as COMBAT, r as useGameStore, s as audioManager, u as registerGame, v as JUMP, x as PLAYER_DISPLAY_SCALE, y as MOVE } from "./routes-BMZl-e95.mjs";
+import { C as WORLD_WIDTH, S as WORLD_HEIGHT, _ as GAME_HEIGHT, a as getLevel, b as PLAYER_BODY, c as allRosterClips, d as unregisterGame, f as CAMERA, g as ENEMY_DISPLAY_SCALE, h as ENEMY_BODY, i as SOUTH_FLORIDA_LEVELS, l as getCharacter, n as inputManager, o as approach, p as COMBAT, r as useGameStore, s as audioManager, u as registerGame, v as JUMP, x as PLAYER_DISPLAY_SCALE, y as MOVE } from "./routes-DL5BWSab.mjs";
 import { t as phaser_esm_exports } from "../_libs/phaser.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/createGame-PpgsuosN.js
+//#region node_modules/.nitro/vite/services/ssr/assets/createGame-CRmrPSij.js
+var STANDARD_SHEET = {
+	frameWidth: 160,
+	frameHeight: 180,
+	frames: 4
+};
+var BOSS_SHEET = {
+	frameWidth: 180,
+	frameHeight: 200,
+	frames: 4
+};
+function clip(id, action, frameRate, repeat, sheet = STANDARD_SHEET) {
+	return {
+		key: `${id}-${action}`,
+		textureKey: `${id}-${action}`,
+		url: `/game/sprites/enemies/${id}/${action}.png`,
+		...sheet,
+		frameRate,
+		repeat
+	};
+}
+function makeSet(id, sheet = STANDARD_SHEET) {
+	return {
+		idle: clip(id, "idle", 6, -1, sheet),
+		run: clip(id, "run", 8, -1, sheet),
+		attack: clip(id, "attack", 10, 0, sheet),
+		hurt: clip(id, "hurt", 10, 0, sheet)
+	};
+}
+var BRUISER = {
+	id: "bruiser",
+	name: "Boardwalk Bruiser",
+	title: "Heavy Street Enforcer",
+	health: 45,
+	speed: 88,
+	damage: 12,
+	attackRange: 76,
+	aggroRange: 380,
+	attackDurationMs: 480,
+	attackCooldownMs: 1200,
+	attackDelayMs: 160,
+	knockback: 320,
+	xp: 12,
+	kiReward: 14,
+	behaviorType: "melee",
+	hasSuperArmor: true,
+	animationSet: makeSet("bruiser")
+};
+var BLADE = {
+	id: "blade",
+	name: "Ybor Blade",
+	title: "Agile Knife Duelist",
+	health: 28,
+	speed: 180,
+	damage: 8,
+	attackRange: 82,
+	aggroRange: 460,
+	attackDurationMs: 360,
+	attackCooldownMs: 800,
+	attackDelayMs: 100,
+	knockback: 220,
+	xp: 10,
+	kiReward: 12,
+	behaviorType: "fast",
+	animationSet: makeSet("blade")
+};
+var ENEMIES = [
+	BRUISER,
+	BLADE,
+	{
+		id: "boss",
+		name: "Syndicate Kingpin",
+		title: "Vice Underworld Boss",
+		health: 160,
+		speed: 95,
+		damage: 22,
+		attackRange: 95,
+		aggroRange: 550,
+		attackDurationMs: 640,
+		attackCooldownMs: 1e3,
+		attackDelayMs: 200,
+		knockback: 480,
+		xp: 50,
+		kiReward: 40,
+		behaviorType: "boss",
+		hasSuperArmor: true,
+		animationSet: makeSet("boss", BOSS_SHEET)
+	}
+];
+function getEnemy(id) {
+	if (id === "thug") return BRUISER;
+	if (id === "rat") return BLADE;
+	return ENEMIES.find((e) => e.id === id) ?? BRUISER;
+}
+function allEnemyClips() {
+	return ENEMIES.flatMap((enemy) => Object.values(enemy.animationSet));
+}
 function prefersReducedMotion() {
 	return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -280,102 +376,6 @@ var Enemy = class {
 		});
 	}
 };
-var STANDARD_SHEET = {
-	frameWidth: 160,
-	frameHeight: 180,
-	frames: 4
-};
-var BOSS_SHEET = {
-	frameWidth: 180,
-	frameHeight: 200,
-	frames: 4
-};
-function clip(id, action, frameRate, repeat, sheet = STANDARD_SHEET) {
-	return {
-		key: `${id}-${action}`,
-		textureKey: `${id}-${action}`,
-		url: `/game/sprites/enemies/${id}/${action}.png`,
-		...sheet,
-		frameRate,
-		repeat
-	};
-}
-function makeSet(id, sheet = STANDARD_SHEET) {
-	return {
-		idle: clip(id, "idle", 6, -1, sheet),
-		run: clip(id, "run", 8, -1, sheet),
-		attack: clip(id, "attack", 10, 0, sheet),
-		hurt: clip(id, "hurt", 10, 0, sheet)
-	};
-}
-var BRUISER = {
-	id: "bruiser",
-	name: "Boardwalk Bruiser",
-	title: "Heavy Street Enforcer",
-	health: 45,
-	speed: 88,
-	damage: 12,
-	attackRange: 76,
-	aggroRange: 380,
-	attackDurationMs: 480,
-	attackCooldownMs: 1200,
-	attackDelayMs: 160,
-	knockback: 320,
-	xp: 12,
-	kiReward: 14,
-	behaviorType: "melee",
-	hasSuperArmor: true,
-	animationSet: makeSet("bruiser")
-};
-var BLADE = {
-	id: "blade",
-	name: "Ybor Blade",
-	title: "Agile Knife Duelist",
-	health: 28,
-	speed: 180,
-	damage: 8,
-	attackRange: 82,
-	aggroRange: 460,
-	attackDurationMs: 360,
-	attackCooldownMs: 800,
-	attackDelayMs: 100,
-	knockback: 220,
-	xp: 10,
-	kiReward: 12,
-	behaviorType: "fast",
-	animationSet: makeSet("blade")
-};
-var ENEMIES = [
-	BRUISER,
-	BLADE,
-	{
-		id: "boss",
-		name: "Syndicate Kingpin",
-		title: "Vice Underworld Boss",
-		health: 160,
-		speed: 95,
-		damage: 22,
-		attackRange: 95,
-		aggroRange: 550,
-		attackDurationMs: 640,
-		attackCooldownMs: 1e3,
-		attackDelayMs: 200,
-		knockback: 480,
-		xp: 50,
-		kiReward: 40,
-		behaviorType: "boss",
-		hasSuperArmor: true,
-		animationSet: makeSet("boss", BOSS_SHEET)
-	}
-];
-function getEnemy(id) {
-	if (id === "thug") return BRUISER;
-	if (id === "rat") return BLADE;
-	return ENEMIES.find((e) => e.id === id) ?? BRUISER;
-}
-function allEnemyClips() {
-	return ENEMIES.flatMap((enemy) => Object.values(enemy.animationSet));
-}
 function playSlash(scene, x, y, facing) {
 	if (!scene.textures.exists("slash-fx")) return;
 	const fx = scene.add.sprite(x + facing * 54, y - 52, "slash-fx", 0);
@@ -470,11 +470,15 @@ var CombatSystem = class {
 	player = null;
 	freeze = 0;
 	debug;
+	onVictoryCallback;
 	constructor(scene, debug = false) {
 		this.scene = scene;
 		this.debug = debug;
 		this.hitboxes = scene.physics.add.group();
 		this.enemySprites = scene.physics.add.group();
+	}
+	setOnVictory(callback) {
+		this.onVictoryCallback = callback;
 	}
 	static preloadAnims(scene) {
 		for (const clip of allEnemyClips()) {
@@ -582,29 +586,30 @@ var CombatSystem = class {
 			if (enemy.dead || !enemy.sprite.active) continue;
 			if (hit.struck.has(enemy.id)) continue;
 			const ebody = enemy.sprite.body;
-			const bodyHit = Boolean(box && ebody && overlaps(box, ebody));
-			const spriteHit = near(hit.x - hit.width / 2, hit.y - hit.height / 2, hit.width, hit.height, enemy.x - 28, enemy.y - 90, 56, 90);
-			if (!bodyHit && !spriteHit) continue;
-			hit.struck.add(enemy.id);
-			this.landOnEnemy(player, enemy, hit);
+			if (overlaps(box, ebody)) {
+				hit.struck.add(enemy.id);
+				this.applyEnemyHit(enemy, hit);
+			}
 		}
 		else if (hit.faction === "enemy") {
-			if (hit.struck.has("player")) return;
+			if (hit.struck.has(player.id)) return;
 			const pbody = player.sprite.body;
 			if (overlaps(box, pbody)) {
-				hit.struck.add("player");
+				hit.struck.add(player.id);
 				this.landOnPlayer(player, hit);
 			}
 		}
 	}
-	landOnEnemy(player, enemy, hit) {
-		const dir = player.facing;
+	applyEnemyHit(enemy, hit) {
+		const player = this.player;
+		if (!player) return;
+		const dir = player.x < enemy.x ? 1 : -1;
 		const store = useGameStore.getState();
-		const comboHits = store.comboHits;
-		const scaleFactor = Math.max(.4, 1 - comboHits * .08);
-		const scaledDamage = Math.max(1, Math.round(hit.damage * scaleFactor));
-		if (!enemy.takeHit(scaledDamage, dir * hit.knockback, hit.knockbackY ?? -80)) return;
-		const hitX = enemy.x + dir * 16;
+		const comboCount = store.comboHits;
+		const scaling = Math.max(.4, 1 - comboCount * .05);
+		const scaledDamage = Math.max(1, Math.round(hit.damage * scaling));
+		if (!enemy.takeHit(scaledDamage, dir * hit.knockback, hit.knockbackY ?? (hit.level === "overhead" || hit.level === "unblockable" ? -140 : -70))) return;
+		const hitX = (player.x + enemy.x) / 2;
 		const hitY = enemy.y - 54;
 		playImpact(this.scene, hitX, hitY);
 		spawnHitSparks(this.scene, hitX, hitY, hit.damage > 25 ? 16729156 : 16770560, 10);
@@ -631,7 +636,9 @@ var CombatSystem = class {
 			audioManager.koAnnounce();
 			cameraZoomPunch(this.scene, 1.08, 300);
 			this.hitstop(160);
-			if (this.aliveCount() === 0) store.setFlash("VICTORY - STAGE CLEAR");
+			const remaining = this.aliveCount();
+			store.setAliveEnemies(remaining);
+			if (remaining === 0) this.onVictoryCallback?.();
 		}
 	}
 	landOnPlayer(player, hit) {
@@ -987,6 +994,7 @@ var InputBuffer = class {
 	}
 };
 var Player = class {
+	id = "player";
 	sprite;
 	character;
 	frameKit;
@@ -1428,11 +1436,13 @@ var PlayScene = class extends Phaser$2.Scene {
 	platforms;
 	bgScale = 1;
 	fpsTimer = 0;
+	isStageCleared = false;
 	constructor() {
 		super({ key: "play" });
 	}
 	init() {
 		this.fpsTimer = 0;
+		this.isStageCleared = false;
 	}
 	preload() {
 		for (const lvl of SOUTH_FLORIDA_LEVELS) if (!this.textures.exists(`bg-${lvl.id}`)) this.load.image(`bg-${lvl.id}`, lvl.parallax.far);
@@ -1461,6 +1471,7 @@ var PlayScene = class extends Phaser$2.Scene {
 		});
 	}
 	create() {
+		this.isStageCleared = false;
 		const levelId = useGameStore.getState().currentLevelId || "fort-lauderdale";
 		const level = getLevel(levelId);
 		const debug = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("debug");
@@ -1472,7 +1483,8 @@ var PlayScene = class extends Phaser$2.Scene {
 		}
 		useGameStore.setState({
 			debug,
-			location: `${level.city} · ${level.name}`
+			location: `${level.city} · ${level.name}`,
+			aliveEnemies: level.enemies.length
 		});
 		const bgKey = this.textures.exists(`bg-${level.id}`) ? `bg-${level.id}` : "bg-fort-lauderdale";
 		const bgHeight = level.groundY + 60;
@@ -1519,6 +1531,9 @@ var PlayScene = class extends Phaser$2.Scene {
 			const enemy = this.combat.spawnEnemy(spawn.id, spawn.x, level.groundY);
 			this.physics.add.collider(enemy.sprite, this.platforms);
 		}
+		this.combat.setOnVictory(() => {
+			this.handleStageClear();
+		});
 		this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 		this.cameras.main.startFollow(this.player.sprite, true, CAMERA.lerpX, CAMERA.lerpY);
 		this.cameras.main.setDeadzone(CAMERA.deadzoneW, CAMERA.deadzoneH);
@@ -1529,6 +1544,18 @@ var PlayScene = class extends Phaser$2.Scene {
 		this.events.once("shutdown", () => {
 			this.combat.shutdown();
 			detachControlsTest();
+		});
+	}
+	handleStageClear() {
+		if (this.isStageCleared) return;
+		this.isStageCleared = true;
+		const store = useGameStore.getState();
+		store.setFlash("STAGE COMPLETE!");
+		audioManager.roundAnnounce();
+		floatText(this, this.cameras.main.scrollX + 360, 420, "STAGE CLEAR!", "#e8c45a", "54px");
+		this.time.delayedCall(1200, () => {
+			store.markLevelComplete(store.currentLevelId);
+			store.setScreen("victory");
 		});
 	}
 	update(_time, delta) {
@@ -1554,18 +1581,10 @@ var PlayScene = class extends Phaser$2.Scene {
 		this.fpsTimer += dt;
 		if (this.fpsTimer > .25) {
 			this.fpsTimer = 0;
+			const alive = this.combat.aliveCount();
 			useGameStore.getState().setFps(Math.round(this.game.loop.actualFps));
-			useGameStore.getState().setAliveEnemies(this.combat.aliveCount());
-			if (this.combat.aliveCount() === 0) {
-				const store = useGameStore.getState();
-				if (store.screen === "play" && !store.flash.includes("VICTORY")) {
-					store.setFlash("STAGE COMPLETE!");
-					this.time.delayedCall(1200, () => {
-						store.markLevelComplete(store.currentLevelId);
-						store.setScreen("victory");
-					});
-				}
-			}
+			useGameStore.getState().setAliveEnemies(alive);
+			if (!this.isStageCleared && alive === 0 && this.combat.enemies.length > 0) this.handleStageClear();
 		}
 	}
 };

@@ -1,9 +1,11 @@
-import { COMBAT } from "../config";
-import { Enemy } from "../enemies/Enemy";
+import { audioManager } from "../audio/AudioManager";
+import { getCharacter } from "../characters/CharacterData";
+import { COMBAT, GAME_WIDTH } from "../config";
 import { allEnemyClips, getEnemy } from "../enemies/EnemyData";
-import { playImpact } from "../systems/CombatFx";
+import { Enemy } from "../enemies/Enemy";
+import { Player } from "../systems/Player";
 import { useGameStore } from "../systems/gameStore";
-import type { Player } from "../systems/Player";
+import { playImpact } from "../systems/CombatFx";
 import {
   cameraZoomPunch,
   flashSprite,
@@ -11,10 +13,8 @@ import {
   shakeCamera,
   spawnHitSparks,
 } from "./Juice";
-import { audioManager } from "../audio/AudioManager";
-import type { AttackLevel, HitReaction } from "./FrameData";
 
-export type Faction = "player" | "enemy";
+export type AttackLevel = "high" | "mid" | "low" | "overhead" | "unblockable";
 
 export type HitSpec = {
   x: number;
@@ -25,17 +25,19 @@ export type HitSpec = {
   chipDamage?: number;
   knockback: number;
   knockbackY?: number;
-  faction: Faction;
-  durationMs: number;
+  hitReaction?: string;
+  faction: "player" | "enemy";
   level?: AttackLevel;
-  hitReaction?: HitReaction;
+  durationMs: number;
   hitstopFrames?: number;
-  follow?: Phaser.Physics.Arcade.Sprite;
+  follow?: any;
   followOffsetX?: number;
   followOffsetY?: number;
 };
 
-type HitData = HitSpec & { struck: Set<string> };
+type HitData = HitSpec & {
+  struck: Set<string>;
+};
 
 function near(
   ax: number,
@@ -64,11 +66,16 @@ export class CombatSystem {
   private player: Player | null = null;
   private freeze = 0;
   private debug: boolean;
+  private onVictoryCallback?: () => void;
 
   constructor(private scene: Phaser.Scene, debug = false) {
     this.debug = debug;
     this.hitboxes = scene.physics.add.group();
     this.enemySprites = scene.physics.add.group();
+  }
+
+  setOnVictory(callback: () => void) {
+    this.onVictoryCallback = callback;
   }
 
   static preloadAnims(scene: Phaser.Scene) {
@@ -203,50 +210,42 @@ export class CombatSystem {
       for (const enemy of this.enemies) {
         if (enemy.dead || !enemy.sprite.active) continue;
         if (hit.struck.has(enemy.id)) continue;
-        const ebody = enemy.sprite.body as Phaser.Physics.Arcade.Body | undefined;
-        const bodyHit = Boolean(box && ebody && overlaps(box, ebody));
-        const spriteHit = near(
-          hit.x - hit.width / 2,
-          hit.y - hit.height / 2,
-          hit.width,
-          hit.height,
-          enemy.x - 28,
-          enemy.y - 90,
-          56,
-          90,
-        );
-        if (!bodyHit && !spriteHit) continue;
-        hit.struck.add(enemy.id);
-        this.landOnEnemy(player, enemy, hit);
+        const ebody = enemy.sprite.body as Phaser.Physics.Arcade.Body;
+        if (overlaps(box, ebody)) {
+          hit.struck.add(enemy.id);
+          this.applyEnemyHit(enemy, hit);
+        }
       }
     } else if (hit.faction === "enemy") {
-      if (hit.struck.has("player")) return;
+      if (hit.struck.has(player.id)) return;
       const pbody = player.sprite.body as Phaser.Physics.Arcade.Body;
       if (overlaps(box, pbody)) {
-        hit.struck.add("player");
+        hit.struck.add(player.id);
         this.landOnPlayer(player, hit);
       }
     }
   }
 
-  private landOnEnemy(player: Player, enemy: Enemy, hit: HitData) {
-    const dir = player.facing;
+  private applyEnemyHit(enemy: Enemy, hit: HitData) {
+    const player = this.player;
+    if (!player) return;
+    const dir = player.x < enemy.x ? 1 : -1;
     const store = useGameStore.getState();
 
-    // Damage Scaling based on combo count (100% -> 90% -> 80% ... min 40%)
-    const comboHits = store.comboHits;
-    const scaleFactor = Math.max(0.4, 1.0 - comboHits * 0.08);
-    const scaledDamage = Math.max(1, Math.round(hit.damage * scaleFactor));
+    // Dynamic combo scaling
+    const comboCount = store.comboHits;
+    const scaling = Math.max(0.4, 1.0 - comboCount * 0.05);
+    const scaledDamage = Math.max(1, Math.round(hit.damage * scaling));
 
-    const connected = enemy.takeHit(
+    const landed = enemy.takeHit(
       scaledDamage,
       dir * hit.knockback,
-      hit.knockbackY ?? -80,
+      hit.knockbackY ?? (hit.level === "overhead" || hit.level === "unblockable" ? -140 : -70),
     );
-    if (!connected) return;
+    if (!landed) return;
 
-    // Sparks & visual feedback
-    const hitX = enemy.x + dir * 16;
+    // Visual juice
+    const hitX = (player.x + enemy.x) / 2;
     const hitY = enemy.y - 54;
     playImpact(this.scene, hitX, hitY);
     spawnHitSparks(this.scene, hitX, hitY, hit.damage > 25 ? 0xff4444 : 0xffe600, 10);
@@ -287,14 +286,16 @@ export class CombatSystem {
       cameraZoomPunch(this.scene, 1.08, 300);
       this.hitstop(160);
 
-      if (this.aliveCount() === 0) {
-        store.setFlash("VICTORY - STAGE CLEAR");
+      const remaining = this.aliveCount();
+      store.setAliveEnemies(remaining);
+      if (remaining === 0) {
+        this.onVictoryCallback?.();
       }
     }
   }
 
   private landOnPlayer(player: Player, hit: HitData) {
-    const originX = hit.follow?.x ?? hit.x;
+    const originX = (hit.follow as any)?.x ?? hit.x;
     const dir = player.x < originX ? -1 : 1;
 
     // Check Player Parry & Guard State
