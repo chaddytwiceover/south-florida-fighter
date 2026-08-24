@@ -8,7 +8,7 @@ var headers = ((m) => function headersRouteRule(event) {
 });
 //#endregion
 //#region scripts/install-page.html?raw
-var install_page_default = "<!DOCTYPE html>\n<html lang=\"en\" class=\"device-desktop\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta\n      name=\"viewport\"\n      content=\"width=device-width, initial-scale=1, viewport-fit=cover\"\n    />\n    <meta name=\"color-scheme\" content=\"dark\" />\n    <meta name=\"theme-color\" content=\"#000000\" />\n    <meta name=\"apple-mobile-web-app-status-bar-style\" content=\"black\" />\n    <meta name=\"apple-mobile-web-app-title\" content=\"{{APP_NAME}}\" />\n    <title>Add {{APP_NAME}} to your Home Screen</title>\n    <link rel=\"manifest\" href=\"/__grok/manifest.webmanifest\" />\n    <link rel=\"apple-touch-icon\" href=\"/__grok/icon-180.png\" />\n    <link rel=\"stylesheet\" href=\"/__grok/install/styles.css\" />\n    <script>\n      (function () {\n        var ua = navigator.userAgent || \"\";\n        var touch = navigator.maxTouchPoints || 0;\n        var isiPad = /iPad/.test(ua) || (/Macintosh/.test(ua) && touch > 1);\n        var isiPhone = /iPhone|iPod/.test(ua);\n        var isIOS = isiPhone || isiPad;\n        var isAndroid = /Android/i.test(ua);\n        var isAndroidPhone = isAndroid && /Mobile/i.test(ua);\n        var isAndroidTablet = isAndroid && !/Mobile/i.test(ua);\n        var minSide = Math.min(screen.width || 0, screen.height || 0);\n        var maxSide = Math.max(screen.width || 0, screen.height || 0);\n\n        var type = \"desktop\";\n        if (isiPhone) type = \"phone\";\n        else if (isiPad || isAndroidTablet) type = \"tablet\";\n        else if (isAndroidPhone) type = \"phone\";\n        else if (touch > 0 && minSide > 0 && minSide <= 500) type = \"phone\";\n        else if (touch > 0 && minSide > 500 && maxSide <= 1400) type = \"tablet\";\n\n        var iosMajor = null;\n        var osToken = null;\n        var safariToken = null;\n        var iphoneOs = ua.match(/iPhone OS (\\d+)[._]/);\n        var ipadOs = ua.match(/CPU OS (\\d+)[._](\\d+) like Mac OS X/);\n        var safariVer = ua.match(/Version\\/(\\d+)[._]/);\n        if (iphoneOs) osToken = parseInt(iphoneOs[1], 10);\n        else if (ipadOs) osToken = parseInt(ipadOs[1], 10);\n        if (isIOS && safariVer) safariToken = parseInt(safariVer[1], 10);\n        if (osToken != null || safariToken != null) {\n          iosMajor = Math.max(osToken || 0, safariToken || 0);\n        }\n\n        var root = document.documentElement;\n        var classes = [\"device-\" + type];\n        if (iosMajor != null) {\n          root.dataset.ios = String(iosMajor);\n          classes.push(iosMajor >= 27 ? \"ios-27-plus\" : \"ios-below-27\");\n        }\n        root.className = classes.join(\" \");\n      })();\n    <\/script>\n  </head>\n  <body>\n    <div class=\"page\">\n      <header class=\"powered\" aria-label=\"Powered by Grok\">\n        <span class=\"powered-by\">Powered by</span>\n        <span class=\"powered-brand\">\n          <img\n            class=\"grok-logo\"\n            src=\"/__grok/install/assets/homescreen/logo-grok.svg\"\n            width=\"14\"\n            height=\"14\"\n            alt=\"\"\n          />\n          <span class=\"powered-grok\">Grok</span>\n        </span>\n      </header>\n\n      <main class=\"content\">\n        <div class=\"ob\" aria-hidden=\"true\">\n          <img\n            class=\"ob-img ob-phone\"\n            src=\"/__grok/install/assets/homescreen/ob-phone.png\"\n            width=\"338\"\n            height=\"294\"\n            alt=\"\"\n          />\n          <img\n            class=\"ob-img ob-ipad\"\n            src=\"/__grok/install/assets/homescreen/ob-ipad.png\"\n            width=\"634\"\n            height=\"294\"\n            alt=\"\"\n          />\n        </div>\n\n        <section class=\"copy\">\n          <h1>Add {{APP_NAME}} to your&nbsp;Home&nbsp;Screen</h1>\n\n          <div class=\"steps\">\n            <p class=\"step step-tap step-ios27\">\n              <span class=\"muted\">Tap</span>\n              <span class=\"glass glass--icon\" aria-hidden=\"true\">\n                <img src=\"/__grok/install/assets/homescreen/glass-puzzle.svg\" width=\"24\" height=\"24\" alt=\"\" />\n              </span>\n              <span class=\"muted loc loc-phone\">in the bottom bar, then</span>\n              <span class=\"muted loc loc-ipad\">in the tool bar, then</span>\n              <span class=\"glass glass--icon\" aria-hidden=\"true\">\n                <img src=\"/__grok/install/assets/homescreen/glass-share.svg\" width=\"24\" height=\"24\" alt=\"\" />\n              </span>\n            </p>\n\n            <p class=\"step step-tap step-ios-legacy\">\n              <span class=\"muted\">Tap</span>\n              <span class=\"glass glass--icon\" aria-hidden=\"true\">\n                <img src=\"/__grok/install/assets/homescreen/glass-share.svg\" width=\"24\" height=\"24\" alt=\"\" />\n              </span>\n              <span class=\"muted loc loc-phone\">in the bottom bar</span>\n              <span class=\"muted loc loc-ipad\">in the tool bar</span>\n            </p>\n\n            <p class=\"step step-select\">\n              <span class=\"muted\">Select</span>\n              <span class=\"add-label\">\n                <img\n                  class=\"plus-icon\"\n                  src=\"/__grok/install/assets/homescreen/plus.svg\"\n                  width=\"16\"\n                  height=\"16\"\n                  alt=\"\"\n                />\n                <span class=\"add-text\">Add to Home Screen</span>\n              </span>\n            </p>\n          </div>\n        </section>\n      </main>\n\n      <main class=\"content content-desktop\">\n        <section class=\"copy\">\n          <h1>Open this link on your iPhone&nbsp;or&nbsp;iPad</h1>\n          <p class=\"desktop-note\">\n            This page shows how to add {{APP_NAME}} to an iOS Home Screen.\n          </p>\n          <a class=\"desktop-open\" href=\"{{APP_URL}}\">Open {{APP_NAME}}</a>\n        </section>\n      </main>\n    </div>\n  </body>\n</html>\n";
+var install_page_default = "<!DOCTYPE html>\r\n<html lang=\"en\" class=\"device-desktop\">\r\n  <head>\r\n    <meta charset=\"utf-8\" />\r\n    <meta\r\n      name=\"viewport\"\r\n      content=\"width=device-width, initial-scale=1, viewport-fit=cover\"\r\n    />\r\n    <meta name=\"color-scheme\" content=\"dark\" />\r\n    <meta name=\"theme-color\" content=\"#000000\" />\r\n    <meta name=\"apple-mobile-web-app-status-bar-style\" content=\"black\" />\r\n    <meta name=\"apple-mobile-web-app-title\" content=\"{{APP_NAME}}\" />\r\n    <title>Add {{APP_NAME}} to your Home Screen</title>\r\n    <link rel=\"manifest\" href=\"/__grok/manifest.webmanifest\" />\r\n    <link rel=\"apple-touch-icon\" href=\"/__grok/icon-180.png\" />\r\n    <link rel=\"stylesheet\" href=\"/__grok/install/styles.css\" />\r\n    <script>\r\n      (function () {\r\n        var ua = navigator.userAgent || \"\";\r\n        var touch = navigator.maxTouchPoints || 0;\r\n        var isiPad = /iPad/.test(ua) || (/Macintosh/.test(ua) && touch > 1);\r\n        var isiPhone = /iPhone|iPod/.test(ua);\r\n        var isIOS = isiPhone || isiPad;\r\n        var isAndroid = /Android/i.test(ua);\r\n        var isAndroidPhone = isAndroid && /Mobile/i.test(ua);\r\n        var isAndroidTablet = isAndroid && !/Mobile/i.test(ua);\r\n        var minSide = Math.min(screen.width || 0, screen.height || 0);\r\n        var maxSide = Math.max(screen.width || 0, screen.height || 0);\r\n\r\n        var type = \"desktop\";\r\n        if (isiPhone) type = \"phone\";\r\n        else if (isiPad || isAndroidTablet) type = \"tablet\";\r\n        else if (isAndroidPhone) type = \"phone\";\r\n        else if (touch > 0 && minSide > 0 && minSide <= 500) type = \"phone\";\r\n        else if (touch > 0 && minSide > 500 && maxSide <= 1400) type = \"tablet\";\r\n\r\n        var iosMajor = null;\r\n        var osToken = null;\r\n        var safariToken = null;\r\n        var iphoneOs = ua.match(/iPhone OS (\\d+)[._]/);\r\n        var ipadOs = ua.match(/CPU OS (\\d+)[._](\\d+) like Mac OS X/);\r\n        var safariVer = ua.match(/Version\\/(\\d+)[._]/);\r\n        if (iphoneOs) osToken = parseInt(iphoneOs[1], 10);\r\n        else if (ipadOs) osToken = parseInt(ipadOs[1], 10);\r\n        if (isIOS && safariVer) safariToken = parseInt(safariVer[1], 10);\r\n        if (osToken != null || safariToken != null) {\r\n          iosMajor = Math.max(osToken || 0, safariToken || 0);\r\n        }\r\n\r\n        var root = document.documentElement;\r\n        var classes = [\"device-\" + type];\r\n        if (iosMajor != null) {\r\n          root.dataset.ios = String(iosMajor);\r\n          classes.push(iosMajor >= 27 ? \"ios-27-plus\" : \"ios-below-27\");\r\n        }\r\n        root.className = classes.join(\" \");\r\n      })();\r\n    <\/script>\r\n  </head>\r\n  <body>\r\n    <div class=\"page\">\r\n      <header class=\"powered\" aria-label=\"Powered by Grok\">\r\n        <span class=\"powered-by\">Powered by</span>\r\n        <span class=\"powered-brand\">\r\n          <img\r\n            class=\"grok-logo\"\r\n            src=\"/__grok/install/assets/homescreen/logo-grok.svg\"\r\n            width=\"14\"\r\n            height=\"14\"\r\n            alt=\"\"\r\n          />\r\n          <span class=\"powered-grok\">Grok</span>\r\n        </span>\r\n      </header>\r\n\r\n      <main class=\"content\">\r\n        <div class=\"ob\" aria-hidden=\"true\">\r\n          <img\r\n            class=\"ob-img ob-phone\"\r\n            src=\"/__grok/install/assets/homescreen/ob-phone.png\"\r\n            width=\"338\"\r\n            height=\"294\"\r\n            alt=\"\"\r\n          />\r\n          <img\r\n            class=\"ob-img ob-ipad\"\r\n            src=\"/__grok/install/assets/homescreen/ob-ipad.png\"\r\n            width=\"634\"\r\n            height=\"294\"\r\n            alt=\"\"\r\n          />\r\n        </div>\r\n\r\n        <section class=\"copy\">\r\n          <h1>Add {{APP_NAME}} to your&nbsp;Home&nbsp;Screen</h1>\r\n\r\n          <div class=\"steps\">\r\n            <p class=\"step step-tap step-ios27\">\r\n              <span class=\"muted\">Tap</span>\r\n              <span class=\"glass glass--icon\" aria-hidden=\"true\">\r\n                <img src=\"/__grok/install/assets/homescreen/glass-puzzle.svg\" width=\"24\" height=\"24\" alt=\"\" />\r\n              </span>\r\n              <span class=\"muted loc loc-phone\">in the bottom bar, then</span>\r\n              <span class=\"muted loc loc-ipad\">in the tool bar, then</span>\r\n              <span class=\"glass glass--icon\" aria-hidden=\"true\">\r\n                <img src=\"/__grok/install/assets/homescreen/glass-share.svg\" width=\"24\" height=\"24\" alt=\"\" />\r\n              </span>\r\n            </p>\r\n\r\n            <p class=\"step step-tap step-ios-legacy\">\r\n              <span class=\"muted\">Tap</span>\r\n              <span class=\"glass glass--icon\" aria-hidden=\"true\">\r\n                <img src=\"/__grok/install/assets/homescreen/glass-share.svg\" width=\"24\" height=\"24\" alt=\"\" />\r\n              </span>\r\n              <span class=\"muted loc loc-phone\">in the bottom bar</span>\r\n              <span class=\"muted loc loc-ipad\">in the tool bar</span>\r\n            </p>\r\n\r\n            <p class=\"step step-select\">\r\n              <span class=\"muted\">Select</span>\r\n              <span class=\"add-label\">\r\n                <img\r\n                  class=\"plus-icon\"\r\n                  src=\"/__grok/install/assets/homescreen/plus.svg\"\r\n                  width=\"16\"\r\n                  height=\"16\"\r\n                  alt=\"\"\r\n                />\r\n                <span class=\"add-text\">Add to Home Screen</span>\r\n              </span>\r\n            </p>\r\n          </div>\r\n        </section>\r\n      </main>\r\n\r\n      <main class=\"content content-desktop\">\r\n        <section class=\"copy\">\r\n          <h1>Open this link on your iPhone&nbsp;or&nbsp;iPad</h1>\r\n          <p class=\"desktop-note\">\r\n            This page shows how to add {{APP_NAME}} to an iOS Home Screen.\r\n          </p>\r\n          <a class=\"desktop-open\" href=\"{{APP_URL}}\">Open {{APP_NAME}}</a>\r\n        </section>\r\n      </main>\r\n    </div>\r\n  </body>\r\n</html>\r\n";
 //#endregion
 //#region \0virtual:grok-og-identity
 var grokOgIdentity = { "site": {
@@ -69,15 +69,26 @@ function appNameFromHost(hostHeader) {
 	if (!slug || slug === "www" || !/^[a-z0-9-]{1,63}$/.test(slug)) return DEFAULT_APP_NAME;
 	return slug.split("-").filter(Boolean).map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ") || "Grok App";
 }
+/** True for Vercel system domains. Envoy rewrites origin Host to these; they SSO-protect `/og.jpg`. */
+function isVercelSystemHost(host) {
+	return host === "vercel.app" || host.endsWith(".vercel.app") || host === "vercel.com" || host.endsWith(".vercel.com");
+}
 /** Hostname suitable for absolute og:image URLs. Preview guests (X-Forwarded-Host) are allowed. */
 function publicAppHost(hostHeader) {
 	const host = String(hostHeader ?? "").split(",")[0].trim().split(":")[0].toLowerCase();
 	if (!host || !/^[a-z0-9.-]+$/.test(host) || !host.includes(".")) return "";
 	if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(host)) return "";
+	if (isVercelSystemHost(host)) return "";
 	return host;
 }
+/**
+* Published apps always use `VITE_PUBLIC_HOSTNAME` (the grok.me host the
+* deployer injects). Live preview has no such env, so fall back to the
+* request host / X-Forwarded-Host. Never prefer request Host on a published
+* app — Envoy rewrites it to `*.vercel.app`.
+*/
 function resolvePublicHost(hostHeader) {
-	return publicAppHost(hostHeader) || publicAppHost(process.env?.VITE_PUBLIC_HOSTNAME);
+	return publicAppHost(process.env?.VITE_PUBLIC_HOSTNAME) || publicAppHost(hostHeader);
 }
 function isInstallQuery(url) {
 	const query = String(url ?? "").split("?", 2)[1] ?? "";
@@ -170,23 +181,29 @@ function readOgSite(cwd = process.cwd()) {
 		return {};
 	}
 }
+/** Public path of an on-disk share card, or "" if neither file exists. */
+function ogCardPublicPath(cwd = process.cwd()) {
+	if (existsSync(join(cwd, "public/og.jpg"))) return "/og.jpg";
+	if (existsSync(join(cwd, "public/og.png"))) return "/og.png";
+	return "";
+}
 function detectCustomOgCard(cwd = process.cwd(), site = {}) {
-	if (siteHasCustomCard(site)) return true;
-	return existsSync(join(cwd, "public/og.jpg")) || existsSync(join(cwd, "public/og.png"));
+	if (ogCardPublicPath(cwd)) return true;
+	return siteHasCustomCard(site) || Boolean(String(site.image ?? "").trim());
 }
 /** Snapshot for Vite/Nitro to bake into the server bundle (Vercel has no workspace FS). */
 function snapshotOgIdentity(cwd = process.cwd()) {
 	const site = { ...readOgSite(cwd) };
-	if (detectCustomOgCard(cwd, site)) {
+	const disk = ogCardPublicPath(cwd);
+	if (disk) {
 		site.card = "custom";
-		site.image = site.image || customOgAssetPath(cwd);
+		site.image = disk;
+	} else {
+		if (siteHasCustomCard(site)) delete site.card;
+		if (site.image) delete site.image;
 	}
 	if (existsSync(join(cwd, "public/x-banner.jpg"))) site.banner = site.banner || "/x-banner.jpg";
 	return { site };
-}
-function customOgAssetPath(cwd = process.cwd()) {
-	if (existsSync(join(cwd, "public/og.png")) && !existsSync(join(cwd, "public/og.jpg"))) return "/og.png";
-	return "/og.jpg";
 }
 function ogServiceUrl() {
 	return (String(process.env?.VITE_OG_SERVICE_URL ?? "").trim() || "https://og.grok.me").replace(/\/+$/, "");
@@ -207,7 +224,25 @@ function resolveOgTitle(site = {}, appName = DEFAULT_APP_NAME, host = "", docume
 function siteHasCustomCard(site = {}) {
 	return String(site.card ?? "").toLowerCase() === "custom";
 }
-function grokOgHeadTags({ host = "", appName = DEFAULT_APP_NAME, site = {}, documentTitle = "" } = {}) {
+/**
+* Preview: public/og.jpg|png on disk.
+* Vercel: the bake (`card=custom` / `image`) because the function cannot stat public/.
+* Otherwise empty — caller emits the og.grok.me placeholder.
+*/
+function resolveOgCardAsset(site = {}, cwd = process.cwd()) {
+	return ogCardPublicPath(cwd) || (detectCustomOgCard(cwd, site) ? String(site.image ?? "").trim() || "/og.jpg" : "");
+}
+/** Stamp `card=custom` when public/og.jpg or public/og.png is on disk. */
+function applyCustomCardFromFs(site, cwd) {
+	const disk = ogCardPublicPath(cwd);
+	if (!disk) return site;
+	return {
+		...site,
+		card: "custom",
+		image: disk
+	};
+}
+function grokOgHeadTags({ host = "", appName = DEFAULT_APP_NAME, site = {}, documentTitle = "", cwd = process.cwd() } = {}) {
 	const title = resolveOgTitle(site, appName, host, documentTitle);
 	const publicHost = resolvePublicHost(host);
 	const tags = [`<meta name="twitter:card" content="summary_large_image">`, `<meta property="og:title" content="${escapeHtml(title)}">`];
@@ -215,8 +250,8 @@ function grokOgHeadTags({ host = "", appName = DEFAULT_APP_NAME, site = {}, docu
 	if (description) tags.push(`<meta property="og:description" content="${escapeHtml(description)}">`);
 	if (String(site.type ?? "").toLowerCase() === "x:game") tags.push(`<meta property="og:type" content="x:game">`);
 	if (publicHost) {
-		const custom = siteHasCustomCard(site);
-		const asset = String(site.image ?? "").trim() || "/og.jpg";
+		const asset = resolveOgCardAsset(site, cwd);
+		const custom = Boolean(asset);
 		let image = custom ? `https://${publicHost}${asset.startsWith("/") ? asset : `/${asset}`}` : `${ogServiceUrl()}/v1/card.png?host=${encodeURIComponent(publicHost)}&title=${encodeURIComponent(title)}`;
 		const color = !custom ? placeholderCardColor(site) : "";
 		if (color) image += `&color=${encodeURIComponent(color)}`;
@@ -251,7 +286,7 @@ function insertBeforeHeadClose(html, snippet) {
 }
 function normalizeHeadContext(ctx = {}) {
 	const cwd = ctx.cwd ?? process.cwd();
-	const site = ctx.site !== void 0 ? ctx.site : snapshotOgIdentity(cwd).site;
+	const site = applyCustomCardFromFs(ctx.site !== void 0 ? ctx.site : snapshotOgIdentity(cwd).site, cwd);
 	return {
 		appName: resolveOgTitle(site, ctx.appName ?? "Grok App", ctx.host ?? ""),
 		projectId: ctx.projectId ?? readGrokProjectId(),
@@ -264,7 +299,7 @@ function normalizeHeadContext(ctx = {}) {
 }
 function injectGrokPwaHead(html, ctx = {}) {
 	if (typeof html !== "string") return html;
-	const { site, projectId, creator, creatorId, host } = normalizeHeadContext(ctx);
+	const { site, projectId, creator, creatorId, host, cwd } = normalizeHeadContext(ctx);
 	const documentTitle = titleFromDocument(html);
 	const appName = resolveOgTitle(site, ctx.appName ?? "Grok App", host, documentTitle);
 	let next = stripShareMetaTags(html);
@@ -277,7 +312,8 @@ function injectGrokPwaHead(html, ctx = {}) {
 		host,
 		appName,
 		site,
-		documentTitle
+		documentTitle,
+		cwd
 	}).join(""));
 	if (!next.includes("/grok-app-builder/extensions.js")) missing.push(...grokExtensionsHeadTags(projectId));
 	else if (projectId && !next.includes("name=\"grok-project-id\"")) missing.push(`<meta name="grok-project-id" content="${escapeHtml(projectId)}">`);
@@ -424,11 +460,11 @@ var findRouteRules = /* @__PURE__ */ (() => {
 		return r;
 	};
 })();
-var _lazy_IO091Z = defineLazyEventHandler(() => import("./_chunks/ssr-renderer.mjs"));
+var _lazy_kDFB1C = defineLazyEventHandler(() => import("./_chunks/ssr-renderer.mjs"));
 var findRoute = /* @__PURE__ */ (() => {
 	const data = {
 		route: "/**",
-		handler: _lazy_IO091Z
+		handler: _lazy_kDFB1C
 	};
 	return ((_m, p) => {
 		return {

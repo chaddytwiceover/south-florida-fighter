@@ -1,6 +1,6 @@
-import { a as audioManager, c as registerGame, i as approach, l as unregisterGame, n as inputManager, o as allRosterClips, r as useGameStore, s as getCharacter } from "./routes-DjuggEnX.mjs";
+import { a as approach, c as getCharacter, i as useGameStore, l as registerGame, n as getFrameKit, o as audioManager, r as inputManager, s as allRosterClips, u as unregisterGame } from "./routes-CZ-0mNJF.mjs";
 import { t as phaser_esm_exports } from "../_libs/phaser.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/createGame-B3_Nri0W.js
+//#region node_modules/.nitro/vite/services/ssr/assets/createGame-HD5vrhMw.js
 var GAME_HEIGHT = 1280;
 var WORLD_WIDTH = 4800;
 var WORLD_HEIGHT = GAME_HEIGHT;
@@ -53,31 +53,80 @@ var COMBAT = {
 function prefersReducedMotion() {
 	return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
-function floatText(scene, x, y, text, color) {
+function floatText(scene, x, y, text, color, size = "32px") {
 	const label = scene.add.text(x, y, text, {
 		fontFamily: "Bebas Neue, Impact, sans-serif",
-		fontSize: "30px",
+		fontSize: size,
 		color,
 		stroke: "#0c1a24",
-		strokeThickness: 5
-	}).setOrigin(.5, 1).setDepth(40);
+		strokeThickness: 6
+	}).setOrigin(.5, 1).setDepth(50);
+	label.setScale(.7);
 	scene.tweens.add({
 		targets: label,
-		y: y - 54,
-		alpha: 0,
-		duration: 560,
-		ease: "Quad.easeOut",
-		onComplete: () => label.destroy()
+		scaleX: 1.15,
+		scaleY: 1.15,
+		y: y - 20,
+		duration: 120,
+		ease: "Back.easeOut",
+		onComplete: () => {
+			scene.tweens.add({
+				targets: label,
+				scaleX: 1,
+				scaleY: 1,
+				y: y - 64,
+				alpha: 0,
+				duration: 480,
+				ease: "Quad.easeIn",
+				onComplete: () => label.destroy()
+			});
+		}
 	});
 }
-function shakeCamera(scene, intensity = COMBAT.shake) {
+function shakeCamera(scene, intensity = COMBAT.shake, duration = 140) {
 	if (prefersReducedMotion()) return;
-	scene.cameras.main.shake(130, intensity);
+	scene.cameras.main.shake(duration, intensity);
 }
-function flashSprite(sprite, tint = 16777215) {
+function cameraZoomPunch(scene, targetZoom = 1.06, duration = 160) {
+	if (prefersReducedMotion()) return;
+	scene.cameras.main.zoomTo(targetZoom, duration * .4, "Quad.easeOut", true, (_cam, progress) => {
+		if (progress === 1) scene.cameras.main.zoomTo(1, duration * .6, "Quad.easeIn");
+	});
+}
+function flashSprite(sprite, tint = 16777215, durationMs = 70) {
 	sprite.setTintFill(tint);
-	sprite.scene.time.delayedCall(70, () => {
+	sprite.scene.time.delayedCall(durationMs, () => {
 		if (sprite.active) sprite.clearTint();
+	});
+}
+function spawnHitSparks(scene, x, y, color = 16770560, count = 8) {
+	for (let i = 0; i < count; i++) {
+		const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+		const speed = Phaser.Math.FloatBetween(120, 380);
+		const line = scene.add.line(x, y, 0, 0, Math.cos(angle) * 14, Math.sin(angle) * 14, color);
+		line.setLineWidth(3);
+		line.setDepth(45);
+		scene.tweens.add({
+			targets: line,
+			x: x + Math.cos(angle) * (speed * .15),
+			y: y + Math.sin(angle) * (speed * .15),
+			alpha: 0,
+			scaleX: .2,
+			duration: 200,
+			ease: "Quad.easeOut",
+			onComplete: () => line.destroy()
+		});
+	}
+}
+function applySquashStretch(sprite, baseScaleX, baseScaleY, squashX, squashY, duration = 100) {
+	const currentFacing = Math.sign(baseScaleX) || 1;
+	sprite.setScale(Math.abs(baseScaleX) * squashX * currentFacing, baseScaleY * squashY);
+	sprite.scene.tweens.add({
+		targets: sprite,
+		scaleX: Math.abs(baseScaleX) * currentFacing,
+		scaleY: baseScaleY,
+		duration,
+		ease: "Quad.easeOut"
 	});
 }
 var Enemy = class {
@@ -128,7 +177,7 @@ var Enemy = class {
 	get y() {
 		return this.sprite.y;
 	}
-	takeHit(damage, knockbackX) {
+	takeHit(damage, knockbackX, knockbackY = -80) {
 		if (this.dead || this.iFrames > 0) return false;
 		this.health = Math.max(0, this.health - damage);
 		this.iFrames = .17;
@@ -136,7 +185,7 @@ var Enemy = class {
 		this.attackLock = 0;
 		this.state = "hurt";
 		this.cooldown = Math.max(this.cooldown, .35);
-		this.sprite.body.setVelocity(knockbackX, -80);
+		this.sprite.body.setVelocity(knockbackX, knockbackY);
 		flashSprite(this.sprite, 16777215);
 		this.playClip("hurt");
 		this.refreshHp();
@@ -567,31 +616,72 @@ var CombatSystem = class {
 	}
 	landOnEnemy(player, enemy, hit) {
 		const dir = player.facing;
-		if (!enemy.takeHit(hit.damage, dir * hit.knockback)) return;
-		playImpact(this.scene, enemy.x + dir * 18, enemy.y - 56);
-		floatText(this.scene, enemy.x, enemy.y - 120, `${hit.damage}`, "#f3e2c2");
-		shakeCamera(this.scene, hit.damage > 20 ? .012 : COMBAT.shake);
-		this.hitstop(hit.damage > 20 ? 80 : COMBAT.hitstopMs);
 		const store = useGameStore.getState();
+		const comboHits = store.comboHits;
+		const scaleFactor = Math.max(.4, 1 - comboHits * .08);
+		const scaledDamage = Math.max(1, Math.round(hit.damage * scaleFactor));
+		if (!enemy.takeHit(scaledDamage, dir * hit.knockback, hit.knockbackY ?? -80)) return;
+		const hitX = enemy.x + dir * 16;
+		const hitY = enemy.y - 54;
+		playImpact(this.scene, hitX, hitY);
+		spawnHitSparks(this.scene, hitX, hitY, hit.damage > 25 ? 16729156 : 16770560, 10);
+		const isHeavy = hit.damage > 20;
+		floatText(this.scene, enemy.x, enemy.y - 120, `${scaledDamage}`, isHeavy ? "#e8c45a" : "#f4f7f5", isHeavy ? "36px" : "28px");
+		if (isHeavy) {
+			audioManager.hitHeavy();
+			cameraZoomPunch(this.scene, 1.05, 140);
+			shakeCamera(this.scene, .012, 160);
+			this.hitstop(hit.hitstopFrames ? hit.hitstopFrames * 16 : 90);
+		} else {
+			audioManager.hitLight();
+			shakeCamera(this.scene, COMBAT.shake, 100);
+			this.hitstop(hit.hitstopFrames ? hit.hitstopFrames * 16 : COMBAT.hitstopMs);
+		}
 		store.addComboHit();
-		store.gainKi(6);
+		audioManager.comboChime(store.comboHits);
+		store.gainKi(8);
 		store.gainXp(enemy.data.xp);
 		if (enemy.dead) {
 			store.addKo();
 			store.gainKi(enemy.data.kiReward);
-			floatText(this.scene, enemy.x, enemy.y - 150, "KO", "#e85d4c");
-			if (this.aliveCount() === 0) store.setFlash("Boardwalk clear");
+			floatText(this.scene, enemy.x, enemy.y - 150, "K.O.", "#e85d4c", "44px");
+			audioManager.koAnnounce();
+			cameraZoomPunch(this.scene, 1.08, 300);
+			this.hitstop(160);
+			if (this.aliveCount() === 0) store.setFlash("VICTORY - STAGE CLEAR");
 		}
 	}
 	landOnPlayer(player, hit) {
 		const originX = hit.follow?.x ?? hit.x;
 		const dir = player.x < originX ? -1 : 1;
-		if (!player.takeHit(hit.damage, dir * hit.knockback)) return;
-		playImpact(this.scene, player.x - dir * 16, player.y - 56);
-		floatText(this.scene, player.x, player.y - 130, `${hit.damage}`, "#e85d4c");
-		shakeCamera(this.scene, .01);
-		this.hitstop(60);
-		useGameStore.getState().resetCombo();
+		const hitResult = player.receiveIncomingAttack(hit.damage, hit.chipDamage ?? 3, dir * hit.knockback, hit.level ?? "mid");
+		if (hitResult.type === "parry") {
+			audioManager.parry();
+			spawnHitSparks(this.scene, player.x, player.y - 50, 65535, 14);
+			flashSprite(player.sprite, 65535, 140);
+			floatText(this.scene, player.x, player.y - 130, "JUST PARRY!", "#00ffff", "36px");
+			shakeCamera(this.scene, .008, 120);
+			this.hitstop(120);
+			useGameStore.getState().gainKi(25);
+			return;
+		}
+		if (hitResult.type === "block") {
+			audioManager.block();
+			spawnHitSparks(this.scene, player.x, player.y - 50, 8965375, 6);
+			flashSprite(player.sprite, 4491519, 80);
+			floatText(this.scene, player.x, player.y - 130, "GUARD", "#8aa0aa", "26px");
+			shakeCamera(this.scene, .004, 80);
+			this.hitstop(40);
+			return;
+		}
+		if (hitResult.type === "hit") {
+			playImpact(this.scene, player.x - dir * 16, player.y - 56);
+			spawnHitSparks(this.scene, player.x, player.y - 56, 15228236, 8);
+			floatText(this.scene, player.x, player.y - 130, `${hit.damage}`, "#e85d4c", "32px");
+			shakeCamera(this.scene, .012, 150);
+			this.hitstop(70);
+			useGameStore.getState().resetCombo();
+		}
 	}
 };
 var FORT_LAUDERDALE = {
@@ -788,11 +878,150 @@ function detachControlsTest() {
 	if (typeof window === "undefined") return;
 	delete window.__controlsTest;
 }
-var COMBO_WINDOW = COMBAT.comboWindow;
-var DASH_SPEED = 640;
+var CharacterStateMachine = class {
+	currentState = "IDLE";
+	stateTime = 0;
+	stateFrames = 0;
+	changeState(newState) {
+		if (this.currentState === "KO") return;
+		this.currentState = newState;
+		this.stateTime = 0;
+		this.stateFrames = 0;
+	}
+	tick(dt) {
+		this.stateTime += dt;
+		this.stateFrames++;
+	}
+	isNeutral() {
+		return this.currentState === "IDLE" || this.currentState === "WALK_FWD" || this.currentState === "WALK_BACK";
+	}
+	isAirborne() {
+		return this.currentState === "JUMP_RISE" || this.currentState === "JUMP_FALL";
+	}
+	isAttacking() {
+		return this.currentState === "ATTACK_STARTUP" || this.currentState === "ATTACK_ACTIVE" || this.currentState === "ATTACK_RECOVERY";
+	}
+	isBlocking() {
+		return this.currentState === "BLOCK_HIGH" || this.currentState === "BLOCK_LOW" || this.currentState === "BLOCK_STUN";
+	}
+	isParrying() {
+		return this.currentState === "PARRY_ACTIVE" || this.currentState === "PARRY_SUCCESS";
+	}
+	isInvulnerable() {
+		return this.currentState === "TECH_ROLL" || this.currentState === "PARRY_SUCCESS";
+	}
+	canCancel() {
+		return this.currentState === "ATTACK_ACTIVE" || this.currentState === "ATTACK_RECOVERY";
+	}
+};
+var InputBuffer = class {
+	history = [];
+	bufferQueue = [];
+	currentFrame = 0;
+	bufferLeniencyFrames = 10;
+	prevRaw = {
+		left: false,
+		right: false,
+		up: false,
+		down: false,
+		light: false,
+		heavy: false,
+		kick: false,
+		special1: false,
+		special2: false,
+		special3: false,
+		finisher: false,
+		guard: false,
+		parry: false,
+		dash: false
+	};
+	tapTimes = {
+		fwdTap: -999,
+		backTap: -999
+	};
+	push(raw, facing) {
+		this.currentFrame++;
+		this.history.push({ ...raw });
+		if (this.history.length > 30) this.history.shift();
+		this.bufferQueue = this.bufferQueue.filter((entry) => !entry.consumed && this.currentFrame - entry.frameCreated <= this.bufferLeniencyFrames);
+		const justLight = raw.light && !this.prevRaw.light;
+		const justHeavy = raw.heavy && !this.prevRaw.heavy;
+		const justKick = raw.kick && !this.prevRaw.kick;
+		const justSpec1 = raw.special1 && !this.prevRaw.special1;
+		const justSpec2 = raw.special2 && !this.prevRaw.special2;
+		const justSpec3 = raw.special3 && !this.prevRaw.special3;
+		const justFinisher = raw.finisher && !this.prevRaw.finisher;
+		const justParry = raw.parry && !this.prevRaw.parry || raw.guard && justLight;
+		const justDash = raw.dash && !this.prevRaw.dash;
+		const justUp = raw.up && !this.prevRaw.up;
+		facing > 0 && raw.right || facing < 0 && raw.left;
+		const movingBack = facing > 0 && raw.left || facing < 0 && raw.right;
+		const justFwd = facing > 0 && raw.right && !this.prevRaw.right || facing < 0 && raw.left && !this.prevRaw.left;
+		const justBack = facing > 0 && raw.left && !this.prevRaw.left || facing < 0 && raw.right && !this.prevRaw.right;
+		if (justFwd) {
+			if (this.currentFrame - this.tapTimes.fwdTap <= 14) {
+				this.addCommand("DASH_FWD");
+				this.tapTimes.fwdTap = -999;
+			} else this.tapTimes.fwdTap = this.currentFrame;
+		}
+		if (justBack) {
+			if (this.currentFrame - this.tapTimes.backTap <= 14) {
+				this.addCommand("DASH_BACK");
+				this.tapTimes.backTap = -999;
+			} else this.tapTimes.backTap = this.currentFrame;
+		}
+		if (justDash) {
+			if (movingBack) this.addCommand("DASH_BACK");
+			else this.addCommand("DASH_FWD");
+		}
+		if (justFinisher) this.addCommand("FINISHER");
+		if (justSpec3) this.addCommand("SPECIAL3");
+		if (justSpec2) this.addCommand("SPECIAL2");
+		if (justSpec1) this.addCommand("SPECIAL1");
+		if (justParry) this.addCommand("PARRY");
+		if (justKick) this.addCommand("KICK");
+		if (justHeavy) this.addCommand("HEAVY");
+		if (justLight) this.addCommand("LIGHT");
+		if (justUp) this.addCommand("JUMP");
+		this.prevRaw = { ...raw };
+	}
+	addCommand(command) {
+		this.bufferQueue.push({
+			command,
+			frameCreated: this.currentFrame,
+			consumed: false
+		});
+	}
+	peek() {
+		const entry = this.bufferQueue.find((e) => !e.consumed);
+		return entry ? entry.command : null;
+	}
+	consume(command) {
+		if (command) {
+			const idx = this.bufferQueue.findIndex((e) => !e.consumed && e.command === command);
+			if (idx !== -1) {
+				this.bufferQueue[idx].consumed = true;
+				return this.bufferQueue[idx].command;
+			}
+			return null;
+		}
+		const entry = this.bufferQueue.find((e) => !e.consumed);
+		if (entry) {
+			entry.consumed = true;
+			return entry.command;
+		}
+		return null;
+	}
+	clear() {
+		this.bufferQueue = [];
+	}
+};
 var Player = class {
 	sprite;
 	character;
+	frameKit;
+	fsm = new CharacterStateMachine();
+	inputBuffer = new InputBuffer();
 	facing = 1;
 	grounded = false;
 	spawn = {
@@ -805,19 +1034,19 @@ var Player = class {
 	jumpHeld = false;
 	wasGrounded = false;
 	jumping = false;
-	actionLock = 0;
-	combo = 0;
-	comboWindow = 0;
-	specialIndex = 0;
-	attackBuffered = false;
-	specialBuffered = false;
-	bufferedSlot = null;
-	playingMove = null;
+	currentAttack = null;
+	attackPhase = null;
+	attackPhaseTimer = 0;
+	hitHasConnected = false;
 	iFrames = 0;
-	hurtLock = 0;
+	stunTimer = 0;
+	dashTimer = 0;
+	parryTimer = 0;
+	parryWindow = 0;
 	recovering = false;
 	constructor(scene, x, y, character) {
 		this.character = character;
+		this.frameKit = getFrameKit(character.id);
 		this.spawn = {
 			x,
 			y
@@ -828,11 +1057,10 @@ var Player = class {
 		this.sprite.setDepth(20);
 		const body = this.sprite.body;
 		body.setCollideWorldBounds(true);
-		body.setMaxVelocity(Math.max(character.movementSpeed, DASH_SPEED), JUMP.terminal);
+		body.setMaxVelocity(Math.max(character.movementSpeed, this.frameKit.dash.speed), JUMP.terminal);
 		body.setDrag(0, 0);
 		body.setFriction(0, 0);
 		body.setBounce(0, 0);
-		body.setAllowGravity(false);
 		body.setAllowGravity(false);
 		body.setSize(PLAYER_BODY.width, PLAYER_BODY.height);
 		body.setOffset(PLAYER_BODY.offsetX, PLAYER_BODY.offsetY);
@@ -855,68 +1083,122 @@ var Player = class {
 	get vy() {
 		return this.sprite.body.velocity.y;
 	}
-	takeHit(damage, knockbackX) {
-		if (this.iFrames > 0 || this.recovering) return false;
+	receiveIncomingAttack(damage, chipDamage, knockbackX, attackLevel) {
+		if (this.iFrames > 0 || this.recovering || this.fsm.isInvulnerable()) return { type: "invulnerable" };
+		if (this.parryWindow > 0) {
+			this.fsm.changeState("PARRY_SUCCESS");
+			this.parryTimer = .28;
+			this.iFrames = .35;
+			this.clearAttack();
+			return { type: "parry" };
+		}
+		if ((this.fsm.currentState === "BLOCK_HIGH" || this.fsm.currentState === "BLOCK_LOW") && attackLevel !== "unblockable") {
+			const isCrouchGuarding = this.fsm.currentState === "BLOCK_LOW";
+			if (!(attackLevel === "overhead" && isCrouchGuarding || attackLevel === "low" && !isCrouchGuarding)) {
+				const store = useGameStore.getState();
+				const health = Math.max(0, store.health - chipDamage);
+				store.setHealth(health);
+				this.fsm.changeState("BLOCK_STUN");
+				this.stunTimer = .16;
+				this.sprite.body.setVelocity(knockbackX * .4, 0);
+				return { type: "block" };
+			}
+		}
 		const store = useGameStore.getState();
 		const health = Math.max(0, store.health - damage);
 		store.setHealth(health);
 		this.iFrames = COMBAT.playerIFramesMs / 1e3;
-		this.hurtLock = .34;
-		this.clearMove();
+		this.stunTimer = .34;
+		this.fsm.changeState("HITSTUN");
+		this.clearAttack();
 		this.sprite.body.setVelocity(knockbackX, -90);
 		flashSprite(this.sprite, 16777215);
 		this.playHurt();
 		audioManager.hurt();
 		if (health <= 0) this.knockOut();
-		return true;
+		return { type: "hit" };
+	}
+	takeHit(damage, knockbackX) {
+		const res = this.receiveIncomingAttack(damage, 3, knockbackX, "mid");
+		return res.type === "hit" || res.type === "block";
 	}
 	update(actions, dt) {
 		const body = this.sprite.body;
 		const vyNow = body.velocity.y;
 		const onFloor = body.blocked.down || body.touching.down || vyNow >= -12 && this.sprite.y >= 976 && this.sprite.y <= 998;
 		this.grounded = onFloor;
+		this.inputBuffer.push(actions.raw, this.facing);
 		if (this.iFrames > 0) {
 			this.iFrames = Math.max(0, this.iFrames - dt);
-			this.sprite.setAlpha(.45 + .55 * Math.abs(Math.sin(this.iFrames * 24)));
+			this.sprite.setAlpha(.45 + .55 * Math.abs(Math.sin(this.iFrames * 28)));
 		} else this.sprite.setAlpha(1);
-		if (this.hurtLock > 0) this.hurtLock = Math.max(0, this.hurtLock - dt);
+		if (this.stunTimer > 0) {
+			this.stunTimer = Math.max(0, this.stunTimer - dt);
+			if (this.stunTimer === 0 && this.fsm.currentState === "HITSTUN") this.fsm.changeState(onFloor ? "IDLE" : "JUMP_FALL");
+		}
+		if (this.parryWindow > 0) this.parryWindow = Math.max(0, this.parryWindow - dt);
+		if (this.parryTimer > 0) {
+			this.parryTimer = Math.max(0, this.parryTimer - dt);
+			if (this.parryTimer === 0 && this.fsm.isParrying()) this.fsm.changeState(onFloor ? "IDLE" : "JUMP_FALL");
+		}
+		if (this.dashTimer > 0) {
+			this.dashTimer = Math.max(0, this.dashTimer - dt);
+			if (this.dashTimer === 0) this.fsm.changeState(onFloor ? "IDLE" : "JUMP_FALL");
+		}
 		if (onFloor) this.coyote = JUMP.coyoteMs / 1e3;
 		else this.coyote = Math.max(0, this.coyote - dt);
 		if (actions.jumpPressed) this.buffer = JUMP.bufferMs / 1e3;
 		else this.buffer = Math.max(0, this.buffer - dt);
 		if (actions.jumpPressed) this.jumpHeld = true;
 		if (!actions.jump) this.jumpHeld = false;
-		if (this.actionLock > 0) this.actionLock = Math.max(0, this.actionLock - dt);
-		if (this.comboWindow > 0) this.comboWindow = Math.max(0, this.comboWindow - dt);
-		else this.combo = 0;
-		const stunned = this.hurtLock > 0 || this.recovering;
-		const occupy = this.actionLock > 0 && this.playingMove;
-		const freezeWalk = stunned || Boolean(occupy) && (this.playingMove?.effect === "dash" || this.playingMove?.effect === "finisher" || this.playingMove?.effect === "projectile" || this.playingMove?.effect === "clone");
+		this.fsm.tick(dt);
+		this.updateMovement(actions, onFloor, dt);
+		this.updateAttackPhase(dt);
+		this.processInputQueue(actions);
+		useGameStore.getState().rechargeKi(9 * dt);
+		this.updateAnimation(onFloor);
+	}
+	updateMovement(actions, onFloor, dt) {
+		const body = this.sprite.body;
+		const isStunned = this.stunTimer > 0 || this.recovering;
+		const isAttacking = this.fsm.isAttacking();
+		const isDashing = this.fsm.currentState === "DASH_FWD" || this.fsm.currentState === "DASH_BACK";
+		const isParrying = this.fsm.isParrying();
 		const speed = this.character.movementSpeed;
 		const accel = onFloor ? MOVE.accel : MOVE.airAccel;
 		const friction = onFloor ? MOVE.friction : MOVE.airFriction;
 		let vx = body.velocity.x;
-		if (!(this.playingMove?.effect === "dash" && this.actionLock > 0)) {
-			if (Math.abs(actions.moveX) > .12 && !freezeWalk) vx = approach(vx, actions.moveX * speed, accel * dt);
-			else vx = approach(vx, 0, friction * dt);
-		}
+		if (!isDashing && !isStunned && !isAttacking && !isParrying) {
+			const movingBack = this.facing > 0 && actions.moveX < -.15 || this.facing < 0 && actions.moveX > .15;
+			if (actions.guard || movingBack && onFloor) {
+				if (actions.moveY > .3) this.fsm.changeState("BLOCK_LOW");
+				else this.fsm.changeState("BLOCK_HIGH");
+				vx = approach(vx, 0, friction * dt);
+			} else if (Math.abs(actions.moveX) > .12) {
+				vx = approach(vx, actions.moveX * speed, accel * dt);
+				if (actions.moveX > .15) this.facing = 1;
+				else if (actions.moveX < -.15) this.facing = -1;
+				if (onFloor) this.fsm.changeState(actions.moveX * this.facing > 0 ? "WALK_FWD" : "WALK_BACK");
+			} else {
+				vx = approach(vx, 0, friction * dt);
+				if (onFloor && this.fsm.currentState !== "IDLE") this.fsm.changeState("IDLE");
+			}
+		} else if (isDashing) vx = (this.fsm.currentState === "DASH_FWD" ? this.facing : -this.facing) * this.frameKit.dash.speed;
+		else vx = approach(vx, 0, friction * dt);
 		this.sprite.x += vx * dt;
 		this.sprite.x = Math.max(40, Math.min(WORLD_WIDTH - 40, this.sprite.x));
 		body.setVelocityX(vx);
-		if (!freezeWalk) {
-			if (actions.moveX > .15) this.facing = 1;
-			else if (actions.moveX < -.15) this.facing = -1;
-		}
 		this.sprite.setFlipX(this.facing < 0);
 		let vy = body.velocity.y;
-		const canJump = this.coyote > 0 && !this.jumping && !stunned;
+		const canJump = this.coyote > 0 && !this.jumping && !isStunned && !isAttacking && !isParrying;
 		if (this.buffer > 0 && canJump) {
 			vy = JUMP.velocity;
 			this.buffer = 0;
 			this.coyote = 0;
 			this.jumping = true;
 			this.jumpHeld = true;
-			this.clearMove();
+			this.fsm.changeState("JUMP_RISE");
+			applySquashStretch(this.sprite, PLAYER_DISPLAY_SCALE, PLAYER_DISPLAY_SCALE, .75, 1.3, 120);
 			audioManager.jump();
 		}
 		if (this.jumping && !this.jumpHeld && vy < 0) {
@@ -929,131 +1211,195 @@ var Player = class {
 		if (onFloor) {
 			if (vy > 0) vy = 0;
 			this.jumping = false;
-			if (!this.wasGrounded && this.vy > 120) audioManager.land();
-		}
+			if (!this.wasGrounded && this.vy > 120) {
+				audioManager.land();
+				applySquashStretch(this.sprite, PLAYER_DISPLAY_SCALE, PLAYER_DISPLAY_SCALE, 1.3, .75, 100);
+			}
+		} else if (vy > 0 && this.fsm.currentState === "JUMP_RISE") this.fsm.changeState("JUMP_FALL");
 		this.sprite.y += vy * dt;
 		if (onFloor && this.sprite.y > 980) this.sprite.y = 980;
 		body.setVelocityY(vy);
 		body.updateFromGameObject();
 		this.wasGrounded = onFloor;
-		if (!stunned) {
-			if (actions.attackPressed) this.attackBuffered = true;
-			if (actions.specialPressed) this.specialBuffered = true;
-			if (actions.specialSlot !== null) {
-				this.specialBuffered = true;
-				this.bufferedSlot = actions.specialSlot;
-			}
-			if (this.actionLock <= 0) {
-				if (this.attackBuffered) {
-					this.attackBuffered = false;
-					this.startAttack();
-				} else if (this.specialBuffered) {
-					this.specialBuffered = false;
-					const slot = this.bufferedSlot;
-					this.bufferedSlot = null;
-					this.startSpecial(slot);
-				}
-			}
-		}
-		useGameStore.getState().rechargeKi(8 * dt);
-		this.updateAnimation(onFloor, vx, vy);
 	}
-	startAttack() {
-		const step = this.comboWindow > 0 ? Math.min(this.combo, 2) : 0;
-		const move = this.character.attacks[step];
-		this.combo = step + 1;
-		this.comboWindow = COMBO_WINDOW;
-		this.playMove(move);
-	}
-	startSpecial(slot) {
-		const store = useGameStore.getState();
-		if (store.energy >= 100) {
-			this.playMove(this.character.finisher);
-			store.spendKi(this.character.finisher.kiCost);
-			store.gainXp(20);
-			this.combo = 0;
-			this.comboWindow = 0;
+	processInputQueue(actions) {
+		if (this.stunTimer > 0 || this.recovering) return;
+		const cmd = this.inputBuffer.peek();
+		if (!cmd) return;
+		if (cmd === "PARRY" && this.fsm.isNeutral()) {
+			this.inputBuffer.consume("PARRY");
+			this.startParry();
 			return;
 		}
-		const index = slot !== null ? Math.max(0, Math.min(2, slot)) : this.specialIndex;
-		const move = this.character.specials[index];
-		if (store.energy < move.kiCost) {
+		if ((cmd === "DASH_FWD" || cmd === "DASH_BACK") && this.fsm.isNeutral()) {
+			this.inputBuffer.consume(cmd);
+			this.startDash(cmd === "DASH_FWD");
+			return;
+		}
+		if (this.fsm.isNeutral() || this.fsm.canCancel() && this.canCancelCurrentAttack(cmd)) this.executeAttackCommand(cmd);
+	}
+	canCancelCurrentAttack(nextCmd) {
+		if (!this.currentAttack) return false;
+		const cancelables = this.currentAttack.cancelableTo;
+		if (nextCmd === "FINISHER") return cancelables.includes("finisher");
+		if (nextCmd === "SPECIAL1" || nextCmd === "SPECIAL2" || nextCmd === "SPECIAL3") return cancelables.includes("special");
+		if (nextCmd === "DASH_FWD" || nextCmd === "DASH_BACK") return cancelables.includes("dash");
+		if (this.currentAttack.id.endsWith("light") && (nextCmd === "HEAVY" || nextCmd === "KICK")) return true;
+		if (this.currentAttack.id.endsWith("heavy") && nextCmd === "KICK") return true;
+		return false;
+	}
+	executeAttackCommand(cmd) {
+		let attackData = null;
+		let clipKey = "light";
+		if (cmd === "LIGHT") {
+			attackData = this.frameKit.light;
+			clipKey = "light";
+		} else if (cmd === "HEAVY") {
+			attackData = this.frameKit.heavy;
+			clipKey = "heavy";
+		} else if (cmd === "KICK") {
+			attackData = this.frameKit.kick;
+			clipKey = "kick";
+		} else if (cmd === "SPECIAL1") {
+			attackData = this.frameKit.special1;
+			clipKey = "special1";
+		} else if (cmd === "SPECIAL2") {
+			attackData = this.frameKit.special2;
+			clipKey = "special2";
+		} else if (cmd === "SPECIAL3") {
+			attackData = this.frameKit.special3;
+			clipKey = "special3";
+		} else if (cmd === "FINISHER") {
+			attackData = this.frameKit.finisher;
+			clipKey = "finisher";
+		}
+		if (!attackData) return;
+		const store = useGameStore.getState();
+		if (attackData.kiCost && store.energy < attackData.kiCost) {
 			useGameStore.setState({ flash: "Need more KI" });
 			return;
 		}
-		store.spendKi(move.kiCost);
-		store.gainXp(10);
-		this.playMove(move);
-		this.specialIndex = (index + 1) % 3;
-		useGameStore.setState({ specialIndex: this.specialIndex });
-		this.combo = 0;
-		this.comboWindow = 0;
-	}
-	playMove(move) {
-		this.playingMove = move;
-		this.actionLock = move.durationMs / 1e3;
+		this.inputBuffer.consume(cmd);
+		if (attackData.kiCost) {
+			store.spendKi(attackData.kiCost);
+			store.gainXp(15);
+		}
+		this.currentAttack = attackData;
+		this.attackPhase = "startup";
+		this.attackPhaseTimer = attackData.startupFrames / 60;
+		this.hitHasConnected = false;
+		this.fsm.changeState("ATTACK_STARTUP");
+		if (attackData.iFrames) this.iFrames = Math.max(this.iFrames, attackData.iFrames / 60);
 		useGameStore.setState({
-			currentMove: move.name,
+			currentMove: attackData.name,
 			flash: ""
 		});
-		const clip = this.character.animationSet[move.anim];
+		const clip = this.character.animationSet[clipKey];
 		this.sprite.anims.stop();
 		this.sprite.setTexture(clip.textureKey, 0);
 		this.sprite.play(clip.key);
+		audioManager.swing(cmd === "LIGHT" ? 1.4 : cmd === "HEAVY" ? .9 : 1.1);
+	}
+	updateAttackPhase(dt) {
+		if (!this.currentAttack || !this.attackPhase) return;
+		this.attackPhaseTimer -= dt;
+		if (this.attackPhaseTimer <= 0) {
+			if (this.attackPhase === "startup") {
+				this.attackPhase = "active";
+				this.attackPhaseTimer = this.currentAttack.activeFrames / 60;
+				this.fsm.changeState("ATTACK_ACTIVE");
+				this.spawnAttackHitbox();
+			} else if (this.attackPhase === "active") {
+				this.attackPhase = "recovery";
+				this.attackPhaseTimer = this.currentAttack.recoveryFrames / 60;
+				this.fsm.changeState("ATTACK_RECOVERY");
+			} else if (this.attackPhase === "recovery") {
+				this.clearAttack();
+				this.fsm.changeState(this.grounded ? "IDLE" : "JUMP_FALL");
+			}
+		}
+	}
+	spawnAttackHitbox() {
+		if (!this.currentAttack || !this.combat) return;
+		const atk = this.currentAttack;
 		const scene = this.sprite.scene;
-		const delay = move.anim === "light" ? 70 : move.anim === "heavy" ? 140 : move.anim === "finisher" ? 200 : 110;
-		if (move.effect === "melee" || move.effect === "finisher") {
-			playSlash(scene, this.x, this.y, this.facing);
-			audioManager.attack();
-			scene.time.delayedCall(delay, () => {
-				if (this.playingMove !== move) return;
-				this.combat?.spawnHit({
-					x: this.x + this.facing * (move.effect === "finisher" ? 70 : 62),
-					y: this.y - 48,
-					width: move.effect === "finisher" ? 160 : 110,
-					height: 96,
-					damage: move.damage,
-					knockback: move.effect === "finisher" ? 460 : 260,
-					faction: "player",
-					durationMs: move.effect === "finisher" ? 200 : 140
-				});
-			});
-		}
-		if (move.effect === "projectile") {
-			audioManager.special();
-			scene.time.delayedCall(120, () => {
-				if (this.playingMove !== move) return;
-				const bolt = playWave(scene, this.x, this.y, this.facing);
-				if (bolt) this.combat?.armProjectile(bolt, {
-					damage: move.damage,
-					knockback: 320,
-					faction: "player",
-					durationMs: 900
-				});
-			});
-		}
-		if (move.effect === "dash") {
-			this.sprite.body.setVelocityX(this.facing * DASH_SPEED);
-			audioManager.whoosh();
-			this.combat?.spawnHit({
-				x: this.x + this.facing * 40,
+		const isSpecial = atk.id.includes("chain") || atk.id.includes("wave") || atk.id.includes("dash") || atk.id.includes("clone") || atk.id.includes("stalker");
+		if (atk.id.includes("hood") || atk.id.includes("phantom")) {
+			audioManager.finisher();
+			this.combat.spawnHit({
+				x: this.x + this.facing * 75,
 				y: this.y - 50,
-				width: 70,
-				height: 64,
-				damage: move.damage,
-				knockback: 300,
+				width: 170,
+				height: 110,
+				damage: atk.damage,
+				chipDamage: atk.chipDamage,
+				knockback: atk.knockbackX,
+				knockbackY: atk.knockbackY,
+				level: atk.level,
+				hitReaction: atk.hitReaction,
+				hitstopFrames: atk.hitstopFrames,
 				faction: "player",
-				durationMs: move.durationMs,
-				follow: this.sprite,
-				followOffsetX: 40,
-				followOffsetY: -50
+				durationMs: atk.activeFrames / 60 * 1e3
 			});
+			playSlash(scene, this.x + this.facing * 30, this.y, this.facing);
+			return;
 		}
-		if (move.effect === "clone") {
+		if (atk.id.includes("wave")) {
+			audioManager.special();
+			const bolt = playWave(scene, this.x, this.y, this.facing);
+			if (bolt) this.combat.armProjectile(bolt, {
+				damage: atk.damage,
+				chipDamage: atk.chipDamage,
+				knockback: atk.knockbackX,
+				knockbackY: atk.knockbackY,
+				level: atk.level,
+				hitReaction: atk.hitReaction,
+				hitstopFrames: atk.hitstopFrames,
+				faction: "player",
+				durationMs: 900
+			});
+			return;
+		}
+		if (atk.id.includes("clone")) {
 			playClone(scene, this.sprite);
 			audioManager.special();
 		}
-		if (move.effect === "finisher") audioManager.finisher();
+		playSlash(scene, this.x, this.y, this.facing);
+		this.combat.spawnHit({
+			x: this.x + this.facing * (isSpecial ? 68 : 58),
+			y: this.y - 48,
+			width: isSpecial ? 120 : 100,
+			height: 90,
+			damage: atk.damage,
+			chipDamage: atk.chipDamage,
+			knockback: atk.knockbackX,
+			knockbackY: atk.knockbackY,
+			level: atk.level,
+			hitReaction: atk.hitReaction,
+			hitstopFrames: atk.hitstopFrames,
+			faction: "player",
+			durationMs: atk.activeFrames / 60 * 1e3
+		});
+	}
+	startParry() {
+		this.fsm.changeState("PARRY_ACTIVE");
+		this.parryWindow = this.frameKit.parry.activeFrames / 60;
+		this.parryTimer = (this.frameKit.parry.activeFrames + this.frameKit.parry.recoveryFrames) / 60;
+		flashSprite(this.sprite, 65535, 90);
+		audioManager.swing(2);
+	}
+	startDash(forward) {
+		this.fsm.changeState(forward ? "DASH_FWD" : "DASH_BACK");
+		this.dashTimer = this.frameKit.dash.durationFrames / 60;
+		this.iFrames = this.frameKit.dash.iFrames / 60;
+		audioManager.dash();
+		applySquashStretch(this.sprite, PLAYER_DISPLAY_SCALE, PLAYER_DISPLAY_SCALE, 1.35, .8, 120);
+	}
+	clearAttack() {
+		this.currentAttack = null;
+		this.attackPhase = null;
+		this.attackPhaseTimer = 0;
+		useGameStore.setState({ currentMove: "" });
 	}
 	playHurt() {
 		const clip = this.character.animationSet.hurt;
@@ -1063,52 +1409,49 @@ var Player = class {
 	}
 	knockOut() {
 		this.recovering = true;
-		this.clearMove();
-		this.hurtLock = 1.1;
-		useGameStore.setState({ flash: "KO — get up" });
-		this.sprite.scene.time.delayedCall(1100, () => {
+		this.clearAttack();
+		this.fsm.changeState("KO");
+		this.stunTimer = 1.2;
+		useGameStore.setState({ flash: "K.O. - RECOVERING" });
+		audioManager.defeat();
+		this.sprite.scene.time.delayedCall(1200, () => {
 			if (!this.sprite.active) return;
 			this.sprite.setPosition(this.spawn.x, this.spawn.y);
 			this.sprite.body.setVelocity(0, 0);
 			useGameStore.getState().setHealth(this.character.health);
-			this.iFrames = 1.2;
-			this.hurtLock = 0;
+			this.iFrames = 1.5;
+			this.stunTimer = 0;
 			this.recovering = false;
+			this.fsm.changeState("IDLE");
 			useGameStore.setState({ flash: "" });
 		});
 	}
-	clearMove() {
-		this.playingMove = null;
-		this.actionLock = 0;
-		this.attackBuffered = false;
-		this.specialBuffered = false;
-		this.bufferedSlot = null;
-		useGameStore.setState({ currentMove: "" });
-	}
-	updateAnimation(onFloor, vx, vy) {
-		if (this.hurtLock > 0 || this.recovering) return;
-		if (this.actionLock > 0 && this.playingMove) return;
-		if (this.playingMove && this.actionLock <= 0) {
-			this.playingMove = null;
-			useGameStore.setState({ currentMove: "" });
-		}
+	updateAnimation(onFloor) {
+		if (this.recovering || this.fsm.currentState === "KO") return;
+		if (this.fsm.currentState === "HITSTUN") return;
+		if (this.fsm.isAttacking()) return;
 		const set = this.character.animationSet;
+		if (this.fsm.isBlocking() || this.fsm.isParrying()) {
+			this.sprite.anims.stop();
+			this.sprite.setTexture(set.idle.textureKey, 0);
+			return;
+		}
 		if (!onFloor) {
-			const frame = vy < -80 ? 1 : 3;
+			const frame = this.vy < -80 ? 1 : 3;
 			this.sprite.anims.stop();
 			if (this.sprite.texture.key !== set.jump.textureKey) this.sprite.setTexture(set.jump.textureKey, frame);
 			else this.sprite.setFrame(frame);
 			return;
 		}
-		const key = Math.abs(vx) > 28 ? set.run.key : set.idle.key;
+		const key = this.fsm.currentState === "WALK_FWD" || this.fsm.currentState === "WALK_BACK" || Math.abs(this.vx) > 28 ? set.run.key : set.idle.key;
 		if (this.sprite.anims.currentAnim?.key !== key || !this.sprite.anims.isPlaying) this.sprite.play(key, true);
 	}
 	destroy() {
 		this.sprite.destroy();
 	}
 };
-var Phaser$1 = phaser_esm_exports;
-var PlayScene = class extends Phaser$1.Scene {
+var Phaser$2 = phaser_esm_exports;
+var PlayScene = class extends Phaser$2.Scene {
 	player;
 	combat;
 	far;
@@ -1242,10 +1585,10 @@ var PlayScene = class extends Phaser$1.Scene {
 		}
 	}
 };
-var Phaser = phaser_esm_exports;
+var Phaser$1 = phaser_esm_exports;
 function createGame(parent) {
-	const game = new Phaser.Game({
-		type: Phaser.AUTO,
+	const game = new Phaser$1.Game({
+		type: Phaser$1.AUTO,
 		parent,
 		width: 720,
 		height: GAME_HEIGHT,
@@ -1267,8 +1610,8 @@ function createGame(parent) {
 			}
 		},
 		scale: {
-			mode: Phaser.Scale.FIT,
-			autoCenter: Phaser.Scale.CENTER_BOTH,
+			mode: Phaser$1.Scale.FIT,
+			autoCenter: Phaser$1.Scale.CENTER_BOTH,
 			width: 720,
 			height: GAME_HEIGHT
 		},

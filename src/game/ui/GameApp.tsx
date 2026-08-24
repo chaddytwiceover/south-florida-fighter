@@ -3,15 +3,40 @@ import { inputManager } from "../input/InputManager";
 import { useGameStore } from "../systems/gameStore";
 import { CharacterSelect } from "./CharacterSelect";
 import { Hud } from "./Hud";
+import { Preloader } from "./Preloader";
 import { RotateHint } from "./RotateHint";
 import { TitleOverlay } from "./TitleOverlay";
 import { TouchControls } from "./TouchControls";
+import { initIframeBridge, postToParent } from "../utils/iframeBridge";
 
 export function GameApp() {
   const hostRef = useRef<HTMLDivElement>(null);
   const screen = useGameStore((s) => s.screen);
+  const health = useGameStore((s) => s.health);
+  const energy = useGameStore((s) => s.energy);
+
+  const [isLoading, setIsLoading] = useState(true);
   const [touchReady, setTouchReady] = useState(false);
 
+  // Initialize iframe bridge
+  useEffect(() => {
+    const cleanup = initIframeBridge();
+    return cleanup;
+  }, []);
+
+  // Post state updates to parent iframe
+  useEffect(() => {
+    postToParent({
+      type: "SF_STATE_CHANGE",
+      data: {
+        screen,
+        health,
+        energy,
+      },
+    });
+  }, [screen, health, energy]);
+
+  // Phaser Game lifecycle
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
@@ -30,6 +55,7 @@ export function GameApp() {
     };
   }, []);
 
+  // Input & screen routing
   useEffect(() => {
     if (screen !== "play") {
       inputManager.enabled = false;
@@ -44,13 +70,25 @@ export function GameApp() {
   }, [screen]);
 
   return (
-    <div className="game-shell">
+    <div
+      className="game-shell"
+      tabIndex={0}
+      onClick={() => hostRef.current?.focus()}
+    >
       <div className="game-stage">
         <div ref={hostRef} id="sf-game" className="game-canvas" />
-        {screen === "play" ? <Hud /> : null}
-        {screen === "play" && touchReady ? <TouchControls /> : null}
-        {screen === "title" ? <TitleOverlay /> : null}
-        {screen === "select" ? <CharacterSelect /> : null}
+
+        {isLoading ? (
+          <Preloader onReady={() => setIsLoading(false)} />
+        ) : (
+          <>
+            {screen === "play" ? <Hud /> : null}
+            {screen === "play" && touchReady ? <TouchControls /> : null}
+            {screen === "title" ? <TitleOverlay /> : null}
+            {screen === "select" ? <CharacterSelect /> : null}
+          </>
+        )}
+
         <RotateHint />
       </div>
     </div>

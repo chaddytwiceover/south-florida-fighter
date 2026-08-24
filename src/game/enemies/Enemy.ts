@@ -64,7 +64,7 @@ export class Enemy {
     return this.sprite.y;
   }
 
-  takeHit(damage: number, knockbackX: number) {
+  takeHit(damage: number, knockbackX: number, knockbackY = -80) {
     if (this.dead || this.iFrames > 0) return false;
     this.health = Math.max(0, this.health - damage);
     this.iFrames = 0.17;
@@ -74,7 +74,7 @@ export class Enemy {
     this.cooldown = Math.max(this.cooldown, 0.35);
 
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;
-    body.setVelocity(knockbackX, -80);
+    body.setVelocity(knockbackX, knockbackY);
     flashSprite(this.sprite, 0xffffff);
     this.playClip("hurt");
     this.refreshHp();

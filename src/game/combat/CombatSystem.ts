@@ -4,7 +4,15 @@ import { allEnemyClips, getEnemy } from "../enemies/EnemyData";
 import { playImpact } from "../systems/CombatFx";
 import { useGameStore } from "../systems/gameStore";
 import type { Player } from "../systems/Player";
-import { floatText, shakeCamera } from "./Juice";
+import {
+  cameraZoomPunch,
+  flashSprite,
+  floatText,
+  shakeCamera,
+  spawnHitSparks,
+} from "./Juice";
+import { audioManager } from "../audio/AudioManager";
+import type { AttackLevel, HitReaction } from "./FrameData";
 
 export type Faction = "player" | "enemy";
 
@@ -14,9 +22,14 @@ export type HitSpec = {
   width: number;
   height: number;
   damage: number;
+  chipDamage?: number;
   knockback: number;
+  knockbackY?: number;
   faction: Faction;
   durationMs: number;
+  level?: AttackLevel;
+  hitReaction?: HitReaction;
+  hitstopFrames?: number;
   follow?: Phaser.Physics.Arcade.Sprite;
   followOffsetX?: number;
   followOffsetY?: number;
@@ -114,7 +127,8 @@ export class CombatSystem {
 
   armProjectile(
     sprite: Phaser.Physics.Arcade.Sprite,
-    spec: Pick<HitSpec, "damage" | "knockback" | "faction" | "durationMs">,
+    spec: Pick<HitSpec, "damage" | "knockback" | "faction" | "durationMs"> &
+      Partial<HitSpec>,
   ) {
     const data: HitData = {
       x: sprite.x,
@@ -217,22 +231,64 @@ export class CombatSystem {
 
   private landOnEnemy(player: Player, enemy: Enemy, hit: HitData) {
     const dir = player.facing;
-    const connected = enemy.takeHit(hit.damage, dir * hit.knockback);
-    if (!connected) return;
-    playImpact(this.scene, enemy.x + dir * 18, enemy.y - 56);
-    floatText(this.scene, enemy.x, enemy.y - 120, `${hit.damage}`, "#f3e2c2");
-    shakeCamera(this.scene, hit.damage > 20 ? 0.012 : COMBAT.shake);
-    this.hitstop(hit.damage > 20 ? 80 : COMBAT.hitstopMs);
     const store = useGameStore.getState();
+
+    // Damage Scaling based on combo count (100% -> 90% -> 80% ... min 40%)
+    const comboHits = store.comboHits;
+    const scaleFactor = Math.max(0.4, 1.0 - comboHits * 0.08);
+    const scaledDamage = Math.max(1, Math.round(hit.damage * scaleFactor));
+
+    const connected = enemy.takeHit(
+      scaledDamage,
+      dir * hit.knockback,
+      hit.knockbackY ?? -80,
+    );
+    if (!connected) return;
+
+    // Sparks & visual feedback
+    const hitX = enemy.x + dir * 16;
+    const hitY = enemy.y - 54;
+    playImpact(this.scene, hitX, hitY);
+    spawnHitSparks(this.scene, hitX, hitY, hit.damage > 25 ? 0xff4444 : 0xffe600, 10);
+
+    // Dynamic floating text
+    const isHeavy = hit.damage > 20;
+    floatText(
+      this.scene,
+      enemy.x,
+      enemy.y - 120,
+      `${scaledDamage}`,
+      isHeavy ? "#e8c45a" : "#f4f7f5",
+      isHeavy ? "36px" : "28px",
+    );
+
+    // Audio & hitstop
+    if (isHeavy) {
+      audioManager.hitHeavy();
+      cameraZoomPunch(this.scene, 1.05, 140);
+      shakeCamera(this.scene, 0.012, 160);
+      this.hitstop(hit.hitstopFrames ? hit.hitstopFrames * 16 : 90);
+    } else {
+      audioManager.hitLight();
+      shakeCamera(this.scene, COMBAT.shake, 100);
+      this.hitstop(hit.hitstopFrames ? hit.hitstopFrames * 16 : COMBAT.hitstopMs);
+    }
+
     store.addComboHit();
-    store.gainKi(6);
+    audioManager.comboChime(store.comboHits);
+    store.gainKi(8);
     store.gainXp(enemy.data.xp);
+
     if (enemy.dead) {
       store.addKo();
       store.gainKi(enemy.data.kiReward);
-      floatText(this.scene, enemy.x, enemy.y - 150, "KO", "#e85d4c");
+      floatText(this.scene, enemy.x, enemy.y - 150, "K.O.", "#e85d4c", "44px");
+      audioManager.koAnnounce();
+      cameraZoomPunch(this.scene, 1.08, 300);
+      this.hitstop(160);
+
       if (this.aliveCount() === 0) {
-        store.setFlash("Boardwalk clear");
+        store.setFlash("VICTORY - STAGE CLEAR");
       }
     }
   }
@@ -240,12 +296,46 @@ export class CombatSystem {
   private landOnPlayer(player: Player, hit: HitData) {
     const originX = hit.follow?.x ?? hit.x;
     const dir = player.x < originX ? -1 : 1;
-    const connected = player.takeHit(hit.damage, dir * hit.knockback);
-    if (!connected) return;
-    playImpact(this.scene, player.x - dir * 16, player.y - 56);
-    floatText(this.scene, player.x, player.y - 130, `${hit.damage}`, "#e85d4c");
-    shakeCamera(this.scene, 0.01);
-    this.hitstop(60);
-    useGameStore.getState().resetCombo();
+
+    // Check Player Parry & Guard State
+    const hitResult = player.receiveIncomingAttack(
+      hit.damage,
+      hit.chipDamage ?? 3,
+      dir * hit.knockback,
+      hit.level ?? "mid",
+    );
+
+    if (hitResult.type === "parry") {
+      // Parried!
+      audioManager.parry();
+      spawnHitSparks(this.scene, player.x, player.y - 50, 0x00ffff, 14);
+      flashSprite(player.sprite, 0x00ffff, 140);
+      floatText(this.scene, player.x, player.y - 130, "JUST PARRY!", "#00ffff", "36px");
+      shakeCamera(this.scene, 0.008, 120);
+      this.hitstop(120);
+      useGameStore.getState().gainKi(25);
+      return;
+    }
+
+    if (hitResult.type === "block") {
+      // Blocked!
+      audioManager.block();
+      spawnHitSparks(this.scene, player.x, player.y - 50, 0x88ccff, 6);
+      flashSprite(player.sprite, 0x4488ff, 80);
+      floatText(this.scene, player.x, player.y - 130, "GUARD", "#8aa0aa", "26px");
+      shakeCamera(this.scene, 0.004, 80);
+      this.hitstop(40);
+      return;
+    }
+
+    if (hitResult.type === "hit") {
+      // Direct Hit!
+      playImpact(this.scene, player.x - dir * 16, player.y - 56);
+      spawnHitSparks(this.scene, player.x, player.y - 56, 0xe85d4c, 8);
+      floatText(this.scene, player.x, player.y - 130, `${hit.damage}`, "#e85d4c", "32px");
+      shakeCamera(this.scene, 0.012, 150);
+      this.hitstop(70);
+      useGameStore.getState().resetCombo();
+    }
   }
 }
