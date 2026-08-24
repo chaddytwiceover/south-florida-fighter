@@ -4,7 +4,7 @@ import { t as create } from "../_libs/zustand.mjs";
 import { a as Sword, c as RotateCcw, d as Flame, f as ChevronRight, l as Play, m as ArrowUp, n as VolumeX, o as Sparkles, p as ChevronLeft, r as Volume2, s as Shield, t as Zap, u as MapPin } from "../_libs/lucide-react.mjs";
 import { t as clsx } from "../_libs/clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-BwETuoLp.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-BgoS_53o.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var __defProp = Object.defineProperty;
@@ -520,7 +520,7 @@ var FORT_LAUDERDALE = {
 	id: "fort-lauderdale",
 	name: "A1A Ocean Boardwalk",
 	city: "Fort Lauderdale",
-	tagline: "Las Olas luxury marina and sunlit oceanfront boardwalk.",
+	tagline: "Las Olas luxury marina, sandy boardwalk, and sunlit oceanfront.",
 	worldWidth: WORLD_WIDTH,
 	worldHeight: WORLD_HEIGHT,
 	groundY: 980,
@@ -557,12 +557,11 @@ var FORT_LAUDERDALE = {
 			depth: 8
 		},
 		{
-			key: "palm",
-			x: 700,
+			key: "ftl_tiki",
+			x: 620,
 			y: 988,
-			scale: 1.15,
-			flipX: true,
-			depth: 6
+			scale: 1.2,
+			depth: 7
 		},
 		{
 			key: "tower",
@@ -572,18 +571,26 @@ var FORT_LAUDERDALE = {
 			depth: 7
 		},
 		{
+			key: "ftl_surf",
+			x: 1480,
+			y: 988,
+			scale: 1.25,
+			depth: 8
+		},
+		{
 			key: "palm",
-			x: 1680,
+			x: 1980,
 			y: 988,
 			scale: 1.4,
 			depth: 8
 		},
 		{
-			key: "palm",
+			key: "ftl_tiki",
 			x: 2420,
 			y: 988,
-			scale: 1.3,
-			depth: 8
+			scale: 1.2,
+			flipX: true,
+			depth: 7
 		},
 		{
 			key: "tower",
@@ -593,10 +600,17 @@ var FORT_LAUDERDALE = {
 			depth: 7
 		},
 		{
-			key: "palm",
-			x: 4160,
+			key: "ftl_surf",
+			x: 3750,
 			y: 988,
-			scale: 1.25,
+			scale: 1.2,
+			depth: 8
+		},
+		{
+			key: "palm",
+			x: 4200,
+			y: 988,
+			scale: 1.3,
 			flipX: true,
 			depth: 6
 		}
@@ -674,39 +688,60 @@ var SOUTH_FLORIDA_LEVELS = [
 		],
 		props: [
 			{
-				key: "palm",
-				x: 420,
+				key: "tampa_lamp",
+				x: 380,
+				y: 988,
+				scale: 1.25,
+				depth: 7
+			},
+			{
+				key: "tampa_barrel",
+				x: 750,
+				y: 988,
+				scale: 1.25,
+				depth: 8
+			},
+			{
+				key: "tampa_balcony",
+				x: 1250,
+				y: 988,
+				scale: 1.25,
+				depth: 7
+			},
+			{
+				key: "tampa_lamp",
+				x: 1780,
 				y: 988,
 				scale: 1.2,
 				depth: 7
 			},
 			{
-				key: "tower",
-				x: 1200,
-				y: 986,
+				key: "tampa_barrel",
+				x: 2350,
+				y: 988,
 				scale: 1.3,
+				flipX: true,
 				depth: 8
 			},
 			{
-				key: "palm",
-				x: 1890,
+				key: "tampa_balcony",
+				x: 2950,
 				y: 988,
-				scale: 1.15,
-				flipX: true,
-				depth: 6
+				scale: 1.3,
+				depth: 7
 			},
 			{
-				key: "tower",
-				x: 2600,
-				y: 986,
+				key: "tampa_lamp",
+				x: 3600,
+				y: 988,
 				scale: 1.25,
 				depth: 7
 			},
 			{
-				key: "palm",
-				x: 3450,
+				key: "tampa_barrel",
+				x: 4150,
 				y: 988,
-				scale: 1.35,
+				scale: 1.2,
 				depth: 8
 			}
 		],
@@ -777,41 +812,61 @@ var SOUTH_FLORIDA_LEVELS = [
 		],
 		props: [
 			{
-				key: "palm",
+				key: "pb_lamp",
 				x: 380,
 				y: 988,
-				scale: 1.45,
+				scale: 1.25,
+				depth: 7
+			},
+			{
+				key: "pb_urn",
+				x: 720,
+				y: 988,
+				scale: 1.2,
 				depth: 8
 			},
 			{
-				key: "palm",
-				x: 890,
+				key: "pb_fountain",
+				x: 1280,
 				y: 988,
 				scale: 1.3,
-				flipX: true,
-				depth: 6
-			},
-			{
-				key: "tower",
-				x: 1650,
-				y: 986,
-				scale: 1.2,
 				depth: 7
 			},
 			{
 				key: "palm",
-				x: 2500,
+				x: 1850,
 				y: 988,
-				scale: 1.4,
+				scale: 1.35,
 				depth: 8
 			},
 			{
-				key: "palm",
-				x: 3380,
+				key: "pb_lamp",
+				x: 2400,
 				y: 988,
-				scale: 1.35,
+				scale: 1.25,
+				depth: 7
+			},
+			{
+				key: "pb_urn",
+				x: 2850,
+				y: 988,
+				scale: 1.2,
 				flipX: true,
-				depth: 6
+				depth: 8
+			},
+			{
+				key: "pb_fountain",
+				x: 3450,
+				y: 988,
+				scale: 1.3,
+				depth: 7
+			},
+			{
+				key: "pb_lamp",
+				x: 4100,
+				y: 988,
+				scale: 1.25,
+				depth: 7
 			}
 		],
 		enemies: [
@@ -881,33 +936,53 @@ var SOUTH_FLORIDA_LEVELS = [
 		],
 		props: [
 			{
-				key: "palm",
-				x: 500,
+				key: "wynwood_hydrant",
+				x: 420,
 				y: 988,
-				scale: 1.2,
-				depth: 7
+				scale: 1.25,
+				depth: 8
 			},
 			{
-				key: "palm",
-				x: 1750,
+				key: "wynwood_crates",
+				x: 920,
 				y: 988,
-				scale: 1.35,
-				flipX: true,
-				depth: 6
+				scale: 1.25,
+				depth: 8
 			},
 			{
-				key: "palm",
-				x: 2900,
+				key: "wynwood_sign",
+				x: 1480,
 				y: 988,
 				scale: 1.25,
 				depth: 7
 			},
 			{
-				key: "palm",
-				x: 3850,
+				key: "wynwood_crates",
+				x: 2100,
 				y: 988,
-				scale: 1.4,
+				scale: 1.3,
 				flipX: true,
+				depth: 8
+			},
+			{
+				key: "wynwood_hydrant",
+				x: 2750,
+				y: 988,
+				scale: 1.2,
+				depth: 8
+			},
+			{
+				key: "wynwood_sign",
+				x: 3350,
+				y: 988,
+				scale: 1.25,
+				depth: 7
+			},
+			{
+				key: "wynwood_crates",
+				x: 3950,
+				y: 988,
+				scale: 1.25,
 				depth: 8
 			}
 		],
@@ -982,40 +1057,55 @@ var SOUTH_FLORIDA_LEVELS = [
 		],
 		props: [
 			{
+				key: "mb_artdeco_lamp",
+				x: 380,
+				y: 988,
+				scale: 1.25,
+				depth: 7
+			},
+			{
+				key: "mb_valet_sign",
+				x: 820,
+				y: 988,
+				scale: 1.25,
+				depth: 8
+			},
+			{
 				key: "palm",
-				x: 350,
+				x: 1450,
 				y: 988,
 				scale: 1.4,
 				depth: 8
 			},
 			{
-				key: "tower",
-				x: 950,
-				y: 986,
+				key: "mb_artdeco_lamp",
+				x: 2050,
+				y: 988,
 				scale: 1.25,
 				depth: 7
 			},
 			{
-				key: "palm",
-				x: 1650,
+				key: "mb_valet_sign",
+				x: 2650,
 				y: 988,
 				scale: 1.3,
 				flipX: true,
-				depth: 6
-			},
-			{
-				key: "tower",
-				x: 2450,
-				y: 986,
-				scale: 1.2,
-				depth: 7
+				depth: 8
 			},
 			{
 				key: "palm",
-				x: 3200,
+				x: 3250,
 				y: 988,
-				scale: 1.45,
+				scale: 1.35,
+				flipX: true,
 				depth: 8
+			},
+			{
+				key: "mb_artdeco_lamp",
+				x: 3950,
+				y: 988,
+				scale: 1.3,
+				depth: 7
 			}
 		],
 		enemies: [
@@ -2348,7 +2438,7 @@ function GameApp() {
 		if (!host) return;
 		let game = null;
 		let cancelled = false;
-		import("./createGame-3ZgN9ise.mjs").then(({ createGame }) => {
+		import("./createGame-DJkv7voi.mjs").then(({ createGame }) => {
 			if (cancelled || !host) return;
 			game = createGame(host);
 		});

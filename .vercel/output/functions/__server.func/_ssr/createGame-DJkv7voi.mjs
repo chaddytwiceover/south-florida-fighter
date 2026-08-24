@@ -1,6 +1,6 @@
-import { C as WORLD_WIDTH, S as WORLD_HEIGHT, _ as GAME_HEIGHT, a as getLevel, b as PLAYER_BODY, c as allRosterClips, d as unregisterGame, f as CAMERA, g as ENEMY_DISPLAY_SCALE, h as ENEMY_BODY, i as SOUTH_FLORIDA_LEVELS, l as getCharacter, n as inputManager, o as approach, p as COMBAT, r as useGameStore, s as audioManager, u as registerGame, v as JUMP, x as PLAYER_DISPLAY_SCALE, y as MOVE } from "./routes-BwETuoLp.mjs";
+import { C as WORLD_WIDTH, S as WORLD_HEIGHT, _ as GAME_HEIGHT, a as getLevel, b as PLAYER_BODY, c as allRosterClips, d as unregisterGame, f as CAMERA, g as ENEMY_DISPLAY_SCALE, h as ENEMY_BODY, i as SOUTH_FLORIDA_LEVELS, l as getCharacter, n as inputManager, o as approach, p as COMBAT, r as useGameStore, s as audioManager, u as registerGame, v as JUMP, x as PLAYER_DISPLAY_SCALE, y as MOVE } from "./routes-BgoS_53o.mjs";
 import { t as phaser_esm_exports } from "../_libs/phaser.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/createGame-3ZgN9ise.js
+//#region node_modules/.nitro/vite/services/ssr/assets/createGame-DJkv7voi.js
 var STANDARD_SHEET = {
 	frameWidth: 160,
 	frameHeight: 180,
@@ -1449,6 +1449,19 @@ var PlayScene = class extends Phaser$2.Scene {
 		this.load.image("ground", "/game/backgrounds/fort-lauderdale/ground.jpg");
 		this.load.image("palm", "/game/sprites/props/palm.png");
 		this.load.image("tower", "/game/sprites/props/tower.png");
+		this.load.image("ftl_tiki", "/game/sprites/props/ftl_tiki.png");
+		this.load.image("ftl_surf", "/game/sprites/props/ftl_surf.png");
+		this.load.image("tampa_lamp", "/game/sprites/props/tampa_lamp.png");
+		this.load.image("tampa_balcony", "/game/sprites/props/tampa_balcony.png");
+		this.load.image("tampa_barrel", "/game/sprites/props/tampa_barrel.png");
+		this.load.image("pb_fountain", "/game/sprites/props/pb_fountain.png");
+		this.load.image("pb_lamp", "/game/sprites/props/pb_lamp.png");
+		this.load.image("pb_urn", "/game/sprites/props/pb_urn.png");
+		this.load.image("wynwood_hydrant", "/game/sprites/props/wynwood_hydrant.png");
+		this.load.image("wynwood_crates", "/game/sprites/props/wynwood_crates.png");
+		this.load.image("wynwood_sign", "/game/sprites/props/wynwood_sign.png");
+		this.load.image("mb_artdeco_lamp", "/game/sprites/props/mb_artdeco_lamp.png");
+		this.load.image("mb_valet_sign", "/game/sprites/props/mb_valet_sign.png");
 		this.load.spritesheet("slash-fx", "/game/sprites/fx/slash.png", {
 			frameWidth: 128,
 			frameHeight: 128

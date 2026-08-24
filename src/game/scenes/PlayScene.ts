@@ -48,8 +48,23 @@ export class PlayScene extends Phaser.Scene {
     }
 
     this.load.image("ground", "/game/backgrounds/fort-lauderdale/ground.jpg");
+    
+    // Core & Stage-Specific Props
     this.load.image("palm", "/game/sprites/props/palm.png");
     this.load.image("tower", "/game/sprites/props/tower.png");
+    this.load.image("ftl_tiki", "/game/sprites/props/ftl_tiki.png");
+    this.load.image("ftl_surf", "/game/sprites/props/ftl_surf.png");
+    this.load.image("tampa_lamp", "/game/sprites/props/tampa_lamp.png");
+    this.load.image("tampa_balcony", "/game/sprites/props/tampa_balcony.png");
+    this.load.image("tampa_barrel", "/game/sprites/props/tampa_barrel.png");
+    this.load.image("pb_fountain", "/game/sprites/props/pb_fountain.png");
+    this.load.image("pb_lamp", "/game/sprites/props/pb_lamp.png");
+    this.load.image("pb_urn", "/game/sprites/props/pb_urn.png");
+    this.load.image("wynwood_hydrant", "/game/sprites/props/wynwood_hydrant.png");
+    this.load.image("wynwood_crates", "/game/sprites/props/wynwood_crates.png");
+    this.load.image("wynwood_sign", "/game/sprites/props/wynwood_sign.png");
+    this.load.image("mb_artdeco_lamp", "/game/sprites/props/mb_artdeco_lamp.png");
+    this.load.image("mb_valet_sign", "/game/sprites/props/mb_valet_sign.png");
 
     this.load.spritesheet("slash-fx", "/game/sprites/fx/slash.png", {
       frameWidth: 128,
