@@ -2,8 +2,8 @@ import { i as __toESM, n as __exportAll } from "../_runtime.mjs";
 import { I as require_jsx_runtime, L as require_react, _ as useRouter, f as createRouter, g as createRootRoute, h as createFileRoute, l as Scripts, m as lazyRouteComponent, p as Outlet, u as HeadContent } from "../_libs/@tanstack/react-router+[...].mjs";
 import { i as TriangleAlert } from "../_libs/lucide-react.mjs";
 import { a as union, i as string, n as number, r as object, t as literal } from "../_libs/zod.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-9T7xsdfl.js
-var router_9T7xsdfl_exports = /* @__PURE__ */ __exportAll({ getRouter: () => getRouter });
+//#region node_modules/.nitro/vite/services/ssr/assets/router-CKtm0e51.js
+var router_CKtm0e51_exports = /* @__PURE__ */ __exportAll({ getRouter: () => getRouter });
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function AppErrorComponent({ error }) {
@@ -272,24 +272,33 @@ function PreviewHostBridge() {
 	}, [router]);
 	return null;
 }
-var styles_default = "/assets/styles-BdzhiqMu.css";
-var APP_NAME = "South Florida Samurai";
+var styles_default = "/assets/styles-D4L3BSwi.css";
+var APP_NAME = "South Florida Fighter";
+var APP_DESC = "The premier 2D arcade fighting game across Fort Lauderdale, Tampa, Palm Beach, Miami, and Miami Beach.";
 var Route$1 = createRootRoute({
 	head: () => ({
 		meta: [
 			{ charSet: "utf-8" },
 			{
 				name: "viewport",
-				content: "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
+				content: "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no"
 			},
-			{ title: APP_NAME },
+			{ title: `${APP_NAME} | 2D Arcade Fighting Championship` },
 			{
 				name: "description",
-				content: "A colorful 2D samurai action game set on the beaches of South Florida."
+				content: APP_DESC
 			},
 			{
 				name: "theme-color",
 				content: "#0C1A24"
+			},
+			{
+				name: "apple-mobile-web-app-capable",
+				content: "yes"
+			},
+			{
+				name: "apple-mobile-web-app-status-bar-style",
+				content: "black-translucent"
 			}
 		],
 		links: [
@@ -321,7 +330,7 @@ var Route$1 = createRootRoute({
 			},
 			{
 				rel: "stylesheet",
-				href: "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@500;600;700;800&display=swap"
+				href: "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@500;600;700;800;900&display=swap"
 			}
 		]
 	}),
@@ -335,7 +344,7 @@ var Route$1 = createRootRoute({
 		] })]
 	})
 });
-var $$splitComponentImporter = () => import("./routes-Ci5gMXoQ.mjs").then((n) => n.t);
+var $$splitComponentImporter = () => import("./routes-BMZl-e95.mjs").then((n) => n.t);
 var rootRouteChildren = { IndexRoute: createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter, "component") }).update({
 	id: "/",
 	path: "/",
@@ -349,4 +358,4 @@ function getRouter() {
 	});
 }
 //#endregion
-export { getRouter, router_9T7xsdfl_exports as t };
+export { getRouter, router_CKtm0e51_exports as t };

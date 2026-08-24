@@ -4,7 +4,7 @@ import { t as create } from "../_libs/zustand.mjs";
 import { a as Sword, c as RotateCcw, d as Flame, f as ChevronRight, l as Play, m as ArrowUp, n as VolumeX, o as Sparkles, p as ChevronLeft, r as Volume2, s as Shield, t as Zap, u as MapPin } from "../_libs/lucide-react.mjs";
 import { t as clsx } from "../_libs/clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-Ci5gMXoQ.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-BMZl-e95.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var __defProp = Object.defineProperty;
@@ -1777,11 +1777,12 @@ function Hud() {
 	});
 }
 var TIPS = [
-	"Tip: Cancel any Normal Attack (Light/Heavy/Kick) into a Special or Finisher on hit!",
+	"Tip: Cancel Normal Attacks (Light/Heavy/Kick) into Specials or Super Finishers on hit!",
 	"Tip: Tap Parry (F / Shield) right before an impact for a Frame-1 Just Parry and +25 KI!",
-	"Tip: Double-tap Forward or press Dash (E) to phase through enemy attacks with iFrames!",
-	"Tip: Hold Guard (S / Shift) to block high attacks; crouch guard to block low sweeps!",
-	"Tip: At 100% KI, unleash your Unblockable Super Finisher (P / 4) for massive damage!"
+	"Tip: Double-tap Forward or press Dash (E) to phase through attacks with invulnerability!",
+	"Tip: Hold Guard (S / Shift) to block overhead strikes; crouch guard to block low sweeps!",
+	"Tip: At 100% KI, unleash your Unblockable Seismic Crown Slam (P / 4) for massive damage!",
+	"Tip: Master all 5 South Florida city arenas from Fort Lauderdale to Miami Beach!"
 ];
 function Preloader({ onReady }) {
 	const [progress, setProgress] = (0, import_react.useState)(0);
@@ -1795,9 +1796,9 @@ function Preloader({ onReady }) {
 					setLoaded(true);
 					return 100;
 				}
-				return p + Math.floor(Math.random() * 18 + 12);
+				return p + Math.floor(Math.random() * 20 + 15);
 			});
-		}, 90);
+		}, 80);
 		const tipTimer = setInterval(() => {
 			setTipIndex((i) => (i + 1) % TIPS.length);
 		}, 2800);
@@ -1814,8 +1815,8 @@ function Preloader({ onReady }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "absolute inset-0 z-40 flex flex-col items-center justify-between bg-ink px-4 py-8 text-foam select-none",
 		children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-ocean/20 via-ink to-ink opacity-80" }),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,rgba(11,110,122,0.05)_50%,transparent_100%)] bg-[length:100%_4px]" }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-ocean/25 via-ink to-ink opacity-90" }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,rgba(11,110,122,0.06)_50%,transparent_100%)] bg-[length:100%_4px]" }),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "relative z-10 flex w-full max-w-md items-center justify-between",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -1825,7 +1826,7 @@ function Preloader({ onReady }) {
 						children: "South Florida Arcade Engine v2.0"
 					})]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "flex items-center gap-1.5 text-xs text-foam/60",
+					className: "flex items-center gap-1.5 text-xs text-foam/70",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Zap, { className: "size-3.5 text-gold" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 						className: "font-mono text-[0.68rem]",
 						children: "60 FPS LOCKED"
@@ -1837,18 +1838,21 @@ function Preloader({ onReady }) {
 				children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "relative mb-3 flex items-center justify-center",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "absolute -inset-4 rounded-full bg-ocean-2/20 blur-xl animate-pulse" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Shield, { className: "size-16 text-foam drop-shadow-[0_0_15px_rgba(20,145,155,0.8)]" })]
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "absolute -inset-4 rounded-full bg-ocean-2/20 blur-xl animate-pulse" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Shield, { className: "size-16 text-gold drop-shadow-[0_0_20px_rgba(232,196,90,0.8)]" })]
 					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-						className: "font-sans text-xs font-black uppercase tracking-[0.38em] text-coral drop-shadow",
-						children: "Fort Lauderdale Boardwalk"
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-1.5 rounded-full border border-gold/30 bg-ink-2/80 px-3 py-0.5 mb-2 shadow",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "size-3 text-coral" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "font-sans text-[0.65rem] font-black uppercase tracking-[0.22em] text-sand",
+							children: "5-City Championship Tour"
+						})]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
-						className: "font-display text-6xl tracking-wider text-foam sm:text-7xl drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]",
+						className: "font-display text-6xl tracking-wider text-foam sm:text-7xl drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]",
 						children: "SOUTH FLORIDA"
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
-						className: "font-display text-5xl tracking-widest text-gold -mt-2 drop-shadow-[0_0_20px_rgba(232,196,90,0.6)]",
+						className: "font-display text-5xl tracking-widest text-gold -mt-2 drop-shadow-[0_0_25px_rgba(232,196,90,0.7)]",
 						children: "FIGHTER"
 					})
 				]
@@ -1859,7 +1863,7 @@ function Preloader({ onReady }) {
 					className: "w-full space-y-2",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "flex items-center justify-between text-[0.7rem] font-bold uppercase tracking-wider text-foam/80",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Loading Arena Assets & Audio DSP..." }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Preloading 5 City Arenas & Frame Data..." }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 							className: "font-mono text-sand",
 							children: [progress, "%"]
 						})]
@@ -1873,10 +1877,10 @@ function Preloader({ onReady }) {
 				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 					type: "button",
 					onClick: handleStart,
-					className: "group relative flex h-14 w-full items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-coral via-sand to-gold px-8 font-sans text-base font-black uppercase tracking-[0.2em] text-ink shadow-[0_0_30px_rgba(232,93,76,0.6)] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
+					className: "group relative flex h-14 w-full items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-coral via-sand to-gold px-8 font-sans text-base font-black uppercase tracking-[0.2em] text-ink shadow-[0_0_30px_rgba(232,93,76,0.7)] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Play, { className: "size-5 fill-ink" }),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Enter Arena" }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Enter Championship" }),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-5 animate-spin text-ink" })
 					]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
@@ -1921,20 +1925,28 @@ function TitleOverlay() {
 		audioManager.roundAnnounce();
 		useGameStore.getState().setScreen("city-select");
 	};
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-		className: "absolute inset-0 z-30 flex items-end justify-center bg-ink/40 px-4 pb-[max(1.4rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] select-none backdrop-blur-[2px]",
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "w-full max-w-md rounded-[1.8rem] border border-foam/20 bg-ink/90 px-6 py-6 text-center shadow-[0_24px_70px_rgba(0,0,0,0.65)] backdrop-blur-xl",
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "absolute inset-0 z-30 flex items-end justify-center px-4 pb-[max(1.4rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] select-none",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "absolute inset-0 z-0 overflow-hidden bg-ink",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+				src: "/game/backgrounds/title.jpg",
+				alt: "",
+				className: "size-full object-cover opacity-60 scale-105 transition-transform duration-1000 ease-out",
+				draggable: false
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "absolute inset-0 bg-gradient-to-t from-ink via-ink/60 to-transparent" })]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "relative z-10 w-full max-w-md rounded-[2rem] border border-foam/25 bg-ink/90 px-6 py-6 text-center shadow-[0_24px_80px_rgba(0,0,0,0.8)] backdrop-blur-xl",
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "flex items-center justify-center gap-2",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-1.5 w-1.5 rounded-full bg-coral animate-ping" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 						className: "font-sans text-[0.68rem] font-black uppercase tracking-[0.32em] text-sand",
-						children: "5-City Florida Championship"
+						children: "5-City Florida Circuit Championship"
 					})]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
-					className: "mt-1 font-display text-6xl leading-none tracking-wide text-foam drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]",
+					className: "mt-1 font-display text-6xl leading-none tracking-wide text-foam drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]",
 					children: "SOUTH FLORIDA"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
@@ -1942,7 +1954,7 @@ function TitleOverlay() {
 					children: "FIGHTER"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "mx-auto my-3 flex max-w-xs items-center justify-center gap-4 text-xs font-bold text-foam/80 border-y border-foam/10 py-1.5 font-mono",
+					className: "mx-auto my-3 flex max-w-xs items-center justify-center gap-3 text-xs font-bold text-foam/80 border-y border-foam/15 py-1.5 font-mono",
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 							className: "flex items-center gap-1 text-gold",
@@ -1956,18 +1968,18 @@ function TitleOverlay() {
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "·" }),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 							className: "flex items-center gap-1 text-coral",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-3.5" }), " BOSS RAID"]
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Flame, { className: "size-3.5" }), " BOSS RAID"]
 						})
 					]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 					className: "mx-auto mt-2 max-w-sm font-sans text-xs leading-relaxed text-muted",
-					children: "Fight across Fort Lauderdale, Tampa, Palm Beach, Miami, and Miami Beach. Master frame-1 parries, combo juggles, and seismic finishers."
+					children: "Fight across Fort Lauderdale, Tampa, Palm Beach, Miami, and Miami Beach. Master frame-1 parries, launcher air juggles, and seismic finishers."
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 					type: "button",
 					onClick: start,
-					className: "mt-5 inline-flex h-13 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-coral via-sand to-gold px-8 font-sans text-base font-black uppercase tracking-[0.18em] text-ink shadow-[0_0_25px_rgba(232,93,76,0.6)] transition-all hover:scale-[1.02] active:scale-[0.98]",
+					className: "mt-5 inline-flex h-13 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-coral via-sand to-gold px-8 font-sans text-base font-black uppercase tracking-[0.18em] text-ink shadow-[0_0_25px_rgba(232,93,76,0.7)] transition-all hover:scale-[1.02] active:scale-[0.98]",
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "size-5 fill-ink" }),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Enter Florida Circuit" }),
@@ -1975,11 +1987,11 @@ function TitleOverlay() {
 					]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "mt-4 grid grid-cols-2 gap-2 rounded-xl border border-foam/10 bg-ink-2/60 p-2.5 text-left font-sans text-[0.62rem] text-foam/75",
+					className: "mt-4 grid grid-cols-2 gap-2 rounded-xl border border-foam/10 bg-ink-2/70 p-2.5 text-left font-sans text-[0.62rem] text-foam/75",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 							className: "font-bold text-sand uppercase block mb-0.5",
-							children: "Keyboard"
+							children: "Desktop Keyboard"
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "A/D: Move · Space: Jump" }),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
@@ -1995,11 +2007,11 @@ function TitleOverlay() {
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "P / 4: Super Finisher" }),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Touch Controls + Swipe" })
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Virtual D-Pad & Swipes" })
 					] })]
 				})
 			]
-		})
+		})]
 	});
 }
 function holdHandlers(key) {
@@ -2341,7 +2353,7 @@ function GameApp() {
 		if (!host) return;
 		let game = null;
 		let cancelled = false;
-		import("./createGame-Cr1TzP6n.mjs").then(({ createGame }) => {
+		import("./createGame-PpgsuosN.mjs").then(({ createGame }) => {
 			if (cancelled || !host) return;
 			game = createGame(host);
 		});

@@ -3,7 +3,9 @@ import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import appCss from "../styles.css?url";
 
-const APP_NAME = "South Florida Samurai";
+const APP_NAME = "South Florida Fighter";
+const APP_DESC =
+  "The premier 2D arcade fighting game across Fort Lauderdale, Tampa, Palm Beach, Miami, and Miami Beach.";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -12,15 +14,16 @@ export const Route = createRootRoute({
       {
         name: "viewport",
         content:
-          "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover",
+          "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no",
       },
-      { title: APP_NAME },
+      { title: `${APP_NAME} | 2D Arcade Fighting Championship` },
       {
         name: "description",
-        content:
-          "A colorful 2D samurai action game set on the beaches of South Florida.",
+        content: APP_DESC,
       },
       { name: "theme-color", content: "#0C1A24" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -35,7 +38,7 @@ export const Route = createRootRoute({
       },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@500;600;700;800&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@500;600;700;800;900&display=swap",
       },
     ],
   }),
