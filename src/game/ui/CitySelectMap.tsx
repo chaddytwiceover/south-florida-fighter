@@ -3,18 +3,13 @@ import { useGameStore } from "../systems/gameStore";
 import { restartPlayScene } from "../runtime";
 import { audioManager } from "../audio/AudioManager";
 import { cn } from "@/lib/utils";
-import { Lock, MapPin, Play, Shield, Sparkles, Star, Trophy } from "lucide-react";
+import { ChevronRight, MapPin, Play, Sparkles, Trophy, Zap } from "lucide-react";
 
 export function CitySelectMap() {
   const currentLevelId = useGameStore((s) => s.currentLevelId);
-  const unlockedLevels = useGameStore((s) => s.unlockedLevels);
   const selectedLevel = getLevel(currentLevelId);
 
   const handleSelectCity = (levelId: string) => {
-    if (!unlockedLevels.includes(levelId)) {
-      audioManager.hitLight();
-      return;
-    }
     audioManager.swing(1.2);
     useGameStore.getState().setCurrentLevel(levelId);
   };
@@ -23,6 +18,14 @@ export function CitySelectMap() {
     audioManager.unlock();
     audioManager.roundAnnounce();
     useGameStore.getState().resetRunStats();
+    useGameStore.getState().setScreen("play");
+    window.setTimeout(() => restartPlayScene(), 80);
+  };
+
+  const handleDirectLaunch = (levelId: string) => {
+    audioManager.unlock();
+    audioManager.roundAnnounce();
+    useGameStore.getState().setCurrentLevel(levelId);
     useGameStore.getState().setScreen("play");
     window.setTimeout(() => restartPlayScene(), 80);
   };
@@ -36,7 +39,7 @@ export function CitySelectMap() {
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-coral animate-ping" />
               <p className="font-sans text-[0.62rem] font-bold uppercase tracking-[0.26em] text-sand">
-                South Florida Circuit
+                South Florida Circuit · 5 Cities
               </p>
             </div>
             <h2 className="font-display text-4xl leading-none text-foam">Choose Your Arena</h2>
@@ -50,25 +53,20 @@ export function CitySelectMap() {
           </button>
         </div>
 
-        {/* City List Carousel / Cards */}
+        {/* City List */}
         <div className="flex-1 overflow-y-auto space-y-2 pr-1">
           {SOUTH_FLORIDA_LEVELS.map((lvl, index) => {
-            const isUnlocked = unlockedLevels.includes(lvl.id);
             const isSelected = lvl.id === selectedLevel.id;
 
             return (
-              <button
+              <div
                 key={lvl.id}
-                type="button"
-                disabled={!isUnlocked}
                 onClick={() => handleSelectCity(lvl.id)}
                 className={cn(
-                  "relative flex w-full items-center gap-3 rounded-2xl border p-2.5 text-left transition-all duration-200",
-                  isSelected && isUnlocked
+                  "relative flex w-full items-center gap-3 rounded-2xl border p-2.5 text-left transition-all duration-200 cursor-pointer",
+                  isSelected
                     ? "border-gold bg-ink/95 shadow-[0_0_20px_rgba(232,196,90,0.3)] ring-2 ring-gold"
-                    : isUnlocked
-                      ? "border-foam/15 bg-ink/75 hover:border-foam/40 hover:bg-ink/85"
-                      : "border-foam/10 bg-ink/40 opacity-55 cursor-not-allowed",
+                    : "border-foam/15 bg-ink/75 hover:border-foam/40 hover:bg-ink/85 active:scale-[0.99]",
                 )}
               >
                 {/* City Thumbnail */}
@@ -79,11 +77,7 @@ export function CitySelectMap() {
                     className="size-full object-cover"
                     draggable={false}
                   />
-                  {!isUnlocked ? (
-                    <div className="absolute inset-0 bg-ink/80 flex items-center justify-center">
-                      <Lock className="size-6 text-foam/60" />
-                    </div>
-                  ) : isSelected ? (
+                  {isSelected ? (
                     <div className="absolute top-1 right-1 rounded-full bg-gold p-0.5 shadow">
                       <Sparkles className="size-3 text-ink" />
                     </div>
@@ -107,7 +101,20 @@ export function CitySelectMap() {
                     {lvl.tagline}
                   </p>
                 </div>
-              </button>
+
+                {/* Quick Launch Button */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDirectLaunch(lvl.id);
+                  }}
+                  className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gold/20 text-gold hover:bg-gold hover:text-ink active:scale-95 transition-colors border border-gold/30"
+                  aria-label={`Play ${lvl.name}`}
+                >
+                  <Play className="size-4 fill-current" />
+                </button>
+              </div>
             );
           })}
         </div>
@@ -119,7 +126,7 @@ export function CitySelectMap() {
               {selectedLevel.city} · Fight Briefing
             </span>
             <span className="font-mono text-[0.62rem] text-foam/60">
-              {selectedLevel.boss ? "★ BOSS STAGE" : "STANDARD ARENA"}
+              {selectedLevel.boss ? "★ CLIMAX BOSS ARENA" : "STANDARD ARENA"}
             </span>
           </div>
           <p className="mt-1 font-sans text-xs text-foam/85 leading-relaxed">

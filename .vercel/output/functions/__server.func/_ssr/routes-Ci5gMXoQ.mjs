@@ -1,10 +1,10 @@
 import { i as __toESM } from "../_runtime.mjs";
 import { I as require_jsx_runtime, L as require_react } from "../_libs/@tanstack/react-router+[...].mjs";
 import { t as create } from "../_libs/zustand.mjs";
-import { a as Sword, c as RotateCcw, d as Lock, f as Flame, h as ArrowUp, l as Play, m as ChevronLeft, n as VolumeX, o as Sparkles, p as ChevronRight, r as Volume2, s as Shield, t as Zap, u as MapPin } from "../_libs/lucide-react.mjs";
+import { a as Sword, c as RotateCcw, d as Flame, f as ChevronRight, l as Play, m as ArrowUp, n as VolumeX, o as Sparkles, p as ChevronLeft, r as Volume2, s as Shield, t as Zap, u as MapPin } from "../_libs/lucide-react.mjs";
 import { t as clsx } from "../_libs/clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-BLfuIWbj.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-Ci5gMXoQ.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var __defProp = Object.defineProperty;
@@ -1066,13 +1066,23 @@ var SOUTH_FLORIDA_LEVELS = [
 function getLevel(id) {
 	return SOUTH_FLORIDA_LEVELS.find((l) => l.id === id) ?? FORT_LAUDERDALE;
 }
+var ALL_LEVEL_IDS = [
+	"fort-lauderdale",
+	"tampa",
+	"palm-beach",
+	"miami",
+	"miami-beach"
+];
 function readUnlockedLevels() {
-	if (typeof window === "undefined") return ["fort-lauderdale"];
+	if (typeof window === "undefined") return ALL_LEVEL_IDS;
 	try {
 		const saved = window.localStorage.getItem("sfs.unlockedLevels");
-		if (saved) return JSON.parse(saved);
+		if (saved) {
+			const parsed = JSON.parse(saved);
+			if (Array.isArray(parsed) && parsed.length >= ALL_LEVEL_IDS.length) return parsed;
+		}
 	} catch {}
-	return ["fort-lauderdale"];
+	return ALL_LEVEL_IDS;
 }
 function saveUnlockedLevels(levels) {
 	if (typeof window === "undefined") return;
@@ -1434,14 +1444,8 @@ function cn(...inputs) {
 	return twMerge(clsx(inputs));
 }
 function CitySelectMap() {
-	const currentLevelId = useGameStore((s) => s.currentLevelId);
-	const unlockedLevels = useGameStore((s) => s.unlockedLevels);
-	const selectedLevel = getLevel(currentLevelId);
+	const selectedLevel = getLevel(useGameStore((s) => s.currentLevelId));
 	const handleSelectCity = (levelId) => {
-		if (!unlockedLevels.includes(levelId)) {
-			audioManager.hitLight();
-			return;
-		}
 		audioManager.swing(1.2);
 		useGameStore.getState().setCurrentLevel(levelId);
 	};
@@ -1449,6 +1453,13 @@ function CitySelectMap() {
 		audioManager.unlock();
 		audioManager.roundAnnounce();
 		useGameStore.getState().resetRunStats();
+		useGameStore.getState().setScreen("play");
+		window.setTimeout(() => restartPlayScene(), 80);
+	};
+	const handleDirectLaunch = (levelId) => {
+		audioManager.unlock();
+		audioManager.roundAnnounce();
+		useGameStore.getState().setCurrentLevel(levelId);
 		useGameStore.getState().setScreen("play");
 		window.setTimeout(() => restartPlayScene(), 80);
 	};
@@ -1463,7 +1474,7 @@ function CitySelectMap() {
 						className: "flex items-center gap-2",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-2 w-2 rounded-full bg-coral animate-ping" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 							className: "font-sans text-[0.62rem] font-bold uppercase tracking-[0.26em] text-sand",
-							children: "South Florida Circuit"
+							children: "South Florida Circuit · 5 Cities"
 						})]
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
 						className: "font-display text-4xl leading-none text-foam",
@@ -1478,50 +1489,57 @@ function CitySelectMap() {
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "flex-1 overflow-y-auto space-y-2 pr-1",
 					children: SOUTH_FLORIDA_LEVELS.map((lvl, index) => {
-						const isUnlocked = unlockedLevels.includes(lvl.id);
 						const isSelected = lvl.id === selectedLevel.id;
-						return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							type: "button",
-							disabled: !isUnlocked,
+						return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							onClick: () => handleSelectCity(lvl.id),
-							className: cn("relative flex w-full items-center gap-3 rounded-2xl border p-2.5 text-left transition-all duration-200", isSelected && isUnlocked ? "border-gold bg-ink/95 shadow-[0_0_20px_rgba(232,196,90,0.3)] ring-2 ring-gold" : isUnlocked ? "border-foam/15 bg-ink/75 hover:border-foam/40 hover:bg-ink/85" : "border-foam/10 bg-ink/40 opacity-55 cursor-not-allowed"),
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "relative size-16 shrink-0 overflow-hidden rounded-xl border border-foam/20 bg-ocean",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
-									src: lvl.parallax.far,
-									alt: "",
-									className: "size-full object-cover",
-									draggable: false
-								}), !isUnlocked ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-									className: "absolute inset-0 bg-ink/80 flex items-center justify-center",
-									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "size-6 text-foam/60" })
-								}) : isSelected ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-									className: "absolute top-1 right-1 rounded-full bg-gold p-0.5 shadow",
-									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-3 text-ink" })
-								}) : null]
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "min-w-0 flex-1",
-								children: [
-									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "flex items-center gap-1.5",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-											className: "font-mono text-[0.6rem] font-black text-coral",
-											children: ["STAGE ", index + 1]
-										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-											className: "font-sans text-[0.62rem] font-bold text-sand/80 uppercase",
-											children: ["· ", lvl.city]
-										})]
-									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-										className: "font-display text-2xl leading-none text-foam truncate",
-										children: lvl.name
-									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-										className: "mt-0.5 font-sans text-[0.65rem] text-muted line-clamp-1",
-										children: lvl.tagline
-									})
-								]
-							})]
+							className: cn("relative flex w-full items-center gap-3 rounded-2xl border p-2.5 text-left transition-all duration-200 cursor-pointer", isSelected ? "border-gold bg-ink/95 shadow-[0_0_20px_rgba(232,196,90,0.3)] ring-2 ring-gold" : "border-foam/15 bg-ink/75 hover:border-foam/40 hover:bg-ink/85 active:scale-[0.99]"),
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "relative size-16 shrink-0 overflow-hidden rounded-xl border border-foam/20 bg-ocean",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+										src: lvl.parallax.far,
+										alt: "",
+										className: "size-full object-cover",
+										draggable: false
+									}), isSelected ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "absolute top-1 right-1 rounded-full bg-gold p-0.5 shadow",
+										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-3 text-ink" })
+									}) : null]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "min-w-0 flex-1",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex items-center gap-1.5",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+												className: "font-mono text-[0.6rem] font-black text-coral",
+												children: ["STAGE ", index + 1]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+												className: "font-sans text-[0.62rem] font-bold text-sand/80 uppercase",
+												children: ["· ", lvl.city]
+											})]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+											className: "font-display text-2xl leading-none text-foam truncate",
+											children: lvl.name
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+											className: "mt-0.5 font-sans text-[0.65rem] text-muted line-clamp-1",
+											children: lvl.tagline
+										})
+									]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+									type: "button",
+									onClick: (e) => {
+										e.stopPropagation();
+										handleDirectLaunch(lvl.id);
+									},
+									className: "flex size-9 shrink-0 items-center justify-center rounded-xl bg-gold/20 text-gold hover:bg-gold hover:text-ink active:scale-95 transition-colors border border-gold/30",
+									"aria-label": `Play ${lvl.name}`,
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Play, { className: "size-4 fill-current" })
+								})
+							]
 						}, lvl.id);
 					})
 				}),
@@ -1535,7 +1553,7 @@ function CitySelectMap() {
 								children: [selectedLevel.city, " · Fight Briefing"]
 							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 								className: "font-mono text-[0.62rem] text-foam/60",
-								children: selectedLevel.boss ? "★ BOSS STAGE" : "STANDARD ARENA"
+								children: selectedLevel.boss ? "★ CLIMAX BOSS ARENA" : "STANDARD ARENA"
 							})]
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
@@ -2323,7 +2341,7 @@ function GameApp() {
 		if (!host) return;
 		let game = null;
 		let cancelled = false;
-		import("./createGame-Cc40m7wk.mjs").then(({ createGame }) => {
+		import("./createGame-Cr1TzP6n.mjs").then(({ createGame }) => {
 			if (cancelled || !host) return;
 			game = createGame(host);
 		});

@@ -46,13 +46,18 @@ type GameStore = {
   resetRunStats: () => void;
 };
 
+const ALL_LEVEL_IDS = ["fort-lauderdale", "tampa", "palm-beach", "miami", "miami-beach"];
+
 function readUnlockedLevels(): string[] {
-  if (typeof window === "undefined") return ["fort-lauderdale"];
+  if (typeof window === "undefined") return ALL_LEVEL_IDS;
   try {
     const saved = window.localStorage.getItem("sfs.unlockedLevels");
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length >= ALL_LEVEL_IDS.length) return parsed;
+    }
   } catch {}
-  return ["fort-lauderdale"];
+  return ALL_LEVEL_IDS;
 }
 
 function saveUnlockedLevels(levels: string[]) {
