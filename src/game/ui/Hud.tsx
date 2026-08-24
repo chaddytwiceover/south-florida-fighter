@@ -3,7 +3,7 @@ import { getCharacter } from "../characters/CharacterData";
 import { inputManager } from "../input/InputManager";
 import { useGameStore } from "../systems/gameStore";
 import { audioManager } from "../audio/AudioManager";
-import { Volume2, VolumeX, Shield, Zap, Sparkles, MapPin } from "lucide-react";
+import { Volume2, VolumeX, Sparkles, MapPin } from "lucide-react";
 
 function getComboRank(hits: number) {
   if (hits >= 15) return { label: "LEGENDARY!", color: "text-amber-300 bg-amber-500/20 border-amber-400" };
@@ -21,7 +21,6 @@ export function Hud() {
   const maxHealth = useGameStore((s) => s.maxHealth);
   const energy = useGameStore((s) => s.energy);
   const maxEnergy = useGameStore((s) => s.maxEnergy);
-  const xp = useGameStore((s) => s.xp);
   const kos = useGameStore((s) => s.kos);
   const comboHits = useGameStore((s) => s.comboHits);
   const aliveEnemies = useGameStore((s) => s.aliveEnemies);
@@ -60,13 +59,14 @@ export function Hud() {
   return (
     <div
       data-testid="hud"
-      className="pointer-events-none absolute inset-x-0 top-0 z-20 p-[max(0.45rem,env(safe-area-inset-top))] px-[max(0.7rem,env(safe-area-inset-left))]"
+      className="pointer-events-none absolute inset-x-0 top-0 z-20 p-2 pt-[max(0.6rem,env(safe-area-inset-top))] px-[max(0.6rem,env(safe-area-inset-left))] select-none"
     >
+      {/* Top Header Row */}
       <div className="flex items-start justify-between gap-2">
-        {/* Left Side: Modern Fighter Status Bar */}
-        <div className="flex min-w-0 flex-1 items-center gap-2.5 rounded-[1.2rem] border border-foam/20 bg-ink/85 p-2 shadow-[0_8px_24px_rgba(0,0,0,0.6)] backdrop-blur-md">
-          {/* Animated Portrait Box */}
-          <div className="relative size-13 shrink-0 overflow-hidden rounded-[0.85rem] border-2 border-gold/60 bg-ocean shadow-md">
+        {/* Left: Player Profile & Health/Ki Card */}
+        <div className="flex items-center gap-2 rounded-2xl border border-foam/20 bg-ink/90 p-2 shadow-2xl backdrop-blur-md max-w-[62%] sm:max-w-[48%]">
+          {/* Portrait Thumbnail */}
+          <div className="relative size-12 shrink-0 overflow-hidden rounded-xl border-2 border-gold/70 bg-ocean shadow-md">
             <img
               src={portrait}
               alt=""
@@ -75,24 +75,24 @@ export function Hud() {
             />
             {finisherReady ? (
               <div className="absolute inset-0 bg-gold/30 animate-pulse flex items-center justify-center">
-                <Sparkles className="size-5 text-amber-200" />
+                <Sparkles className="size-4 text-amber-200" />
               </div>
             ) : null}
           </div>
 
-          {/* Health & Ki Meters */}
-          <div className="min-w-0 flex-1 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <span className="font-display text-2xl leading-none tracking-wide text-foam drop-shadow">
+          {/* Player Meters */}
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="flex items-baseline justify-between gap-1 leading-none">
+              <span className="font-display text-lg tracking-wide text-foam truncate">
                 {characterName}
               </span>
-              <span className="font-mono text-[0.65rem] font-bold text-sand/80">
-                HP {Math.round(health)}/{maxHealth}
+              <span className="font-mono text-[0.6rem] font-bold text-sand shrink-0">
+                {Math.round(health)}/{maxHealth}
               </span>
             </div>
 
-            {/* Health Bar with Ghost Damage Trail */}
-            <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-ink-2 ring-1 ring-foam/20">
+            {/* Health Bar */}
+            <div className="relative h-2 w-full overflow-hidden rounded-full bg-ink-2 ring-1 ring-foam/20">
               <div
                 className="absolute inset-y-0 left-0 rounded-full bg-rose-800 transition-all duration-300 ease-out"
                 style={{ width: `${ghostHpPct}%` }}
@@ -103,20 +103,20 @@ export function Hud() {
               />
             </div>
 
-            {/* 3-Tier Segmented Ki / EX Gauge */}
+            {/* Ki Gauge */}
             <div className="space-y-0.5">
-              <div className="flex items-center justify-between text-[0.58rem] font-extrabold uppercase tracking-wider">
-                <span className={finisherReady ? "text-gold animate-pulse" : "text-foam/70"}>
-                  {finisherReady ? "★ SEISMIC CROWN SLAM READY" : "KI GAUGE"}
+              <div className="flex items-center justify-between text-[0.52rem] font-bold uppercase tracking-wider leading-none">
+                <span className={finisherReady ? "text-gold animate-pulse truncate" : "text-foam/70 truncate"}>
+                  {finisherReady ? "★ SUPER READY" : "KI GAUGE"}
                 </span>
-                <span className="font-mono text-foam/60">{Math.round(energy)}%</span>
+                <span className="font-mono text-foam/60 shrink-0">{Math.round(energy)}%</span>
               </div>
-              <div className="relative flex h-2 w-full gap-0.5 overflow-hidden rounded-full bg-ink-2 p-0.5 ring-1 ring-foam/20">
+              <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-ink-2 ring-1 ring-foam/20">
                 <div
                   className={`h-full rounded-full transition-all duration-100 ${
                     finisherReady
-                      ? "bg-gradient-to-r from-amber-400 via-gold to-yellow-300 shadow-[0_0_12px_rgba(232,196,90,1)] animate-pulse"
-                      : "bg-gradient-to-r from-ocean-2 to-cyan-400 shadow-[0_0_8px_rgba(20,145,155,0.8)]"
+                      ? "bg-gradient-to-r from-amber-400 via-gold to-yellow-300 shadow-[0_0_10px_rgba(232,196,90,1)] animate-pulse"
+                      : "bg-gradient-to-r from-ocean-2 to-cyan-400 shadow-[0_0_6px_rgba(20,145,155,0.8)]"
                   }`}
                   style={{ width: `${kiPct}%` }}
                 />
@@ -125,13 +125,13 @@ export function Hud() {
           </div>
         </div>
 
-        {/* Right Side: Combos, Location & Circuit Buttons */}
-        <div className="flex shrink-0 flex-col items-end gap-1.5">
+        {/* Right: Stage Info, Map Button, Audio Toggle */}
+        <div className="flex shrink-0 flex-col items-end gap-1">
           <div className="flex items-center gap-1.5">
             <button
               type="button"
               onClick={toggleAudio}
-              className="pointer-events-auto flex size-7 items-center justify-center rounded-full border border-foam/20 bg-ink/80 text-foam/80 hover:bg-ink hover:text-foam active:scale-95"
+              className="pointer-events-auto flex size-7 items-center justify-center rounded-full border border-foam/20 bg-ink/85 text-foam/80 hover:bg-ink hover:text-foam active:scale-95 shadow-md"
               aria-label={muted ? "Unmute sound" : "Mute sound"}
             >
               {muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
@@ -139,7 +139,7 @@ export function Hud() {
             <button
               type="button"
               data-testid="circuit-map-button"
-              className="pointer-events-auto flex items-center gap-1 rounded-full border border-foam/20 bg-ink/80 px-2.5 py-1 font-sans text-[0.62rem] font-black uppercase tracking-wider text-foam/90 hover:bg-ink active:scale-95"
+              className="pointer-events-auto flex items-center gap-1 rounded-full border border-foam/20 bg-ink/85 px-2.5 py-1 font-sans text-[0.62rem] font-black uppercase tracking-wider text-foam hover:bg-ink active:scale-95 shadow-md"
               onClick={() => {
                 inputManager.enabled = false;
                 useGameStore.getState().setScreen("city-select");
@@ -150,29 +150,29 @@ export function Hud() {
             </button>
           </div>
 
-          <p className="rounded-full border border-foam/15 bg-ink/80 px-2.5 py-0.5 font-sans text-[0.58rem] font-bold uppercase tracking-[0.14em] text-sand">
+          <div className="rounded-full border border-foam/15 bg-ink/85 px-2.5 py-0.5 font-sans text-[0.55rem] font-bold uppercase tracking-wider text-sand shadow-sm max-w-[170px] truncate text-right">
             {location}
-          </p>
-          <p className="rounded-full border border-foam/15 bg-ink/80 px-2.5 py-0.5 font-sans text-[0.58rem] font-bold uppercase tracking-wider text-foam">
+          </div>
+          <div className="rounded-full border border-foam/15 bg-ink/85 px-2.5 py-0.5 font-sans text-[0.55rem] font-bold uppercase tracking-wider text-foam shadow-sm">
             KO {kos} · {aliveEnemies} LEFT
-          </p>
+          </div>
 
           {currentMove ? (
-            <p className="rounded-full bg-royal/90 border border-purple-400/40 px-3 py-1 font-display text-sm tracking-wide text-foam shadow-[0_0_10px_rgba(107,46,160,0.6)]">
+            <p className="rounded-full bg-royal/90 border border-purple-400/40 px-2.5 py-0.5 font-display text-xs tracking-wide text-foam shadow-[0_0_10px_rgba(107,46,160,0.6)]">
               {currentMove}
             </p>
           ) : null}
 
           {/* Dynamic Combo Tier Pill */}
           {comboHits >= 2 ? (
-            <div className="flex flex-col items-end">
+            <div className="flex flex-col items-end animate-bounce">
               <div
-                className={`flex items-center gap-1.5 rounded-full border px-3 py-0.5 font-display text-base tracking-wider drop-shadow shadow-md ${
+                className={`flex items-center gap-1 rounded-full border px-2.5 py-0.5 font-display text-sm tracking-wider shadow-md ${
                   getComboRank(comboHits).color
                 }`}
               >
                 <span>{comboHits} HITS</span>
-                <span className="text-xs font-sans font-black">
+                <span className="text-[0.6rem] font-sans font-black">
                   {getComboRank(comboHits).label}
                 </span>
               </div>
@@ -186,7 +186,7 @@ export function Hud() {
           ) : null}
 
           {debug ? (
-            <p className="font-mono text-[0.65rem] tabular-nums text-sand">FPS {fps}</p>
+            <p className="font-mono text-[0.6rem] tabular-nums text-sand">FPS {fps}</p>
           ) : null}
         </div>
       </div>

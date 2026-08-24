@@ -35,30 +35,38 @@ export type EnemyData = {
   animationSet: EnemyAnimationSet;
 };
 
-const SHEET = { frameWidth: 256, frameHeight: 144, frames: 4 } as const;
+type SheetConfig = {
+  frameWidth: number;
+  frameHeight: number;
+  frames: number;
+};
+
+const STANDARD_SHEET: SheetConfig = { frameWidth: 160, frameHeight: 180, frames: 4 };
+const BOSS_SHEET: SheetConfig = { frameWidth: 180, frameHeight: 200, frames: 4 };
 
 function clip(
   id: string,
   action: EnemyAnimName,
   frameRate: number,
   repeat: number,
+  sheet: SheetConfig = STANDARD_SHEET,
 ): EnemyClip {
   return {
     key: `${id}-${action}`,
     textureKey: `${id}-${action}`,
     url: `/game/sprites/enemies/${id}/${action}.png`,
-    ...SHEET,
+    ...sheet,
     frameRate,
     repeat,
   };
 }
 
-function makeSet(id: string): EnemyAnimationSet {
+function makeSet(id: string, sheet: SheetConfig = STANDARD_SHEET): EnemyAnimationSet {
   return {
-    idle: clip(id, "idle", 6, -1),
-    run: clip(id, "run", 8, -1),
-    attack: clip(id, "attack", 10, 0),
-    hurt: clip(id, "hurt", 10, 0),
+    idle: clip(id, "idle", 6, -1, sheet),
+    run: clip(id, "run", 8, -1, sheet),
+    attack: clip(id, "attack", 10, 0, sheet),
+    hurt: clip(id, "hurt", 10, 0, sheet),
   };
 }
 
@@ -118,7 +126,7 @@ export const BOSS: EnemyData = {
   kiReward: 40,
   behaviorType: "boss",
   hasSuperArmor: true,
-  animationSet: makeSet("boss"),
+  animationSet: makeSet("boss", BOSS_SHEET),
 };
 
 export const ENEMIES: EnemyData[] = [BRUISER, BLADE, BOSS];

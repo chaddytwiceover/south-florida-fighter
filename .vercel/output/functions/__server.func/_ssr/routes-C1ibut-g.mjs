@@ -4,7 +4,7 @@ import { t as create } from "../_libs/zustand.mjs";
 import { a as Sword, c as RotateCcw, d as Lock, f as Flame, h as ArrowUp, l as Play, m as ChevronLeft, n as VolumeX, o as Sparkles, p as ChevronRight, r as Volume2, s as Shield, t as Zap, u as MapPin } from "../_libs/lucide-react.mjs";
 import { t as clsx } from "../_libs/clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-BHug610o.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-C1ibut-g.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var __defProp = Object.defineProperty;
@@ -45,19 +45,19 @@ var CAMERA = {
 	lookAhead: 86,
 	lookY: 220
 };
-var PLAYER_DISPLAY_SCALE = 1.18;
+var PLAYER_DISPLAY_SCALE = 1.25;
 var PLAYER_BODY = {
-	width: 38,
-	height: 86,
-	offsetX: 45,
-	offsetY: 40
+	width: 54,
+	height: 115,
+	offsetX: 53,
+	offsetY: 50
 };
-var ENEMY_DISPLAY_SCALE = 1.12;
+var ENEMY_DISPLAY_SCALE = 1.2;
 var ENEMY_BODY = {
-	width: 34,
-	height: 80,
-	offsetX: 47,
-	offsetY: 44
+	width: 52,
+	height: 115,
+	offsetX: 54,
+	offsetY: 50
 };
 var COMBAT = {
 	hitstopMs: 48,
@@ -84,8 +84,8 @@ function restartPlayScene() {
 	}, 50);
 }
 var SHEET = {
-	frameWidth: 256,
-	frameHeight: 144,
+	frameWidth: 160,
+	frameHeight: 180,
 	frames: 4
 };
 function clip(id, action, frameRate, repeat) {
@@ -1603,7 +1603,6 @@ function Hud() {
 	const maxHealth = useGameStore((s) => s.maxHealth);
 	const energy = useGameStore((s) => s.energy);
 	const maxEnergy = useGameStore((s) => s.maxEnergy);
-	useGameStore((s) => s.xp);
 	const kos = useGameStore((s) => s.kos);
 	const comboHits = useGameStore((s) => s.comboHits);
 	const aliveEnemies = useGameStore((s) => s.aliveEnemies);
@@ -1632,13 +1631,13 @@ function Hud() {
 	};
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 		"data-testid": "hud",
-		className: "pointer-events-none absolute inset-x-0 top-0 z-20 p-[max(0.45rem,env(safe-area-inset-top))] px-[max(0.7rem,env(safe-area-inset-left))]",
+		className: "pointer-events-none absolute inset-x-0 top-0 z-20 p-2 pt-[max(0.6rem,env(safe-area-inset-top))] px-[max(0.6rem,env(safe-area-inset-left))] select-none",
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "flex items-start justify-between gap-2",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "flex min-w-0 flex-1 items-center gap-2.5 rounded-[1.2rem] border border-foam/20 bg-ink/85 p-2 shadow-[0_8px_24px_rgba(0,0,0,0.6)] backdrop-blur-md",
+				className: "flex items-center gap-2 rounded-2xl border border-foam/20 bg-ink/90 p-2 shadow-2xl backdrop-blur-md max-w-[62%] sm:max-w-[48%]",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "relative size-13 shrink-0 overflow-hidden rounded-[0.85rem] border-2 border-gold/60 bg-ocean shadow-md",
+					className: "relative size-12 shrink-0 overflow-hidden rounded-xl border-2 border-gold/70 bg-ocean shadow-md",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
 						src: portrait,
 						alt: "",
@@ -1646,20 +1645,19 @@ function Hud() {
 						draggable: false
 					}), finisherReady ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 						className: "absolute inset-0 bg-gold/30 animate-pulse flex items-center justify-center",
-						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-5 text-amber-200" })
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-4 text-amber-200" })
 					}) : null]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "min-w-0 flex-1 space-y-1.5",
+					className: "min-w-0 flex-1 space-y-1",
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "flex items-center justify-between",
+							className: "flex items-baseline justify-between gap-1 leading-none",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-								className: "font-display text-2xl leading-none tracking-wide text-foam drop-shadow",
+								className: "font-display text-lg tracking-wide text-foam truncate",
 								children: characterName
 							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-								className: "font-mono text-[0.65rem] font-bold text-sand/80",
+								className: "font-mono text-[0.6rem] font-bold text-sand shrink-0",
 								children: [
-									"HP ",
 									Math.round(health),
 									"/",
 									maxHealth
@@ -1667,7 +1665,7 @@ function Hud() {
 							})]
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "relative h-2.5 w-full overflow-hidden rounded-full bg-ink-2 ring-1 ring-foam/20",
+							className: "relative h-2 w-full overflow-hidden rounded-full bg-ink-2 ring-1 ring-foam/20",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 								className: "absolute inset-y-0 left-0 rounded-full bg-rose-800 transition-all duration-300 ease-out",
 								style: { width: `${ghostHpPct}%` }
@@ -1679,18 +1677,18 @@ function Hud() {
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "space-y-0.5",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "flex items-center justify-between text-[0.58rem] font-extrabold uppercase tracking-wider",
+								className: "flex items-center justify-between text-[0.52rem] font-bold uppercase tracking-wider leading-none",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-									className: finisherReady ? "text-gold animate-pulse" : "text-foam/70",
-									children: finisherReady ? "★ SEISMIC CROWN SLAM READY" : "KI GAUGE"
+									className: finisherReady ? "text-gold animate-pulse truncate" : "text-foam/70 truncate",
+									children: finisherReady ? "★ SUPER READY" : "KI GAUGE"
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-									className: "font-mono text-foam/60",
+									className: "font-mono text-foam/60 shrink-0",
 									children: [Math.round(energy), "%"]
 								})]
 							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-								className: "relative flex h-2 w-full gap-0.5 overflow-hidden rounded-full bg-ink-2 p-0.5 ring-1 ring-foam/20",
+								className: "relative h-1.5 w-full overflow-hidden rounded-full bg-ink-2 ring-1 ring-foam/20",
 								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-									className: `h-full rounded-full transition-all duration-100 ${finisherReady ? "bg-gradient-to-r from-amber-400 via-gold to-yellow-300 shadow-[0_0_12px_rgba(232,196,90,1)] animate-pulse" : "bg-gradient-to-r from-ocean-2 to-cyan-400 shadow-[0_0_8px_rgba(20,145,155,0.8)]"}`,
+									className: `h-full rounded-full transition-all duration-100 ${finisherReady ? "bg-gradient-to-r from-amber-400 via-gold to-yellow-300 shadow-[0_0_10px_rgba(232,196,90,1)] animate-pulse" : "bg-gradient-to-r from-ocean-2 to-cyan-400 shadow-[0_0_6px_rgba(20,145,155,0.8)]"}`,
 									style: { width: `${kiPct}%` }
 								})
 							})]
@@ -1698,20 +1696,20 @@ function Hud() {
 					]
 				})]
 			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "flex shrink-0 flex-col items-end gap-1.5",
+				className: "flex shrink-0 flex-col items-end gap-1",
 				children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "flex items-center gap-1.5",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 							type: "button",
 							onClick: toggleAudio,
-							className: "pointer-events-auto flex size-7 items-center justify-center rounded-full border border-foam/20 bg-ink/80 text-foam/80 hover:bg-ink hover:text-foam active:scale-95",
+							className: "pointer-events-auto flex size-7 items-center justify-center rounded-full border border-foam/20 bg-ink/85 text-foam/80 hover:bg-ink hover:text-foam active:scale-95 shadow-md",
 							"aria-label": muted ? "Unmute sound" : "Mute sound",
 							children: muted ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(VolumeX, { className: "size-3.5" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Volume2, { className: "size-3.5" })
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							type: "button",
 							"data-testid": "circuit-map-button",
-							className: "pointer-events-auto flex items-center gap-1 rounded-full border border-foam/20 bg-ink/80 px-2.5 py-1 font-sans text-[0.62rem] font-black uppercase tracking-wider text-foam/90 hover:bg-ink active:scale-95",
+							className: "pointer-events-auto flex items-center gap-1 rounded-full border border-foam/20 bg-ink/85 px-2.5 py-1 font-sans text-[0.62rem] font-black uppercase tracking-wider text-foam hover:bg-ink active:scale-95 shadow-md",
 							onClick: () => {
 								inputManager.enabled = false;
 								useGameStore.getState().setScreen("city-select");
@@ -1719,12 +1717,12 @@ function Hud() {
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "size-3 text-sand" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Map" })]
 						})]
 					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-						className: "rounded-full border border-foam/15 bg-ink/80 px-2.5 py-0.5 font-sans text-[0.58rem] font-bold uppercase tracking-[0.14em] text-sand",
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "rounded-full border border-foam/15 bg-ink/85 px-2.5 py-0.5 font-sans text-[0.55rem] font-bold uppercase tracking-wider text-sand shadow-sm max-w-[170px] truncate text-right",
 						children: location
 					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-						className: "rounded-full border border-foam/15 bg-ink/80 px-2.5 py-0.5 font-sans text-[0.58rem] font-bold uppercase tracking-wider text-foam",
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "rounded-full border border-foam/15 bg-ink/85 px-2.5 py-0.5 font-sans text-[0.55rem] font-bold uppercase tracking-wider text-foam shadow-sm",
 						children: [
 							"KO ",
 							kos,
@@ -1734,15 +1732,15 @@ function Hud() {
 						]
 					}),
 					currentMove ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-						className: "rounded-full bg-royal/90 border border-purple-400/40 px-3 py-1 font-display text-sm tracking-wide text-foam shadow-[0_0_10px_rgba(107,46,160,0.6)]",
+						className: "rounded-full bg-royal/90 border border-purple-400/40 px-2.5 py-0.5 font-display text-xs tracking-wide text-foam shadow-[0_0_10px_rgba(107,46,160,0.6)]",
 						children: currentMove
 					}) : null,
 					comboHits >= 2 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "flex flex-col items-end",
+						className: "flex flex-col items-end animate-bounce",
 						children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: `flex items-center gap-1.5 rounded-full border px-3 py-0.5 font-display text-base tracking-wider drop-shadow shadow-md ${getComboRank(comboHits).color}`,
+							className: `flex items-center gap-1 rounded-full border px-2.5 py-0.5 font-display text-sm tracking-wider shadow-md ${getComboRank(comboHits).color}`,
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [comboHits, " HITS"] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-								className: "text-xs font-sans font-black",
+								className: "text-[0.6rem] font-sans font-black",
 								children: getComboRank(comboHits).label
 							})]
 						})
@@ -1752,7 +1750,7 @@ function Hud() {
 						children: flash
 					}) : null,
 					debug ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-						className: "font-mono text-[0.65rem] tabular-nums text-sand",
+						className: "font-mono text-[0.6rem] tabular-nums text-sand",
 						children: ["FPS ", fps]
 					}) : null
 				]
@@ -2325,7 +2323,7 @@ function GameApp() {
 		if (!host) return;
 		let game = null;
 		let cancelled = false;
-		import("./createGame-CysCI2YK.mjs").then(({ createGame }) => {
+		import("./createGame-DQnAK5yO.mjs").then(({ createGame }) => {
 			if (cancelled || !host) return;
 			game = createGame(host);
 		});

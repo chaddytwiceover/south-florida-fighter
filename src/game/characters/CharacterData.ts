@@ -55,7 +55,7 @@ export type CharacterData = {
 };
 
 // 4 frames per sprite sheet row for smooth 60fps arcade step animation
-const SHEET = { frameWidth: 256, frameHeight: 144, frames: 4 } as const;
+const SHEET = { frameWidth: 160, frameHeight: 180, frames: 4 } as const;
 
 function clip(
   id: string,

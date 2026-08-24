@@ -38,11 +38,11 @@ export const CAMERA = {
   lookY: 220,
 } as const;
 
-export const PLAYER_DISPLAY_SCALE = 1.18;
-export const PLAYER_BODY = { width: 38, height: 86, offsetX: 45, offsetY: 40 };
+export const PLAYER_DISPLAY_SCALE = 1.25;
+export const PLAYER_BODY = { width: 54, height: 115, offsetX: 53, offsetY: 50 };
 
-export const ENEMY_DISPLAY_SCALE = 1.12;
-export const ENEMY_BODY = { width: 34, height: 80, offsetX: 47, offsetY: 44 };
+export const ENEMY_DISPLAY_SCALE = 1.2;
+export const ENEMY_BODY = { width: 52, height: 115, offsetX: 54, offsetY: 50 };
 
 export const COMBAT = {
   hitstopMs: 48,

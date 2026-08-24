@@ -1,6 +1,6 @@
-import { C as WORLD_WIDTH, S as WORLD_HEIGHT, _ as GAME_HEIGHT, a as getLevel, b as PLAYER_BODY, c as allRosterClips, d as unregisterGame, f as CAMERA, g as ENEMY_DISPLAY_SCALE, h as ENEMY_BODY, i as SOUTH_FLORIDA_LEVELS, l as getCharacter, n as inputManager, o as approach, p as COMBAT, r as useGameStore, s as audioManager, u as registerGame, v as JUMP, x as PLAYER_DISPLAY_SCALE, y as MOVE } from "./routes-BHug610o.mjs";
+import { C as WORLD_WIDTH, S as WORLD_HEIGHT, _ as GAME_HEIGHT, a as getLevel, b as PLAYER_BODY, c as allRosterClips, d as unregisterGame, f as CAMERA, g as ENEMY_DISPLAY_SCALE, h as ENEMY_BODY, i as SOUTH_FLORIDA_LEVELS, l as getCharacter, n as inputManager, o as approach, p as COMBAT, r as useGameStore, s as audioManager, u as registerGame, v as JUMP, x as PLAYER_DISPLAY_SCALE, y as MOVE } from "./routes-C1ibut-g.mjs";
 import { t as phaser_esm_exports } from "../_libs/phaser.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/createGame-CysCI2YK.js
+//#region node_modules/.nitro/vite/services/ssr/assets/createGame-DQnAK5yO.js
 function prefersReducedMotion() {
 	return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -280,27 +280,32 @@ var Enemy = class {
 		});
 	}
 };
-var SHEET = {
-	frameWidth: 256,
-	frameHeight: 144,
+var STANDARD_SHEET = {
+	frameWidth: 160,
+	frameHeight: 180,
 	frames: 4
 };
-function clip(id, action, frameRate, repeat) {
+var BOSS_SHEET = {
+	frameWidth: 180,
+	frameHeight: 200,
+	frames: 4
+};
+function clip(id, action, frameRate, repeat, sheet = STANDARD_SHEET) {
 	return {
 		key: `${id}-${action}`,
 		textureKey: `${id}-${action}`,
 		url: `/game/sprites/enemies/${id}/${action}.png`,
-		...SHEET,
+		...sheet,
 		frameRate,
 		repeat
 	};
 }
-function makeSet(id) {
+function makeSet(id, sheet = STANDARD_SHEET) {
 	return {
-		idle: clip(id, "idle", 6, -1),
-		run: clip(id, "run", 8, -1),
-		attack: clip(id, "attack", 10, 0),
-		hurt: clip(id, "hurt", 10, 0)
+		idle: clip(id, "idle", 6, -1, sheet),
+		run: clip(id, "run", 8, -1, sheet),
+		attack: clip(id, "attack", 10, 0, sheet),
+		hurt: clip(id, "hurt", 10, 0, sheet)
 	};
 }
 var BRUISER = {
@@ -360,7 +365,7 @@ var ENEMIES = [
 		kiReward: 40,
 		behaviorType: "boss",
 		hasSuperArmor: true,
-		animationSet: makeSet("boss")
+		animationSet: makeSet("boss", BOSS_SHEET)
 	}
 ];
 function getEnemy(id) {
