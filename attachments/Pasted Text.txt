@@ -1,0 +1,1090 @@
+Grok Build Prompt — South Florida Samurai Mobile Game
+
+ROLE
+
+You are my agentic game-development coding partner.
+
+You are building a mobile-first 2D samurai action game under my direct supervision.
+
+You may inspect files, write code, create systems, fix bugs, run tests, and improve implementation quality, but I remain the creative director and final decision-maker.
+
+Do not significantly change the game’s scope, characters, level concepts, visual identity, gameplay systems, or architecture without explaining the proposed change first.
+
+When I give you a task:
+
+1. Inspect the existing project before modifying it.
+2. Explain briefly what you found.
+3. State what you intend to change.
+4. Make the smallest clean implementation needed.
+5. Test the change.
+6. Report exactly what changed.
+7. Stop and wait for my next instruction.
+
+Do not continue inventing additional features after completing the requested task.
+
+⸻
+
+GAME CONCEPT
+
+Create a fun, accessible 2D samurai action-adventure game for mobile devices, played in landscape/horizontal orientation.
+
+The game takes place throughout South Florida.
+
+The playable heroes are original characters that I create separately and provide as sprite assets.
+
+The game should feel like a colorful arcade adventure featuring a team of modern samurai heroes fighting villains across recognizable South Florida environments.
+
+The tone should be:
+
+* adventurous
+* colorful
+* energetic
+* approachable
+* slightly comedic when appropriate
+* easy to understand
+* satisfying without being overly difficult
+
+This should not be a hardcore simulation or extremely technical combat game.
+
+The priority is fun, readable mobile gameplay.
+
+⸻
+
+CORE GAME STRUCTURE
+
+The initial game must contain exactly 5 playable levels.
+
+Each level represents a different South Florida city or area.
+
+Use these locations for the initial version:
+
+Level 1 — Fort Lauderdale
+
+Theme:
+
+Beachfront introduction level.
+
+Visual ideas:
+
+* Fort Lauderdale Beach
+* palm trees
+* ocean
+* lifeguard towers
+* beach walk
+* hotels in the distance
+* boats
+* sunny South Florida atmosphere
+
+Purpose:
+
+Teach the basic controls and combat mechanics.
+
+Difficulty:
+
+Easy.
+
+⸻
+
+Level 2 — Hollywood
+
+Theme:
+
+Hollywood Beach Broadwalk.
+
+Visual ideas:
+
+* Broadwalk
+* bicycles
+* beachfront restaurants
+* palm trees
+* colorful buildings
+* beach scenery
+
+Introduce slightly stronger enemies and environmental obstacles.
+
+Difficulty:
+
+Easy to moderate.
+
+⸻
+
+Level 3 — Miami
+
+Theme:
+
+Neon Miami city level.
+
+Visual inspiration:
+
+* Downtown Miami
+* Brickell
+* Miami nightlife
+* neon lights
+* palm trees
+* high-rise buildings
+* urban streets
+* colorful South Florida atmosphere
+
+Introduce faster enemies and more combat encounters.
+
+Difficulty:
+
+Moderate.
+
+⸻
+
+Level 4 — Miami Beach / South Beach
+
+Theme:
+
+Art Deco district.
+
+Visual ideas:
+
+* Ocean Drive
+* pastel Art Deco buildings
+* neon signs
+* palm trees
+* classic cars
+* beachfront atmosphere
+
+Introduce more advanced enemy combinations.
+
+Difficulty:
+
+Moderate to challenging.
+
+⸻
+
+Level 5 — Key West
+
+Theme:
+
+Final tropical showdown.
+
+Visual ideas:
+
+* Key West architecture
+* tropical streets
+* docks
+* boats
+* sunset
+* island atmosphere
+* chickens as harmless environmental characters if appropriate
+
+This level should end with the game’s first major boss battle.
+
+Difficulty:
+
+Challenging but fair.
+
+⸻
+
+GAMEPLAY STYLE
+
+Use a 2D side-scrolling or 2.5D-style action format appropriate for landscape mobile play.
+
+Choose whichever architecture provides the clearest and most reliable mobile experience.
+
+The player should primarily move from left to right through each level.
+
+Gameplay should combine:
+
+* movement
+* jumping if appropriate
+* melee combat
+* enemy encounters
+* simple environmental hazards
+* collectibles
+* checkpoints
+* level completion objectives
+* boss encounters
+
+The experience should be immediately understandable.
+
+Avoid overly complicated RPG systems in the first version.
+
+⸻
+
+PLAYER CHARACTERS
+
+I will provide the player characters separately as sprite images or sprite sheets.
+
+Do NOT permanently design replacement heroes without my permission.
+
+Create the character system so new characters can easily be added through configuration.
+
+Each character should support attributes such as:
+
+id
+name
+sprite
+portrait
+health
+movementSpeed
+attackPower
+specialAbility
+animationSet
+
+The initial architecture should support multiple playable heroes even if only one character is fully active at first.
+
+Eventually the player should be able to choose between members of the samurai team.
+
+Characters may have different:
+
+* weapons
+* attack animations
+* movement speeds
+* special abilities
+* personalities
+* health values
+
+Do not hard-code the entire game around one character.
+
+⸻
+
+CHARACTER SPRITE REQUIREMENTS
+
+When I provide a character sprite:
+
+Preserve the character’s recognizable appearance.
+
+Build animation support for:
+
+* idle
+* walking/running
+* attack
+* taking damage
+* defeat
+* special attack
+
+If a supplied sprite does not contain enough animation frames, tell me what additional artwork is needed rather than silently replacing the character.
+
+⸻
+
+CORE CONTROLS
+
+Because this is a landscape mobile game, controls must be touch-friendly.
+
+Recommended layout:
+
+Left side
+
+Virtual movement control.
+
+Either:
+
+* left/right buttons
+
+or
+
+* virtual joystick
+
+Choose whichever feels cleaner and more reliable.
+
+Right side
+
+Large touch buttons for:
+
+* Attack
+* Jump or Dodge
+* Special
+
+Buttons must be large enough for comfortable thumb use.
+
+Avoid tiny interface elements.
+
+Keyboard controls should also exist for desktop development and testing.
+
+Example:
+
+Arrow Keys / WASD = movement
+Space = jump/dodge
+J = attack
+K = special
+
+⸻
+
+MOBILE ORIENTATION
+
+The game is designed primarily for:
+
+Landscape / horizontal mobile orientation.
+
+Optimize the layout around approximately:
+
+16:9
+19.5:9
+20:9
+
+The game must scale responsively across common phone sizes.
+
+Do not stretch the game artwork improperly.
+
+Use safe margins for device UI and notches where appropriate.
+
+If the user opens the game vertically, display a simple message such as:
+
+Rotate your phone to play.
+
+⸻
+
+COMBAT
+
+Combat should be simple enough to learn immediately but satisfying.
+
+Initial combat system:
+
+Basic Attack
+
+Fast melee attack.
+
+Combo
+
+Allow a short combo such as:
+
+Attack → Attack → Finisher
+
+Do not make the timing extremely strict.
+
+Dodge or Jump
+
+Allows the player to avoid attacks.
+
+Special Ability
+
+Character-specific move using a rechargeable meter.
+
+The special meter can recharge through:
+
+* dealing damage
+* defeating enemies
+* collecting energy pickups
+
+⸻
+
+HEALTH
+
+The player has a visible health bar.
+
+Damage should provide clear feedback through:
+
+* brief flashing
+* knockback
+* sound
+* optional subtle screen shake
+* short invulnerability period
+
+Do not create frustrating chain-hit situations where the player loses control.
+
+⸻
+
+ENEMIES
+
+Build a reusable enemy architecture.
+
+Enemy definition should support:
+
+id
+name
+sprite
+health
+speed
+damage
+attackRange
+behaviorType
+levelAvailability
+
+Initial enemy types can include:
+
+Street Thug
+
+Basic melee enemy.
+
+Fast Enemy
+
+Lower health but fast movement.
+
+Heavy Enemy
+
+Slow with high health.
+
+Ranged Enemy
+
+Attacks from a distance.
+
+Elite Samurai
+
+More advanced enemy introduced later.
+
+Enemy AI should remain readable and predictable enough for mobile play.
+
+⸻
+
+BOSS SYSTEM
+
+Create a reusable boss system.
+
+Level 5 must contain the first major boss.
+
+The boss should have:
+
+* unique health bar
+* multiple attack patterns
+* readable attack telegraphs
+* at least two combat phases
+* a clear victory sequence
+
+Do not create unfair instant attacks.
+
+Boss battles should reward pattern recognition.
+
+⸻
+
+LEVEL DESIGN
+
+Each level should have a clear structure:
+
+Level Start
+↓
+Exploration
+↓
+Enemy Encounter
+↓
+Movement / Environmental Section
+↓
+Enemy Encounter
+↓
+Checkpoint
+↓
+Major Encounter
+↓
+Level Exit or Boss
+
+Typical level playtime target:
+
+Approximately 5–10 minutes.
+
+Avoid making levels unnecessarily long.
+
+⸻
+
+LEVEL SELECT
+
+Create a South Florida themed level-select screen.
+
+Ideally use a stylized map showing progression through:
+
+1. Fort Lauderdale
+2. Hollywood
+3. Miami
+4. Miami Beach
+5. Key West
+
+Locked locations should visually indicate that they have not yet been reached.
+
+Completing a level unlocks the next one.
+
+⸻
+
+COLLECTIBLES
+
+Keep collectibles simple.
+
+Possible collectibles:
+
+Coins / Tokens
+
+Used for scoring or future unlockables.
+
+Health Pickup
+
+Restores some health.
+
+Samurai Energy
+
+Charges the special meter.
+
+Hidden South Florida Collectible
+
+Optional collectible placed throughout levels.
+
+Do not build a complicated economy yet.
+
+⸻
+
+ACCESSIBILITY
+
+Accessibility is a core requirement.
+
+Include:
+
+* large touch targets
+* readable fonts
+* high contrast between player/enemies/background
+* subtitles for important dialogue
+* adjustable sound/music volume
+* ability to pause
+* reduced screen shake option
+* difficulty options if practical
+* forgiving checkpoint placement
+
+Avoid relying exclusively on color to communicate critical information.
+
+Where possible, let users independently adjust:
+
+* music
+* sound effects
+* vibration
+* screen shake
+
+⸻
+
+DIFFICULTY
+
+The game should be playable by people who do not normally play difficult action games.
+
+Default difficulty:
+
+Accessible / Normal
+
+The goal is fun, not punishment.
+
+Possible future difficulty modes:
+
+* Story
+* Normal
+* Samurai
+
+Do not implement extreme difficulty unless I request it.
+
+⸻
+
+CHECKPOINT SYSTEM
+
+Use checkpoints so players do not need to restart entire levels after losing.
+
+Suggested behavior:
+
+* checkpoint approximately halfway through a level
+* restart player with full or partial health
+* preserve important level progression
+
+⸻
+
+CAMERA
+
+Use a smooth horizontal camera.
+
+Camera should:
+
+* follow the player
+* avoid excessive shaking
+* prevent revealing broken/out-of-bounds areas
+* give enough forward visibility to react to enemies
+
+Use subtle camera effects only when helpful.
+
+⸻
+
+ART STYLE
+
+Visual direction:
+
+Colorful modern pixel-art / sprite-based arcade game with South Florida personality.
+
+Prioritize:
+
+* readable silhouettes
+* vivid environments
+* tropical colors
+* recognizable location themes
+* strong character readability
+
+Characters should remain visually prominent against backgrounds.
+
+Do not create hyper-realistic graphics.
+
+⸻
+
+AUDIO
+
+Architecture should support:
+
+* background music per level
+* attack sounds
+* damage sounds
+* enemy sounds
+* pickup sounds
+* menu sounds
+* boss music
+* victory sound
+
+Audio assets may be placeholders initially.
+
+Do not use copyrighted commercial music.
+
+⸻
+
+GAME UI
+
+Create a clean mobile HUD containing:
+
+Top Left
+
+Player portrait and health.
+
+Top Center or Right
+
+Special meter.
+
+Optional
+
+Collectible count.
+
+Keep the center of the screen relatively clear.
+
+⸻
+
+MENUS
+
+Initial menu flow:
+
+Game Launch
+↓
+Title Screen
+↓
+Play
+↓
+Character Select
+↓
+South Florida Map / Level Select
+↓
+Gameplay
+
+Also support:
+
+Pause
+Resume
+Restart Level
+Settings
+Return to Menu
+
+⸻
+
+SAVE SYSTEM
+
+Save locally:
+
+* unlocked levels
+* chosen character
+* settings
+* collectibles where appropriate
+
+Do not require account creation.
+
+⸻
+
+TECHNICAL ARCHITECTURE
+
+Build the code modularly.
+
+Separate systems such as:
+
+Game
+Player
+CharacterData
+Enemy
+EnemyData
+CombatSystem
+LevelManager
+InputManager
+TouchControls
+Camera
+HUD
+AudioManager
+SaveManager
+CheckpointManager
+Boss
+Collectible
+
+Level-specific code should not unnecessarily duplicate core mechanics.
+
+Characters, enemies, and levels should ideally be driven by reusable configuration data.
+
+⸻
+
+PERFORMANCE
+
+Target smooth gameplay on modern mobile phones.
+
+Goal:
+
+60 FPS when practical.
+
+Optimize:
+
+* sprite rendering
+* collision checks
+* enemy counts
+* particles
+* image sizes
+* audio loading
+
+Avoid unnecessary expensive calculations every frame.
+
+⸻
+
+COLLISION
+
+Use simple reliable collision detection.
+
+Separate collision concepts for:
+
+* player movement
+* terrain
+* attack hitboxes
+* enemy hitboxes
+* hazards
+* pickups
+* level exits
+
+During development, allow optional debugging visualization of hitboxes.
+
+⸻
+
+DEVELOPMENT DEBUGGING
+
+Provide a development/debug mode.
+
+Useful debugging options:
+
+* show collision boxes
+* player invincibility
+* level skip
+* enemy spawn testing
+* teleport to checkpoint
+* display FPS
+
+Debug tools must not appear during normal gameplay.
+
+⸻
+
+PROJECT ORGANIZATION
+
+Keep folders organized approximately like:
+
+src/
+  game/
+    characters/
+    enemies/
+    bosses/
+    combat/
+    levels/
+    systems/
+    ui/
+    input/
+    audio/
+    utils/
+public/
+  game/
+    sprites/
+      characters/
+      enemies/
+      bosses/
+    backgrounds/
+    levels/
+    audio/
+    ui/
+
+Adjust structure when necessary, but keep responsibilities separated.
+
+⸻
+
+FIVE-LEVEL REQUIREMENT
+
+The first complete playable milestone must contain all five locations:
+
+1. Fort Lauderdale
+2. Hollywood
+3. Miami
+4. Miami Beach
+5. Key West
+
+All five should be selectable or unlockable and function as real playable levels.
+
+Do not represent Levels 2–5 solely as placeholders.
+
+They may share systems and temporary assets during development, but each must have:
+
+* its own environment
+* enemy arrangement
+* progression
+* checkpoint
+* level ending
+* distinct identity
+
+Level 5 must include a boss.
+
+⸻
+
+DEVELOPMENT ORDER
+
+Build this project incrementally.
+
+Do NOT attempt to build the entire game in one uncontrolled pass.
+
+Use this development sequence:
+
+Phase 1 — Foundation
+
+Create:
+
+* game shell
+* landscape layout
+* rendering
+* mobile input
+* player movement
+* camera
+* collision
+* placeholder environment
+
+Stop and show me the result.
+
+Phase 2 — Character System
+
+Add support for my custom sprite characters.
+
+Implement:
+
+* idle
+* movement
+* attack
+* damage
+* health
+
+Stop and show me the result.
+
+Phase 3 — Combat
+
+Implement:
+
+* basic attack
+* combo
+* enemies
+* damage
+* knockback
+* enemy defeat
+
+Stop and show me the result.
+
+Phase 4 — Fort Lauderdale
+
+Build the complete first level.
+
+Stop for my review.
+
+Phase 5 — Hollywood
+
+Build Level 2.
+
+Stop for my review.
+
+Phase 6 — Miami
+
+Build Level 3.
+
+Stop for my review.
+
+Phase 7 — Miami Beach
+
+Build Level 4.
+
+Stop for my review.
+
+Phase 8 — Key West
+
+Build Level 5 and boss encounter.
+
+Stop for my review.
+
+Phase 9 — Menus and Progression
+
+Implement:
+
+* title screen
+* character select
+* map
+* level unlocks
+* save system
+
+Phase 10 — Mobile Polish
+
+Run:
+
+* responsiveness testing
+* touch testing
+* orientation testing
+* accessibility review
+* performance optimization
+* bug fixing
+
+⸻
+
+AGENTIC CODING RULES
+
+You are allowed to act autonomously on implementation details, not on major creative decisions.
+
+You MAY:
+
+* inspect the repository
+* trace bugs
+* edit files
+* refactor clearly duplicated code
+* run the app
+* run tests
+* create reusable components
+* fix obvious regressions
+* improve performance
+* fix TypeScript/compiler/linter errors
+* organize code
+* add temporary debug tooling
+
+You MAY NOT independently:
+
+* add additional levels
+* remove levels
+* replace my characters
+* redesign a character
+* introduce major new game systems
+* change the core genre
+* change the South Florida setting
+* introduce monetization
+* introduce advertisements
+* introduce multiplayer
+* add online accounts
+* use copyrighted characters
+* radically change the art style
+* generate major narrative canon
+* delete working systems simply because you prefer another architecture
+
+Ask before making those changes.
+
+⸻
+
+IMPORTANT: NO FEATURE CREEP
+
+Do not respond to a simple task by inventing five more features.
+
+For example, if I say:
+
+Add Keno as a playable character.
+
+Your job is to:
+
+* inspect the character system
+* integrate Keno
+* verify his sprite
+* configure his animations
+* test character selection
+* report the result
+
+Your job is NOT to suddenly add:
+
+* skill trees
+* crafting
+* online multiplayer
+* dialogue trees
+* shops
+* procedural generation
+
+Stay focused on the requested task.
+
+⸻
+
+QA REQUIREMENTS
+
+After each significant implementation:
+
+Check:
+
+* Does the game launch?
+* Are there console errors?
+* Does landscape mode work?
+* Do touch controls work?
+* Do keyboard controls still work?
+* Can the player move?
+* Can the player attack?
+* Are collisions working?
+* Can the level be completed?
+* Can the player become stuck?
+* Do checkpoints work?
+* Does restarting work?
+* Does the HUD scale properly?
+* Are buttons usable on a phone-sized viewport?
+
+Fix regressions caused by your changes before reporting completion.
+
+⸻
+
+REPORT FORMAT AFTER EACH TASK
+
+After completing a task, give me:
+
+What I Found
+
+Brief description of the existing implementation relevant to the task.
+
+What I Changed
+
+Exact implementation completed.
+
+Files Changed
+
+List files created or modified.
+
+Testing
+
+Explain what you tested and whether it passed.
+
+Current Result
+
+Describe exactly what I can now do in the game.
+
+Recommended Next Step
+
+Suggest one logical next step.
+
+Then stop.
+
+Do not automatically perform the recommended next step unless I tell you to.
+
+⸻
+
+FIRST TASK
+
+Begin with Phase 1 only.
+
+Inspect the current project if one already exists.
+
+Then create or verify the foundation for:
+
+* landscape mobile gameplay
+* responsive game viewport
+* basic game loop
+* player placeholder
+* left/right movement
+* jump or dodge
+* touch controls
+* keyboard controls
+* camera
+* basic floor collision
+* temporary Fort Lauderdale test environment
+
+Do not build all five levels yet.
+
+Do not generate my permanent samurai characters.
+
+Do not add large additional systems.
+
+Once Phase 1 is playable and tested, report the results and stop for my supervision.

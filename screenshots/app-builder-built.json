@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8081/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "South Florida Samurai",
+      "hasCanvas": false,
+      "bodyTextLen": 242,
+      "bodyTextHash": "22fa1a4ba1439405c37fa02f26338f7a77b922ca24c801b9d77a75c3f56de881",
+      "bodyTextPrefix": "SOUTH FLORIDA Samurai Portrait arcade brawler JAV and KENO hit t",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "South Florida Samurai",
+      "hasCanvas": false,
+      "bodyTextLen": 223,
+      "bodyTextHash": "343d7472f0ea2011ea4ceb261021278d333cfaad72139a6d8092c9c6c253d1b2",
+      "bodyTextPrefix": "SOUTH FLORIDA Samurai Portrait arcade brawler JAV and KENO hit t",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-built.json",
+  "divergesFromBaseline": false,
+  "baselineReasons": []
+}

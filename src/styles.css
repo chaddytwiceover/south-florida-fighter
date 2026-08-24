@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #0c1a24;
+  --color-ink-2: #122330;
+  --color-foam: #f4f7f5;
+  --color-muted: #8aa0aa;
+  --color-ocean: #0b6e7a;
+  --color-ocean-2: #14919b;
+  --color-coral: #e85d4c;
+  --color-sand: #f3e2c2;
+  --color-board: #c9924a;
+  --color-royal: #6b2ea0;
+  --color-gold: #e8c45a;
+  --font-display: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
+  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-fast: 250ms;
+  --motion-quick: 150ms;
+}
+
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  html,
+  body,
+  #app {
+    height: 100%;
+    margin: 0;
+    background: var(--color-ink);
+    color: var(--color-foam);
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body {
+    font-family: var(--font-sans);
+  }
+}
+
+.game-shell {
+  width: 100dvw;
+  height: 100dvh;
+  display: grid;
+  place-items: center;
+  background: var(--color-ink);
+}
+
+.game-stage {
+  position: relative;
+  width: min(100dvw, calc(100dvh * 9 / 16));
+  height: min(100dvh, calc(100dvw * 16 / 9));
+  overflow: hidden;
+  background: #0b6e7a;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.game-canvas,
+.game-canvas canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
