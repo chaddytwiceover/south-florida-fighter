@@ -24,6 +24,7 @@ export class PlayScene extends Phaser.Scene {
   private combat!: CombatSystem;
   private far!: Phaser.GameObjects.TileSprite;
   private platforms!: Phaser.Physics.Arcade.StaticGroup;
+  private bgScale = 1;
   private fpsTimer = 0;
 
   constructor() {
@@ -88,17 +89,23 @@ export class PlayScene extends Phaser.Scene {
     }
     useGameStore.setState({ debug, location: `${level.city} · ${level.name}` });
 
-    // Sky & Parallax Skyline Layer
+    // Sky & Parallax Skyline Layer without vertical repetition
     const bgKey = this.textures.exists(`bg-${level.id}`)
       ? `bg-${level.id}`
       : "bg-fort-lauderdale";
 
+    const bgHeight = level.groundY + 60;
     this.far = this.add
-      .tileSprite(0, 0, GAME_WIDTH, GAME_HEIGHT, bgKey)
+      .tileSprite(0, 0, GAME_WIDTH, bgHeight, bgKey)
       .setOrigin(0, 0)
-      .setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
       .setScrollFactor(0)
       .setDepth(0);
+
+    const tex = this.textures.get(bgKey).getSourceImage() as { width?: number; height?: number };
+    const texHeight = tex?.height || 1080;
+    this.bgScale = bgHeight / texHeight;
+    this.far.tileScaleY = this.bgScale;
+    this.far.tileScaleX = this.bgScale;
 
     // Ground Walkway
     const groundH = WORLD_HEIGHT - level.groundY + 120;
@@ -217,7 +224,7 @@ export class PlayScene extends Phaser.Scene {
     );
 
     const scrollX = cam.scrollX;
-    this.far.tilePositionX = scrollX * 0.18;
+    this.far.tilePositionX = (scrollX * 0.18) / Math.max(0.1, this.bgScale);
 
     this.fpsTimer += dt;
     if (this.fpsTimer > 0.25) {

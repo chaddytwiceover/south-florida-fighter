@@ -4,7 +4,7 @@ import { t as create } from "../_libs/zustand.mjs";
 import { a as Sword, c as RotateCcw, d as Lock, f as Flame, h as ArrowUp, l as Play, m as ChevronLeft, n as VolumeX, o as Sparkles, p as ChevronRight, r as Volume2, s as Shield, t as Zap, u as MapPin } from "../_libs/lucide-react.mjs";
 import { t as clsx } from "../_libs/clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-C1ibut-g.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-BLfuIWbj.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var __defProp = Object.defineProperty;
@@ -2323,7 +2323,7 @@ function GameApp() {
 		if (!host) return;
 		let game = null;
 		let cancelled = false;
-		import("./createGame-DQnAK5yO.mjs").then(({ createGame }) => {
+		import("./createGame-Cc40m7wk.mjs").then(({ createGame }) => {
 			if (cancelled || !host) return;
 			game = createGame(host);
 		});

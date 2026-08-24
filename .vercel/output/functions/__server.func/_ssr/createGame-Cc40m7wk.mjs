@@ -1,6 +1,6 @@
-import { C as WORLD_WIDTH, S as WORLD_HEIGHT, _ as GAME_HEIGHT, a as getLevel, b as PLAYER_BODY, c as allRosterClips, d as unregisterGame, f as CAMERA, g as ENEMY_DISPLAY_SCALE, h as ENEMY_BODY, i as SOUTH_FLORIDA_LEVELS, l as getCharacter, n as inputManager, o as approach, p as COMBAT, r as useGameStore, s as audioManager, u as registerGame, v as JUMP, x as PLAYER_DISPLAY_SCALE, y as MOVE } from "./routes-C1ibut-g.mjs";
+import { C as WORLD_WIDTH, S as WORLD_HEIGHT, _ as GAME_HEIGHT, a as getLevel, b as PLAYER_BODY, c as allRosterClips, d as unregisterGame, f as CAMERA, g as ENEMY_DISPLAY_SCALE, h as ENEMY_BODY, i as SOUTH_FLORIDA_LEVELS, l as getCharacter, n as inputManager, o as approach, p as COMBAT, r as useGameStore, s as audioManager, u as registerGame, v as JUMP, x as PLAYER_DISPLAY_SCALE, y as MOVE } from "./routes-BLfuIWbj.mjs";
 import { t as phaser_esm_exports } from "../_libs/phaser.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/createGame-DQnAK5yO.js
+//#region node_modules/.nitro/vite/services/ssr/assets/createGame-Cc40m7wk.js
 function prefersReducedMotion() {
 	return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -1426,6 +1426,7 @@ var PlayScene = class extends Phaser$2.Scene {
 	combat;
 	far;
 	platforms;
+	bgScale = 1;
 	fpsTimer = 0;
 	constructor() {
 		super({ key: "play" });
@@ -1474,7 +1475,12 @@ var PlayScene = class extends Phaser$2.Scene {
 			location: `${level.city} · ${level.name}`
 		});
 		const bgKey = this.textures.exists(`bg-${level.id}`) ? `bg-${level.id}` : "bg-fort-lauderdale";
-		this.far = this.add.tileSprite(0, 0, 720, GAME_HEIGHT, bgKey).setOrigin(0, 0).setDisplaySize(720, GAME_HEIGHT).setScrollFactor(0).setDepth(0);
+		const bgHeight = level.groundY + 60;
+		this.far = this.add.tileSprite(0, 0, 720, bgHeight, bgKey).setOrigin(0, 0).setScrollFactor(0).setDepth(0);
+		const texHeight = this.textures.get(bgKey).getSourceImage()?.height || 1080;
+		this.bgScale = bgHeight / texHeight;
+		this.far.tileScaleY = this.bgScale;
+		this.far.tileScaleX = this.bgScale;
 		const groundH = WORLD_HEIGHT - level.groundY + 120;
 		this.add.tileSprite(WORLD_WIDTH / 2, level.groundY, WORLD_WIDTH, groundH, "ground").setOrigin(.5, 0).setDepth(4);
 		for (const prop of level.props) this.add.image(prop.x, prop.y, prop.key).setOrigin(.5, 1).setScale(prop.scale).setFlipX(Boolean(prop.flipX)).setDepth(prop.depth);
@@ -1544,7 +1550,7 @@ var PlayScene = class extends Phaser$2.Scene {
 		const current = cam.followOffset.x;
 		cam.setFollowOffset(current + (look - current) * Math.min(1, 4 * dt), CAMERA.lookY);
 		const scrollX = cam.scrollX;
-		this.far.tilePositionX = scrollX * .18;
+		this.far.tilePositionX = scrollX * .18 / Math.max(.1, this.bgScale);
 		this.fpsTimer += dt;
 		if (this.fpsTimer > .25) {
 			this.fpsTimer = 0;
