@@ -175,11 +175,10 @@ export const MIAMI: LevelDef = {
     { x: 2950, y: GROUND_Y - 130, width: 250, height: 24 },
   ],
   props: [
-    { key: "palm", x: 500, y: GROUND_Y + 8, scale: 1.25, depth: 7 },
-    { key: "tower", x: 1300, y: GROUND_Y + 6, scale: 1.35, depth: 8 },
-    { key: "palm", x: 2100, y: GROUND_Y + 8, scale: 1.15, flipX: true, depth: 6 },
-    { key: "tower", x: 2850, y: GROUND_Y + 6, scale: 1.3, depth: 7 },
-    { key: "palm", x: 3700, y: GROUND_Y + 8, scale: 1.4, depth: 8 },
+    { key: "palm", x: 500, y: GROUND_Y + 8, scale: 1.2, depth: 7 },
+    { key: "palm", x: 1750, y: GROUND_Y + 8, scale: 1.35, flipX: true, depth: 6 },
+    { key: "palm", x: 2900, y: GROUND_Y + 8, scale: 1.25, depth: 7 },
+    { key: "palm", x: 3850, y: GROUND_Y + 8, scale: 1.4, flipX: true, depth: 8 },
   ],
   enemies: [
     { id: "blade", x: 600 },

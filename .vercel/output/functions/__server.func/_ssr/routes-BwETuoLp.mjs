@@ -4,7 +4,7 @@ import { t as create } from "../_libs/zustand.mjs";
 import { a as Sword, c as RotateCcw, d as Flame, f as ChevronRight, l as Play, m as ArrowUp, n as VolumeX, o as Sparkles, p as ChevronLeft, r as Volume2, s as Shield, t as Zap, u as MapPin } from "../_libs/lucide-react.mjs";
 import { t as clsx } from "../_libs/clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-DL5BWSab.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-BwETuoLp.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var __defProp = Object.defineProperty;
@@ -884,36 +884,30 @@ var SOUTH_FLORIDA_LEVELS = [
 				key: "palm",
 				x: 500,
 				y: 988,
-				scale: 1.25,
+				scale: 1.2,
 				depth: 7
 			},
 			{
-				key: "tower",
-				x: 1300,
-				y: 986,
-				scale: 1.35,
-				depth: 8
-			},
-			{
 				key: "palm",
-				x: 2100,
+				x: 1750,
 				y: 988,
-				scale: 1.15,
+				scale: 1.35,
 				flipX: true,
 				depth: 6
 			},
 			{
-				key: "tower",
-				x: 2850,
-				y: 986,
-				scale: 1.3,
+				key: "palm",
+				x: 2900,
+				y: 988,
+				scale: 1.25,
 				depth: 7
 			},
 			{
 				key: "palm",
-				x: 3700,
+				x: 3850,
 				y: 988,
 				scale: 1.4,
+				flipX: true,
 				depth: 8
 			}
 		],
@@ -2354,7 +2348,7 @@ function GameApp() {
 		if (!host) return;
 		let game = null;
 		let cancelled = false;
-		import("./createGame-CRmrPSij.mjs").then(({ createGame }) => {
+		import("./createGame-3ZgN9ise.mjs").then(({ createGame }) => {
 			if (cancelled || !host) return;
 			game = createGame(host);
 		});
