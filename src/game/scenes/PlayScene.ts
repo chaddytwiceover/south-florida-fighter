@@ -21,6 +21,40 @@ import { audioManager } from "../audio/AudioManager";
 
 const Phaser = (PhaserNS as { default?: typeof PhaserNS }).default ?? PhaserNS;
 
+const PROP_CALIBRATION: Record<string, { bottomPad: number; scale: number }> = {
+  ftl_surf: { bottomPad: 0, scale: 0.9 },
+  ftl_tiki: { bottomPad: 0, scale: 0.95 },
+  mb_artdeco_lamp: { bottomPad: 1, scale: 0.92 },
+  mb_valet_sign: { bottomPad: 2, scale: 0.95 },
+  palm: { bottomPad: 13, scale: 0.92 },
+  pb_fountain: { bottomPad: 0, scale: 0.92 },
+  pb_lamp: { bottomPad: 1, scale: 0.92 },
+  pb_urn: { bottomPad: 0, scale: 0.95 },
+  tampa_balcony: { bottomPad: 0, scale: 0.9 },
+  tampa_barrel: { bottomPad: 2, scale: 0.95 },
+  tampa_lamp: { bottomPad: 1, scale: 0.92 },
+  tower: { bottomPad: 13, scale: 0.92 },
+  wynwood_crates: { bottomPad: 3, scale: 0.95 },
+  wynwood_hydrant: { bottomPad: 0, scale: 0.95 },
+  wynwood_sign: { bottomPad: 0, scale: 0.92 },
+};
+
+function loadImageOnce(scene: Phaser.Scene, key: string, url: string) {
+  if (!scene.textures.exists(key)) scene.load.image(key, url);
+}
+
+function loadSpriteSheetOnce(
+  scene: Phaser.Scene,
+  key: string,
+  url: string,
+  frameWidth: number,
+  frameHeight: number,
+) {
+  if (!scene.textures.exists(key)) {
+    scene.load.spritesheet(key, url, { frameWidth, frameHeight });
+  }
+}
+
 export class PlayScene extends Phaser.Scene {
   private player!: Player;
   private combat!: CombatSystem;
@@ -42,54 +76,37 @@ export class PlayScene extends Phaser.Scene {
   preload() {
     // Preload all 5 South Florida city backgrounds
     for (const lvl of SOUTH_FLORIDA_LEVELS) {
-      if (!this.textures.exists(`bg-${lvl.id}`)) {
-        this.load.image(`bg-${lvl.id}`, lvl.parallax.far);
-      }
+      loadImageOnce(this, `bg-${lvl.id}`, lvl.parallax.far);
     }
 
-    this.load.image("ground", "/game/backgrounds/fort-lauderdale/ground.jpg");
+    loadImageOnce(this, "ground", "/game/backgrounds/fort-lauderdale/ground.jpg");
     
     // Core & Stage-Specific Props
-    this.load.image("palm", "/game/sprites/props/palm.png");
-    this.load.image("tower", "/game/sprites/props/tower.png");
-    this.load.image("ftl_tiki", "/game/sprites/props/ftl_tiki.png");
-    this.load.image("ftl_surf", "/game/sprites/props/ftl_surf.png");
-    this.load.image("tampa_lamp", "/game/sprites/props/tampa_lamp.png");
-    this.load.image("tampa_balcony", "/game/sprites/props/tampa_balcony.png");
-    this.load.image("tampa_barrel", "/game/sprites/props/tampa_barrel.png");
-    this.load.image("pb_fountain", "/game/sprites/props/pb_fountain.png");
-    this.load.image("pb_lamp", "/game/sprites/props/pb_lamp.png");
-    this.load.image("pb_urn", "/game/sprites/props/pb_urn.png");
-    this.load.image("wynwood_hydrant", "/game/sprites/props/wynwood_hydrant.png");
-    this.load.image("wynwood_crates", "/game/sprites/props/wynwood_crates.png");
-    this.load.image("wynwood_sign", "/game/sprites/props/wynwood_sign.png");
-    this.load.image("mb_artdeco_lamp", "/game/sprites/props/mb_artdeco_lamp.png");
-    this.load.image("mb_valet_sign", "/game/sprites/props/mb_valet_sign.png");
+    loadImageOnce(this, "palm", "/game/sprites/props/palm.png");
+    loadImageOnce(this, "tower", "/game/sprites/props/tower.png");
+    loadImageOnce(this, "ftl_tiki", "/game/sprites/props/ftl_tiki.png");
+    loadImageOnce(this, "ftl_surf", "/game/sprites/props/ftl_surf.png");
+    loadImageOnce(this, "tampa_lamp", "/game/sprites/props/tampa_lamp.png");
+    loadImageOnce(this, "tampa_balcony", "/game/sprites/props/tampa_balcony.png");
+    loadImageOnce(this, "tampa_barrel", "/game/sprites/props/tampa_barrel.png");
+    loadImageOnce(this, "pb_fountain", "/game/sprites/props/pb_fountain.png");
+    loadImageOnce(this, "pb_lamp", "/game/sprites/props/pb_lamp.png");
+    loadImageOnce(this, "pb_urn", "/game/sprites/props/pb_urn.png");
+    loadImageOnce(this, "wynwood_hydrant", "/game/sprites/props/wynwood_hydrant.png");
+    loadImageOnce(this, "wynwood_crates", "/game/sprites/props/wynwood_crates.png");
+    loadImageOnce(this, "wynwood_sign", "/game/sprites/props/wynwood_sign.png");
+    loadImageOnce(this, "mb_artdeco_lamp", "/game/sprites/props/mb_artdeco_lamp.png");
+    loadImageOnce(this, "mb_valet_sign", "/game/sprites/props/mb_valet_sign.png");
 
-    this.load.spritesheet("slash-fx", "/game/sprites/fx/slash.png", {
-      frameWidth: 128,
-      frameHeight: 128,
-    });
-    this.load.spritesheet("wave-fx", "/game/sprites/fx/wave.png", {
-      frameWidth: 128,
-      frameHeight: 128,
-    });
-    this.load.spritesheet("impact-fx", "/game/sprites/fx/impact.png", {
-      frameWidth: 128,
-      frameHeight: 128,
-    });
+    loadSpriteSheetOnce(this, "slash-fx", "/game/sprites/fx/slash.png", 128, 128);
+    loadSpriteSheetOnce(this, "wave-fx", "/game/sprites/fx/wave.png", 128, 128);
+    loadSpriteSheetOnce(this, "impact-fx", "/game/sprites/fx/impact.png", 128, 128);
 
     for (const clip of allRosterClips()) {
-      this.load.spritesheet(clip.textureKey, clip.url, {
-        frameWidth: clip.frameWidth,
-        frameHeight: clip.frameHeight,
-      });
+      loadSpriteSheetOnce(this, clip.textureKey, clip.url, clip.frameWidth, clip.frameHeight);
     }
     for (const clip of allEnemyClips()) {
-      this.load.spritesheet(clip.textureKey, clip.url, {
-        frameWidth: clip.frameWidth,
-        frameHeight: clip.frameHeight,
-      });
+      loadSpriteSheetOnce(this, clip.textureKey, clip.url, clip.frameWidth, clip.frameHeight);
     }
   }
 
@@ -140,10 +157,12 @@ export class PlayScene extends Phaser.Scene {
 
     // Stage Props
     for (const prop of level.props) {
+      const calibration = PROP_CALIBRATION[prop.key] ?? { bottomPad: 0, scale: 1 };
+      const displayScale = prop.scale * calibration.scale;
       this.add
-        .image(prop.x, prop.y, prop.key)
+        .image(prop.x, prop.y + calibration.bottomPad * displayScale, prop.key)
         .setOrigin(0.5, 1)
-        .setScale(prop.scale)
+        .setScale(displayScale)
         .setFlipX(Boolean(prop.flipX))
         .setDepth(prop.depth);
     }

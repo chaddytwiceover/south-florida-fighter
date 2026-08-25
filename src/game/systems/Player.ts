@@ -211,11 +211,15 @@ export class Player {
     // Update timers & iFrames
     if (this.iFrames > 0) {
       this.iFrames = Math.max(0, this.iFrames - dt);
-      this.sprite.setAlpha(
-        0.45 + 0.55 * Math.abs(Math.sin(this.iFrames * 28)),
-      );
+      this.sprite.setAlpha(1);
+      if (Math.sin(this.iFrames * 32) > 0) {
+        this.sprite.setTint(0xbdefff);
+      } else {
+        this.sprite.clearTint();
+      }
     } else {
       this.sprite.setAlpha(1);
+      this.sprite.clearTint();
     }
 
     if (this.stunTimer > 0) {

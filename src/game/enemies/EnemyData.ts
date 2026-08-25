@@ -132,8 +132,6 @@ export const BOSS: EnemyData = {
 export const ENEMIES: EnemyData[] = [BRUISER, BLADE, BOSS];
 
 export function getEnemy(id: string): EnemyData {
-  if (id === "thug") return BRUISER;
-  if (id === "rat") return BLADE;
   return ENEMIES.find((e) => e.id === id) ?? BRUISER;
 }
 
