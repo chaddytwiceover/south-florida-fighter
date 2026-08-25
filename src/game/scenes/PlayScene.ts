@@ -27,6 +27,7 @@ import {
   preloadFightBackground,
   preloadTextureAtlases,
 } from "../PerformanceOptimizations.js";
+import { RollbackNetcode } from "../RollbackNetcode.js";
 
 const Phaser = (PhaserNS as { default?: typeof PhaserNS }).default ?? PhaserNS;
 
@@ -56,6 +57,8 @@ export class PlayScene extends Phaser.Scene {
   private bgScale = 1;
   private fpsTimer = 0;
   private isStageCleared = false;
+  private rollbackFrame = 0;
+  private rollbackNetcode?: RollbackNetcode;
 
   constructor() {
     super({ key: "play" });
@@ -64,6 +67,7 @@ export class PlayScene extends Phaser.Scene {
   init() {
     this.fpsTimer = 0;
     this.isStageCleared = false;
+    this.rollbackFrame = 0;
   }
 
   preload() {
@@ -164,6 +168,14 @@ export class PlayScene extends Phaser.Scene {
       this.handleStageClear();
     });
 
+    this.rollbackNetcode = new RollbackNetcode(this, {
+      getPlayer: () => this.player,
+      getCombat: () => this.combat,
+      getStore: () => useGameStore,
+      resimulateFrame: (actions: unknown, fixedDt: number) =>
+        this.stepSimulation(actions as ReturnType<typeof inputManager.poll>, fixedDt),
+    });
+
     // Camera follow
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     this.cameras.main.startFollow(
@@ -179,11 +191,15 @@ export class PlayScene extends Phaser.Scene {
     attachControlsTest(this.player, () => this.combat.aliveCount());
     if (typeof window !== "undefined") {
       window.__playGeneration = (window.__playGeneration ?? 0) + 1;
+      (window as any).__rollbackNetcode = this.rollbackNetcode;
     }
 
     this.events.once("shutdown", () => {
       this.combat.shutdown();
       detachControlsTest();
+      if (typeof window !== "undefined" && (window as any).__rollbackNetcode === this.rollbackNetcode) {
+        delete (window as any).__rollbackNetcode;
+      }
     });
   }
 
@@ -210,14 +226,7 @@ export class PlayScene extends Phaser.Scene {
     });
   }
 
-  update(_time: number, delta: number) {
-    const dt = Math.min(delta / 1000, 0.1);
-    const actions = inputManager.poll();
-    if (actions.pausePressed && useGameStore.getState().playing) {
-      inputManager.enabled = false;
-      useGameStore.getState().setScreen("city-select");
-    }
-
+  private stepSimulation(actions: ReturnType<typeof inputManager.poll>, dt: number) {
     if (this.combat.isFrozen()) {
       this.combat.tickFreeze(dt);
       this.player.update(actions, 0);
@@ -236,6 +245,19 @@ export class PlayScene extends Phaser.Scene {
 
     const scrollX = cam.scrollX;
     this.far.tilePositionX = (scrollX * 0.18) / Math.max(0.1, this.bgScale);
+  }
+
+  update(_time: number, delta: number) {
+    const dt = Math.min(delta / 1000, 0.1);
+    const actions = inputManager.poll();
+    if (actions.pausePressed && useGameStore.getState().playing) {
+      inputManager.enabled = false;
+      useGameStore.getState().setScreen("city-select");
+    }
+
+    this.stepSimulation(actions, dt);
+    this.rollbackNetcode?.recordFrame(this.rollbackFrame, actions);
+    this.rollbackFrame += 1;
 
     this.fpsTimer += dt;
     if (this.fpsTimer > 0.25) {
