@@ -1,8 +1,21 @@
 import type { GameObjects, Physics, Scene } from "phaser";
+import {
+  acquirePooledProjectile,
+  createOptimizedAnimation,
+  releaseProjectile,
+  resolveClipTexture,
+} from "../PerformanceOptimizations.js";
+
+const FX_CLIPS = {
+  slash: { key: "slash-fx", textureKey: "slash-fx", frames: 4, frameRate: 18, repeat: 0 },
+  wave: { key: "wave-fx", textureKey: "wave-fx", frames: 4, frameRate: 14, repeat: -1 },
+  impact: { key: "impact-fx", textureKey: "impact-fx", frames: 4, frameRate: 18, repeat: 0 },
+} as const;
 
 export function playSlash(scene: Scene, x: number, y: number, facing: number) {
-  if (!scene.textures.exists("slash-fx")) return;
-  const fx = scene.add.sprite(x + facing * 54, y - 52, "slash-fx", 0);
+  const texture = resolveClipTexture(scene, FX_CLIPS.slash, 0);
+  if (!scene.textures.exists(texture.key)) return;
+  const fx = scene.add.sprite(x + facing * 54, y - 52, texture.key, texture.frame);
   fx.setOrigin(0.5, 0.5);
   fx.setScale(1.15);
   fx.setFlipX(facing < 0);
@@ -12,25 +25,20 @@ export function playSlash(scene: Scene, x: number, y: number, facing: number) {
 }
 
 export function playWave(scene: Scene, x: number, y: number, facing: number) {
-  if (!scene.textures.exists("wave-fx")) return null;
-  const bolt = scene.physics.add.sprite(x + facing * 42, y - 58, "wave-fx", 0);
-  bolt.setOrigin(0.5, 0.5);
-  bolt.setScale(0.95);
-  bolt.setFlipX(facing < 0);
-  bolt.setDepth(22);
-  bolt.setVelocity(facing * 520, 0);
+  const bolt = acquirePooledProjectile(scene, x, y, facing);
+  if (!bolt) return null;
   const body = bolt.body as Physics.Arcade.Body | null;
   body?.setAllowGravity(false);
-  if (scene.anims.exists("wave-fx")) bolt.play("wave-fx");
   scene.time.delayedCall(900, () => {
-    if (bolt.active) bolt.destroy();
+    releaseProjectile(bolt);
   });
   return bolt;
 }
 
 export function playImpact(scene: Scene, x: number, y: number) {
-  if (!scene.textures.exists("impact-fx")) return;
-  const fx = scene.add.sprite(x, y, "impact-fx", 0);
+  const texture = resolveClipTexture(scene, FX_CLIPS.impact, 0);
+  if (!scene.textures.exists(texture.key)) return;
+  const fx = scene.add.sprite(x, y, texture.key, texture.frame);
   fx.setOrigin(0.5, 0.5);
   fx.setScale(0.95);
   fx.setDepth(25);
@@ -57,28 +65,7 @@ export function playClone(scene: Scene, source: GameObjects.Sprite) {
 }
 
 export function createFxAnimations(scene: Scene) {
-  if (scene.textures.exists("slash-fx") && !scene.anims.exists("slash-fx")) {
-    scene.anims.create({
-      key: "slash-fx",
-      frames: scene.anims.generateFrameNumbers("slash-fx", { start: 0, end: 3 }),
-      frameRate: 18,
-      repeat: 0,
-    });
-  }
-  if (scene.textures.exists("wave-fx") && !scene.anims.exists("wave-fx")) {
-    scene.anims.create({
-      key: "wave-fx",
-      frames: scene.anims.generateFrameNumbers("wave-fx", { start: 0, end: 3 }),
-      frameRate: 14,
-      repeat: -1,
-    });
-  }
-  if (scene.textures.exists("impact-fx") && !scene.anims.exists("impact-fx")) {
-    scene.anims.create({
-      key: "impact-fx",
-      frames: scene.anims.generateFrameNumbers("impact-fx", { start: 0, end: 3 }),
-      frameRate: 18,
-      repeat: 0,
-    });
-  }
+  createOptimizedAnimation(scene, FX_CLIPS.slash);
+  createOptimizedAnimation(scene, FX_CLIPS.wave);
+  createOptimizedAnimation(scene, FX_CLIPS.impact);
 }

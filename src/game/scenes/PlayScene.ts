@@ -11,13 +11,22 @@ import {
 } from "../config";
 import { allEnemyClips } from "../enemies/EnemyData";
 import { inputManager } from "../input/InputManager";
-import { getLevel, SOUTH_FLORIDA_LEVELS } from "../levels/LevelRegistry";
+import { getLevel } from "../levels/LevelRegistry";
 import { createFxAnimations } from "../systems/CombatFx";
 import { attachControlsTest, detachControlsTest } from "../systems/controlsTest";
 import { useGameStore } from "../systems/gameStore";
 import { Player } from "../systems/Player";
 import { floatText } from "../combat/Juice";
 import { audioManager } from "../audio/AudioManager";
+import {
+  addOptimizedImage,
+  createLazyParallaxBackground,
+  createOptimizedAnimation,
+  enforceSteadyFrameRate,
+  initPerformancePools,
+  preloadFightBackground,
+  preloadTextureAtlases,
+} from "../PerformanceOptimizations.js";
 
 const Phaser = (PhaserNS as { default?: typeof PhaserNS }).default ?? PhaserNS;
 
@@ -39,22 +48,6 @@ const PROP_CALIBRATION: Record<string, { bottomPad: number; scale: number }> = {
   wynwood_sign: { bottomPad: 0, scale: 0.92 },
 };
 
-function loadImageOnce(scene: Phaser.Scene, key: string, url: string) {
-  if (!scene.textures.exists(key)) scene.load.image(key, url);
-}
-
-function loadSpriteSheetOnce(
-  scene: Phaser.Scene,
-  key: string,
-  url: string,
-  frameWidth: number,
-  frameHeight: number,
-) {
-  if (!scene.textures.exists(key)) {
-    scene.load.spritesheet(key, url, { frameWidth, frameHeight });
-  }
-}
-
 export class PlayScene extends Phaser.Scene {
   private player!: Player;
   private combat!: CombatSystem;
@@ -74,40 +67,9 @@ export class PlayScene extends Phaser.Scene {
   }
 
   preload() {
-    // Preload all 5 South Florida city backgrounds
-    for (const lvl of SOUTH_FLORIDA_LEVELS) {
-      loadImageOnce(this, `bg-${lvl.id}`, lvl.parallax.far);
-    }
-
-    loadImageOnce(this, "ground", "/game/backgrounds/fort-lauderdale/ground.jpg");
-    
-    // Core & Stage-Specific Props
-    loadImageOnce(this, "palm", "/game/sprites/props/palm.png");
-    loadImageOnce(this, "tower", "/game/sprites/props/tower.png");
-    loadImageOnce(this, "ftl_tiki", "/game/sprites/props/ftl_tiki.png");
-    loadImageOnce(this, "ftl_surf", "/game/sprites/props/ftl_surf.png");
-    loadImageOnce(this, "tampa_lamp", "/game/sprites/props/tampa_lamp.png");
-    loadImageOnce(this, "tampa_balcony", "/game/sprites/props/tampa_balcony.png");
-    loadImageOnce(this, "tampa_barrel", "/game/sprites/props/tampa_barrel.png");
-    loadImageOnce(this, "pb_fountain", "/game/sprites/props/pb_fountain.png");
-    loadImageOnce(this, "pb_lamp", "/game/sprites/props/pb_lamp.png");
-    loadImageOnce(this, "pb_urn", "/game/sprites/props/pb_urn.png");
-    loadImageOnce(this, "wynwood_hydrant", "/game/sprites/props/wynwood_hydrant.png");
-    loadImageOnce(this, "wynwood_crates", "/game/sprites/props/wynwood_crates.png");
-    loadImageOnce(this, "wynwood_sign", "/game/sprites/props/wynwood_sign.png");
-    loadImageOnce(this, "mb_artdeco_lamp", "/game/sprites/props/mb_artdeco_lamp.png");
-    loadImageOnce(this, "mb_valet_sign", "/game/sprites/props/mb_valet_sign.png");
-
-    loadSpriteSheetOnce(this, "slash-fx", "/game/sprites/fx/slash.png", 128, 128);
-    loadSpriteSheetOnce(this, "wave-fx", "/game/sprites/fx/wave.png", 128, 128);
-    loadSpriteSheetOnce(this, "impact-fx", "/game/sprites/fx/impact.png", 128, 128);
-
-    for (const clip of allRosterClips()) {
-      loadSpriteSheetOnce(this, clip.textureKey, clip.url, clip.frameWidth, clip.frameHeight);
-    }
-    for (const clip of allEnemyClips()) {
-      loadSpriteSheetOnce(this, clip.textureKey, clip.url, clip.frameWidth, clip.frameHeight);
-    }
+    const levelId = useGameStore.getState().currentLevelId || "fort-lauderdale";
+    preloadFightBackground(this, getLevel(levelId));
+    preloadTextureAtlases(this);
   }
 
   create() {
@@ -120,6 +82,7 @@ export class PlayScene extends Phaser.Scene {
 
     this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     this.physics.world.gravity.y = 0;
+    enforceSteadyFrameRate(this);
     if (debug) {
       this.physics.world.createDebugGraphic();
       this.physics.world.drawDebug = true;
@@ -130,23 +93,9 @@ export class PlayScene extends Phaser.Scene {
       aliveEnemies: level.enemies.length,
     });
 
-    // Sky & Parallax Skyline Layer without vertical repetition
-    const bgKey = this.textures.exists(`bg-${level.id}`)
-      ? `bg-${level.id}`
-      : "bg-fort-lauderdale";
-
-    const bgHeight = level.groundY + 60;
-    this.far = this.add
-      .tileSprite(0, 0, GAME_WIDTH, bgHeight, bgKey)
-      .setOrigin(0, 0)
-      .setScrollFactor(0)
-      .setDepth(0);
-
-    const tex = this.textures.get(bgKey).getSourceImage() as { width?: number; height?: number };
-    const texHeight = tex?.height || 1080;
-    this.bgScale = bgHeight / texHeight;
-    this.far.tileScaleY = this.bgScale;
-    this.far.tileScaleX = this.bgScale;
+    const parallax = createLazyParallaxBackground(this, level, GAME_WIDTH);
+    this.far = parallax.far;
+    this.bgScale = parallax.bgScale;
 
     // Ground Walkway
     const groundH = WORLD_HEIGHT - level.groundY + 120;
@@ -159,8 +108,7 @@ export class PlayScene extends Phaser.Scene {
     for (const prop of level.props) {
       const calibration = PROP_CALIBRATION[prop.key] ?? { bottomPad: 0, scale: 1 };
       const displayScale = prop.scale * calibration.scale;
-      this.add
-        .image(prop.x, prop.y + calibration.bottomPad * displayScale, prop.key)
+      addOptimizedImage(this, prop.x, prop.y + calibration.bottomPad * displayScale, prop.key)
         .setOrigin(0.5, 1)
         .setScale(displayScale)
         .setFlipX(Boolean(prop.flipX))
@@ -192,19 +140,11 @@ export class PlayScene extends Phaser.Scene {
 
     // Create Animations
     for (const clip of allRosterClips()) {
-      if (this.anims.exists(clip.key)) continue;
-      this.anims.create({
-        key: clip.key,
-        frames: this.anims.generateFrameNumbers(clip.textureKey, {
-          start: 0,
-          end: clip.frames - 1,
-        }),
-        frameRate: clip.frameRate,
-        repeat: clip.repeat,
-      });
+      createOptimizedAnimation(this, clip);
     }
     createFxAnimations(this);
     CombatSystem.preloadAnims(this);
+    initPerformancePools(this);
 
     // Player Spawn
     const character = getCharacter(useGameStore.getState().characterId);

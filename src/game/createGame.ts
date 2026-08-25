@@ -1,5 +1,9 @@
 import * as PhaserNS from "phaser";
 import { GAME_HEIGHT, GAME_WIDTH } from "./config";
+import {
+  optimizedRenderConfig,
+  selectOptimizedRenderer,
+} from "./PerformanceOptimizations.js";
 import { registerGame, unregisterGame } from "./runtime";
 import { PlayScene } from "./scenes/PlayScene";
 
@@ -7,14 +11,12 @@ const Phaser = (PhaserNS as { default?: typeof PhaserNS }).default ?? PhaserNS;
 
 export function createGame(parent: HTMLElement): Phaser.Game {
   const game = new Phaser.Game({
-    type: Phaser.AUTO,
+    type: selectOptimizedRenderer(Phaser),
     parent,
     width: GAME_WIDTH,
     height: GAME_HEIGHT,
     backgroundColor: "#0b6e7a",
-    antialias: true,
-    roundPixels: true,
-    pixelArt: false,
+    ...optimizedRenderConfig(),
     banner: false,
     physics: {
       default: "arcade",
@@ -37,9 +39,7 @@ export function createGame(parent: HTMLElement): Phaser.Game {
     },
     scene: [PlayScene],
     audio: { disableWebAudio: true },
-    render: {
-      powerPreference: "high-performance",
-    },
+    render: optimizedRenderConfig(),
   });
   registerGame(game);
   game.events.once("destroy", () => unregisterGame(game));

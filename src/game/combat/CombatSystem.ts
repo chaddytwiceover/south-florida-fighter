@@ -13,6 +13,17 @@ import {
   shakeCamera,
   spawnHitSparks,
 } from "./Juice";
+import {
+  applyJuiceHit,
+  hitstopDuration,
+  type HitTier,
+} from "./CombatJuiciness";
+import {
+  acquireHitbox,
+  createOptimizedAnimation,
+  releaseHitbox,
+  releaseProjectile,
+} from "../PerformanceOptimizations.js";
 
 export type AttackLevel = "high" | "mid" | "low" | "overhead" | "unblockable";
 
@@ -80,16 +91,7 @@ export class CombatSystem {
 
   static preloadAnims(scene: Phaser.Scene) {
     for (const clip of allEnemyClips()) {
-      if (scene.anims.exists(clip.key)) continue;
-      scene.anims.create({
-        key: clip.key,
-        frames: scene.anims.generateFrameNumbers(clip.textureKey, {
-          start: 0,
-          end: clip.frames - 1,
-        }),
-        frameRate: clip.frameRate,
-        repeat: clip.repeat,
-      });
+      createOptimizedAnimation(scene, clip);
     }
   }
 
@@ -106,28 +108,13 @@ export class CombatSystem {
   }
 
   spawnHit(spec: HitSpec) {
-    const rect = this.scene.add.rectangle(
-      spec.x,
-      spec.y,
-      spec.width,
-      spec.height,
-      0xe85d4c,
-      this.debug ? 0.28 : 0,
-    );
-    rect.setOrigin(0.5, 0.5);
-    rect.setDepth(23);
-    this.scene.physics.add.existing(rect);
-    const body = rect.body as Phaser.Physics.Arcade.Body;
-    body.setAllowGravity(false);
-    body.setImmovable(true);
-    body.setSize(spec.width, spec.height);
-    body.updateFromGameObject();
+    const rect = acquireHitbox(this.scene, spec, this.debug);
     const data: HitData = { ...spec, struck: new Set() };
     rect.setData("hit", data);
     this.hitboxes.add(rect);
     this.resolveHitbox(rect, data);
     this.scene.time.delayedCall(spec.durationMs, () => {
-      if (rect.active) rect.destroy();
+      if (rect.active) releaseHitbox(rect);
     });
     return rect;
   }
@@ -151,7 +138,7 @@ export class CombatSystem {
     sprite.setData("hit", data);
     this.hitboxes.add(sprite);
     this.scene.time.delayedCall(spec.durationMs, () => {
-      if (sprite.active) sprite.destroy();
+      if (sprite.active) releaseProjectile(sprite);
     });
   }
 
@@ -170,6 +157,7 @@ export class CombatSystem {
   update(dt: number) {
     for (const obj of this.hitboxes.getChildren()) {
       const go = obj as Phaser.GameObjects.Rectangle & Phaser.Physics.Arcade.Sprite;
+      if (!go.active) continue;
       const hit = go.getData("hit") as HitData | undefined;
       if (hit?.follow && hit.follow.active) {
         const facing = hit.follow.flipX ? -1 : 1;
@@ -244,34 +232,47 @@ export class CombatSystem {
     );
     if (!landed) return;
 
-    // Visual juice
+    // Determine Hit Tier
+    const isSuper = hit.damage >= 45 || hit.level === "unblockable";
+    const isHeavy = hit.damage > 20;
+    const tier: HitTier = isSuper ? "super" : isHeavy ? "heavy" : "light";
+
+    // Visual juice & impact sound
     const hitX = (player.x + enemy.x) / 2;
     const hitY = enemy.y - 54;
     playImpact(this.scene, hitX, hitY);
-    spawnHitSparks(this.scene, hitX, hitY, hit.damage > 25 ? 0xff4444 : 0xffe600, 10);
 
     // Dynamic floating text
-    const isHeavy = hit.damage > 20;
     floatText(
       this.scene,
       enemy.x,
       enemy.y - 120,
       `${scaledDamage}`,
-      isHeavy ? "#e8c45a" : "#f4f7f5",
-      isHeavy ? "36px" : "28px",
+      isSuper ? "#d53f8c" : isHeavy ? "#e8c45a" : "#f4f7f5",
+      isSuper ? "42px" : isHeavy ? "36px" : "28px",
     );
 
-    // Audio & hitstop
-    if (isHeavy) {
+    // Audio dispatch
+    if (isSuper) {
+      audioManager.finisher();
+    } else if (isHeavy) {
       audioManager.hitHeavy();
-      cameraZoomPunch(this.scene, 1.05, 140);
-      shakeCamera(this.scene, 0.012, 160);
-      this.hitstop(hit.hitstopFrames ? hit.hitstopFrames * 16 : 90);
     } else {
       audioManager.hitLight();
-      shakeCamera(this.scene, COMBAT.shake, 100);
-      this.hitstop(hit.hitstopFrames ? hit.hitstopFrames * 16 : COMBAT.hitstopMs);
     }
+
+    // Comprehensive Juiciness Engine (Hitstop + Camera Zoom/Shake + Flash + Timescale Ramp)
+    const overrideHitstop = hit.hitstopFrames ? hit.hitstopFrames / 60 : undefined;
+    const freezeSec = overrideHitstop ?? hitstopDuration(tier);
+    this.hitstop(freezeSec * 1000);
+
+    applyJuiceHit(this.scene, {
+      tier,
+      hitX,
+      hitY,
+      freezeSec,
+      sparkColor: isSuper ? 0xd53f8c : isHeavy ? 0xe85d4c : 0xffe600,
+    });
 
     store.addComboHit();
     audioManager.comboChime(store.comboHits);
@@ -283,8 +284,12 @@ export class CombatSystem {
       store.gainKi(enemy.data.kiReward);
       floatText(this.scene, enemy.x, enemy.y - 150, "K.O.", "#e85d4c", "44px");
       audioManager.koAnnounce();
-      cameraZoomPunch(this.scene, 1.08, 300);
-      this.hitstop(160);
+      applyJuiceHit(this.scene, {
+        tier: "super",
+        hitX: enemy.x,
+        hitY: enemy.y - 60,
+        freezeSec: 0.22,
+      });
 
       const remaining = this.aliveCount();
       store.setAliveEnemies(remaining);
@@ -309,11 +314,19 @@ export class CombatSystem {
     if (hitResult.type === "parry") {
       // Parried!
       audioManager.parry();
-      spawnHitSparks(this.scene, player.x, player.y - 50, 0x00ffff, 14);
       flashSprite(player.sprite, 0x00ffff, 140);
       floatText(this.scene, player.x, player.y - 130, "JUST PARRY!", "#00ffff", "36px");
-      shakeCamera(this.scene, 0.008, 120);
-      this.hitstop(120);
+
+      const freezeSec = hitstopDuration("parry");
+      this.hitstop(freezeSec * 1000);
+      applyJuiceHit(this.scene, {
+        tier: "parry",
+        hitX: player.x,
+        hitY: player.y - 50,
+        freezeSec,
+        sparkColor: 0x00ffff,
+      });
+
       useGameStore.getState().gainKi(25);
       return;
     }
@@ -321,21 +334,38 @@ export class CombatSystem {
     if (hitResult.type === "block") {
       // Blocked!
       audioManager.block();
-      spawnHitSparks(this.scene, player.x, player.y - 50, 0x88ccff, 6);
       flashSprite(player.sprite, 0x4488ff, 80);
       floatText(this.scene, player.x, player.y - 130, "GUARD", "#8aa0aa", "26px");
-      shakeCamera(this.scene, 0.004, 80);
-      this.hitstop(40);
+
+      const freezeSec = hitstopDuration("block");
+      this.hitstop(freezeSec * 1000);
+      applyJuiceHit(this.scene, {
+        tier: "block",
+        hitX: player.x,
+        hitY: player.y - 50,
+        freezeSec,
+        sparkColor: 0x88ccff,
+      });
       return;
     }
 
     if (hitResult.type === "hit") {
       // Direct Hit!
       playImpact(this.scene, player.x - dir * 16, player.y - 56);
-      spawnHitSparks(this.scene, player.x, player.y - 56, 0xe85d4c, 8);
       floatText(this.scene, player.x, player.y - 130, `${hit.damage}`, "#e85d4c", "32px");
-      shakeCamera(this.scene, 0.012, 150);
-      this.hitstop(70);
+
+      const isHeavy = hit.damage > 20;
+      const tier: HitTier = isHeavy ? "heavy" : "light";
+      const freezeSec = hitstopDuration(tier);
+      this.hitstop(freezeSec * 1000);
+
+      applyJuiceHit(this.scene, {
+        tier,
+        hitX: player.x - dir * 16,
+        hitY: player.y - 56,
+        freezeSec,
+      });
+
       useGameStore.getState().resetCombo();
     }
   }

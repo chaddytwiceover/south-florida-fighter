@@ -13,6 +13,7 @@
     "build:dev": "node scripts/with-app-env.mjs vite build --mode development",
     "preview": "node scripts/with-app-env.mjs vite preview",
     "typecheck": "tsc --noEmit",
+    "pack:atlases": "node scripts/pack-texture-atlases.mjs",
     "extract:8frame": "node scripts/extract-8frame-sprites.mjs",
     "check:auth": "node scripts/check-auth-invariant.mjs",
     "test": "node --test 'scripts/**/*.test.mjs'",

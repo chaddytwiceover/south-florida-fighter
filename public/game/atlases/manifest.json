@@ -1,0 +1,11 @@
+{
+  "maxSize": 2048,
+  "atlases": [
+    {
+      "key": "sprites-0",
+      "image": "/game/atlases/sprites-0.png",
+      "json": "/game/atlases/sprites-0.json",
+      "frames": 187
+    }
+  ]
+}

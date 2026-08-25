@@ -1,4 +1,8 @@
 import { COMBAT } from "../config";
+import {
+  spawnPooledFloatText,
+  spawnPooledSparks,
+} from "../PerformanceOptimizations.js";
 
 export function prefersReducedMotion() {
   return (
@@ -15,38 +19,7 @@ export function floatText(
   color: string,
   size = "32px",
 ) {
-  const label = scene.add
-    .text(x, y, text, {
-      fontFamily: "Bebas Neue, Impact, sans-serif",
-      fontSize: size,
-      color,
-      stroke: "#0c1a24",
-      strokeThickness: 6,
-    })
-    .setOrigin(0.5, 1)
-    .setDepth(50);
-
-  label.setScale(0.7);
-  scene.tweens.add({
-    targets: label,
-    scaleX: 1.15,
-    scaleY: 1.15,
-    y: y - 20,
-    duration: 120,
-    ease: "Back.easeOut",
-    onComplete: () => {
-      scene.tweens.add({
-        targets: label,
-        scaleX: 1,
-        scaleY: 1,
-        y: y - 64,
-        alpha: 0,
-        duration: 480,
-        ease: "Quad.easeIn",
-        onComplete: () => label.destroy(),
-      });
-    },
-  });
+  spawnPooledFloatText(scene, x, y, text, color, size);
 }
 
 export function shakeCamera(
@@ -89,32 +62,7 @@ export function spawnHitSparks(
   color = 0xffe600,
   count = 8,
 ) {
-  for (let i = 0; i < count; i++) {
-    const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
-    const speed = Phaser.Math.FloatBetween(120, 380);
-    const line = scene.add.line(
-      x,
-      y,
-      0,
-      0,
-      Math.cos(angle) * 14,
-      Math.sin(angle) * 14,
-      color,
-    );
-    line.setLineWidth(3);
-    line.setDepth(45);
-
-    scene.tweens.add({
-      targets: line,
-      x: x + Math.cos(angle) * (speed * 0.15),
-      y: y + Math.sin(angle) * (speed * 0.15),
-      alpha: 0,
-      scaleX: 0.2,
-      duration: 200,
-      ease: "Quad.easeOut",
-      onComplete: () => line.destroy(),
-    });
-  }
+  spawnPooledSparks(scene, x, y, { color, count, depth: 45 });
 }
 
 export function applySquashStretch(

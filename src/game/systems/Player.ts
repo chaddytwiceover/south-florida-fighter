@@ -30,6 +30,10 @@ import { playClone, playSlash, playWave } from "./CombatFx";
 import { useGameStore } from "./gameStore";
 import { approach } from "../utils/math";
 import { audioManager } from "../audio/AudioManager";
+import {
+  resolveClipTexture,
+  setSpriteClipFrame,
+} from "../PerformanceOptimizations.js";
 
 export type AttackResolution =
   | { type: "parry" }
@@ -78,11 +82,12 @@ export class Player {
     this.frameKit = getFrameKit(character.id);
     this.spawn = { x, y };
 
+    const initialTexture = resolveClipTexture(scene, character.animationSet.idle, 0);
     this.sprite = scene.physics.add.sprite(
       x,
       y,
-      character.animationSet.idle.textureKey,
-      0,
+      initialTexture.key,
+      initialTexture.frame,
     );
     this.sprite.setOrigin(0.5, 1);
     this.sprite.setScale(PLAYER_DISPLAY_SCALE);
@@ -482,7 +487,7 @@ export class Player {
 
     const clip = this.character.animationSet[clipKey as keyof typeof this.character.animationSet];
     this.sprite.anims.stop();
-    this.sprite.setTexture(clip.textureKey, 0);
+    setSpriteClipFrame(this.sprite, clip, 0);
     this.sprite.play(clip.key);
 
     audioManager.swing(cmd === "LIGHT" ? 1.4 : cmd === "HEAVY" ? 0.9 : 1.1);
@@ -611,7 +616,7 @@ export class Player {
   private playHurt() {
     const clip = this.character.animationSet.hurt;
     this.sprite.anims.stop();
-    this.sprite.setTexture(clip.textureKey, 0);
+    setSpriteClipFrame(this.sprite, clip, 0);
     this.sprite.play(clip.key);
   }
 
@@ -646,18 +651,14 @@ export class Player {
 
     if (this.fsm.isBlocking() || this.fsm.isParrying()) {
       this.sprite.anims.stop();
-      this.sprite.setTexture(set.idle.textureKey, 0);
+      setSpriteClipFrame(this.sprite, set.idle, 0);
       return;
     }
 
     if (!onFloor) {
       const frame = this.vy < -80 ? 1 : 3;
       this.sprite.anims.stop();
-      if (this.sprite.texture.key !== set.jump.textureKey) {
-        this.sprite.setTexture(set.jump.textureKey, frame);
-      } else {
-        this.sprite.setFrame(frame);
-      }
+      setSpriteClipFrame(this.sprite, set.jump, frame);
       return;
     }
 

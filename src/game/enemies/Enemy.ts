@@ -4,6 +4,10 @@ import { ENEMY_BODY, ENEMY_DISPLAY_SCALE, GROUND_Y, JUMP } from "../config";
 import { audioManager } from "../audio/AudioManager";
 import type { EnemyData } from "./EnemyData";
 import { approach } from "../utils/math";
+import {
+  resolveClipTexture,
+  setSpriteClipFrame,
+} from "../PerformanceOptimizations.js";
 
 type EnemyState = "idle" | "patrol" | "chase" | "attack" | "hurt" | "dead";
 
@@ -35,11 +39,12 @@ export class Enemy {
     const isBoss = data.behaviorType === "boss";
     const scale = isBoss ? ENEMY_DISPLAY_SCALE * 1.3 : ENEMY_DISPLAY_SCALE;
 
+    const initialTexture = resolveClipTexture(scene, data.animationSet.idle, 0);
     this.sprite = scene.physics.add.sprite(
       x,
       y,
-      data.animationSet.idle.textureKey,
-      0,
+      initialTexture.key,
+      initialTexture.frame,
     );
     this.sprite.setOrigin(0.5, 1);
     this.sprite.setScale(scale);
@@ -239,7 +244,7 @@ export class Enemy {
     const clip = this.data.animationSet[action];
     if (this.sprite.anims.currentAnim?.key === clip.key) return;
     this.sprite.anims.stop();
-    this.sprite.setTexture(clip.textureKey, 0);
+    setSpriteClipFrame(this.sprite, clip, 0);
     this.sprite.play(clip.key, true);
   }
 
