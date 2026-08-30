@@ -48,10 +48,17 @@ export function flashSprite(
   sprite: Phaser.GameObjects.Sprite,
   tint = 0xffffff,
   durationMs = 70,
+  baseTint?: number,
 ) {
   sprite.setTintFill(tint);
   sprite.scene.time.delayedCall(durationMs, () => {
-    if (sprite.active) sprite.clearTint();
+    if (sprite.active) {
+      if (baseTint !== undefined) {
+        sprite.setTint(baseTint);
+      } else {
+        sprite.clearTint();
+      }
+    }
   });
 }
 
