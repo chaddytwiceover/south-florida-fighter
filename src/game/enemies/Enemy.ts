@@ -29,6 +29,7 @@ export class Enemy {
   private hpBg: Phaser.GameObjects.Rectangle;
   private hpFill: Phaser.GameObjects.Rectangle;
   private struck = false;
+  private phase2 = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, data: EnemyData) {
     this.data = data;
@@ -93,21 +94,32 @@ export class Enemy {
     if (this.dead || this.iFrames > 0) return false;
     this.health = Math.max(0, this.health - damage);
     this.iFrames = this.data.behaviorType === "boss" ? 0.25 : 0.17;
-    this.hurtLock = this.data.behaviorType === "boss" ? 0.18 : 0.28;
-    this.attackLock = 0;
-    this.state = "hurt";
-    this.cooldown = Math.max(this.cooldown, 0.35);
+
+    let isSuperHit = damage >= 45;
+    let resistHitStun = this.data.hasSuperArmor && !isSuperHit;
 
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;
-    body.setVelocity(
-      this.data.behaviorType === "boss" ? knockbackX * 0.4 : knockbackX,
-      this.data.behaviorType === "boss" ? -40 : knockbackY,
-    );
+
+    if (!resistHitStun) {
+      this.hurtLock = this.data.behaviorType === "boss" ? 0.18 : 0.28;
+      this.attackLock = 0;
+      this.state = "hurt";
+      this.cooldown = Math.max(this.cooldown, 0.35);
+
+      let actualKnockbackX = this.data.behaviorType === "boss" ? knockbackX * 0.4 : knockbackX;
+      let actualKnockbackY = this.data.behaviorType === "boss" ? -40 : knockbackY;
+      body.setVelocity(actualKnockbackX, actualKnockbackY);
+    }
+
     flashSprite(
       this.sprite,
       this.data.behaviorType === "boss" ? 0xff00ff : 0xffffff,
+      70,
+      this.phase2 ? 0xff5555 : undefined
     );
-    this.playClip("hurt");
+    if (!resistHitStun) {
+      this.playClip("hurt");
+    }
     this.refreshHp();
     audioManager.hurt();
 
@@ -117,6 +129,35 @@ export class Enemy {
 
   update(dt: number, playerX: number, playerY: number, combat: CombatSystem) {
     if (!this.sprite.active) return;
+
+    if (this.data.behaviorType === "boss" && this.health <= this.data.health * 0.5 && !this.phase2 && !this.dead) {
+      this.phase2 = true;
+      this.hurtLock = 1.0;
+      this.attackLock = 0;
+      this.state = "attack";
+      this.playClip("attack");
+      this.sprite.setTint(0xff5555);
+
+      this.sprite.scene.time.delayedCall(200, () => {
+        if (!this.sprite.active || this.dead) return;
+        combat.spawnHit({
+          x: this.x,
+          y: this.y - 10,
+          width: 300,
+          height: 120,
+          damage: 30,
+          knockback: 400,
+          faction: "enemy",
+          level: "unblockable",
+          durationMs: 200,
+          follow: this.sprite,
+          followOffsetX: 0,
+          followOffsetY: -10,
+        });
+        audioManager.finisher();
+      });
+    }
+
     const hpOffset = this.data.behaviorType === "boss" ? -145 : -128;
     this.hpBg.setPosition(this.x, this.y + hpOffset);
     const hpW = this.data.behaviorType === "boss" ? 70 : 42;
@@ -178,7 +219,8 @@ export class Enemy {
     if (dist < this.data.aggroRange) {
       this.state = "chase";
       this.facing = dir;
-      const targetVx = dir * this.data.speed;
+      const effectiveSpeed = this.phase2 ? this.data.speed * 1.5 : this.data.speed;
+      const targetVx = dir * effectiveSpeed;
       const vx = approach(body.velocity.x, targetVx, 1600 * dt);
       this.sprite.x += vx * dt;
       this.sprite.y += vy * dt;
@@ -197,9 +239,10 @@ export class Enemy {
       this.patrolDir = deltaHome > 0 ? 1 : -1;
     }
     this.facing = this.patrolDir;
+    const effectiveSpeed = this.phase2 ? this.data.speed * 1.5 : this.data.speed;
     const vx = approach(
       body.velocity.x,
-      this.patrolDir * (this.data.speed * 0.45),
+      this.patrolDir * (effectiveSpeed * 0.45),
       800 * dt,
     );
     this.sprite.x += vx * dt;
@@ -223,12 +266,13 @@ export class Enemy {
     this.sprite.scene.time.delayedCall(this.data.attackDelayMs, () => {
       if (this.dead || this.hurtLock > 0) return;
       audioManager.swing(isBoss ? 0.7 : 1.1);
+      const effectiveDamage = this.phase2 ? this.data.damage * 1.5 : this.data.damage;
       combat.spawnHit({
         x: this.x + this.facing * (isBoss ? 58 : 42),
         y: this.y - 48,
         width: isBoss ? 110 : 78,
         height: isBoss ? 96 : 74,
-        damage: this.data.damage,
+        damage: effectiveDamage,
         knockback: this.data.knockback,
         faction: "enemy",
         level: isBoss ? "overhead" : "mid",
