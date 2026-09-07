@@ -125,6 +125,46 @@ var Flame = createLucideIcon("flame", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Gamepad2 = createLucideIcon("gamepad-2", [
+	["line", {
+		x1: "6",
+		x2: "10",
+		y1: "11",
+		y2: "11",
+		key: "1gktln"
+	}],
+	["line", {
+		x1: "8",
+		x2: "8",
+		y1: "9",
+		y2: "13",
+		key: "qnk9ow"
+	}],
+	["line", {
+		x1: "15",
+		x2: "15.01",
+		y1: "12",
+		y2: "12",
+		key: "krot7o"
+	}],
+	["line", {
+		x1: "18",
+		x2: "18.01",
+		y1: "10",
+		y2: "10",
+		key: "1lcuu1"
+	}],
+	["path", {
+		d: "M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z",
+		key: "mfqc10"
+	}]
+]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var MapPin = createLucideIcon("map-pin", [["path", {
 	d: "M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0",
 	key: "1r0f0z"
@@ -156,6 +196,21 @@ var RotateCcw = createLucideIcon("rotate-ccw", [["path", {
 }], ["path", {
 	d: "M3 3v5h5",
 	key: "1xhq8a"
+}]]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Settings = createLucideIcon("settings", [["path", {
+	d: "M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z",
+	key: "1qme2f"
+}], ["circle", {
+	cx: "12",
+	cy: "12",
+	r: "3",
+	key: "1v7zrd"
 }]]);
 /**
 * @license lucide-react v0.510.0 - ISC
@@ -305,4 +360,4 @@ var Zap = createLucideIcon("zap", [["path", {
 	key: "1xq2db"
 }]]);
 //#endregion
-export { Sword as a, RotateCcw as c, Flame as d, ChevronRight as f, TriangleAlert as i, Play as l, ArrowUp as m, VolumeX as n, Sparkles as o, ChevronLeft as p, Volume2 as r, Shield as s, Zap as t, MapPin as u };
+export { Sword as a, Settings as c, MapPin as d, Gamepad2 as f, ArrowUp as g, ChevronLeft as h, TriangleAlert as i, RotateCcw as l, ChevronRight as m, VolumeX as n, Sparkles as o, Flame as p, Volume2 as r, Shield as s, Zap as t, Play as u };

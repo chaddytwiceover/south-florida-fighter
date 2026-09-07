@@ -57,11 +57,13 @@
   position: relative;
   width: min(100dvw, calc(100dvh * 9 / 16));
   height: min(100dvh, calc(100dvw * 16 / 9));
+  min-width: 320px;
   overflow: hidden;
   background: #0b6e7a;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .game-canvas,
@@ -70,6 +72,39 @@
   height: 100%;
   display: block;
   touch-action: none;
+}
+
+.touch-button {
+  position: relative;
+  isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-button::after {
+  content: "";
+  position: absolute;
+  inset: 50%;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(circle, rgb(244 247 245 / 0.34), transparent 62%);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.15);
+  transition:
+    opacity var(--motion-quick) var(--ease-smooth-out),
+    transform var(--motion-fast) var(--ease-smooth-out);
+}
+
+.touch-button:active::after,
+.touch-button[data-active="true"]::after {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(2.8);
+}
+
+@media (min-width: 720px) {
+  .game-stage {
+    width: min(100dvw, calc(100dvh * 16 / 9));
+    height: min(100dvh, calc(100dvw * 9 / 16));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

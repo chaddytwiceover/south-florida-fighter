@@ -35,7 +35,7 @@ export function createGame(parent: HTMLElement): Phaser.Game {
     },
     input: {
       keyboard: true,
-      activePointers: 3,
+      activePointers: 5,
     },
     scene: [PlayScene],
     audio: { disableWebAudio: true },

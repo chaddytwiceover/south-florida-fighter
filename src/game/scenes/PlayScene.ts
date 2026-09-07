@@ -27,7 +27,6 @@ import {
   preloadFightBackground,
   preloadTextureAtlases,
 } from "../PerformanceOptimizations.js";
-import { RollbackNetcode } from "../RollbackNetcode.js";
 
 const Phaser = (PhaserNS as { default?: typeof PhaserNS }).default ?? PhaserNS;
 
@@ -57,8 +56,6 @@ export class PlayScene extends Phaser.Scene {
   private bgScale = 1;
   private fpsTimer = 0;
   private isStageCleared = false;
-  private rollbackFrame = 0;
-  private rollbackNetcode?: RollbackNetcode;
 
   constructor() {
     super({ key: "play" });
@@ -67,7 +64,6 @@ export class PlayScene extends Phaser.Scene {
   init() {
     this.fpsTimer = 0;
     this.isStageCleared = false;
-    this.rollbackFrame = 0;
   }
 
   preload() {
@@ -168,14 +164,6 @@ export class PlayScene extends Phaser.Scene {
       this.handleStageClear();
     });
 
-    this.rollbackNetcode = new RollbackNetcode(this, {
-      getPlayer: () => this.player,
-      getCombat: () => this.combat,
-      getStore: () => useGameStore,
-      resimulateFrame: (actions: unknown, fixedDt: number) =>
-        this.stepSimulation(actions as ReturnType<typeof inputManager.poll>, fixedDt),
-    });
-
     // Camera follow
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     this.cameras.main.startFollow(
@@ -188,18 +176,16 @@ export class PlayScene extends Phaser.Scene {
     this.cameras.main.setFollowOffset(-CAMERA.lookAhead, CAMERA.lookY);
     this.cameras.main.setRoundPixels(true);
 
+    inputManager.attachPhaserScene(this);
     attachControlsTest(this.player, () => this.combat.aliveCount());
     if (typeof window !== "undefined") {
       window.__playGeneration = (window.__playGeneration ?? 0) + 1;
-      (window as any).__rollbackNetcode = this.rollbackNetcode;
     }
 
     this.events.once("shutdown", () => {
       this.combat.shutdown();
+      inputManager.detachPhaserScene();
       detachControlsTest();
-      if (typeof window !== "undefined" && (window as any).__rollbackNetcode === this.rollbackNetcode) {
-        delete (window as any).__rollbackNetcode;
-      }
     });
   }
 
@@ -256,8 +242,6 @@ export class PlayScene extends Phaser.Scene {
     }
 
     this.stepSimulation(actions, dt);
-    this.rollbackNetcode?.recordFrame(this.rollbackFrame, actions);
-    this.rollbackFrame += 1;
 
     this.fpsTimer += dt;
     if (this.fpsTimer > 0.25) {

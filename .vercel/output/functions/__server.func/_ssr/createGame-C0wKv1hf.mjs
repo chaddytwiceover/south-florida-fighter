@@ -1,6 +1,327 @@
-import { C as WORLD_WIDTH, S as WORLD_HEIGHT, _ as GAME_HEIGHT, a as getLevel, b as PLAYER_BODY, c as allRosterClips, d as unregisterGame, f as CAMERA, g as ENEMY_DISPLAY_SCALE, h as ENEMY_BODY, i as SOUTH_FLORIDA_LEVELS, l as getCharacter, n as inputManager, o as approach, p as COMBAT, r as useGameStore, s as audioManager, u as registerGame, v as JUMP, x as PLAYER_DISPLAY_SCALE, y as MOVE } from "./routes-BgoS_53o.mjs";
+import { S as WORLD_WIDTH, _ as JUMP, a as approach, b as PLAYER_DISPLAY_SCALE, c as getCharacter, d as CAMERA, f as COMBAT, g as GAME_HEIGHT, h as ENEMY_DISPLAY_SCALE, i as getLevel, l as registerGame, m as ENEMY_BODY, n as inputManager, o as audioManager, r as useGameStore, s as allRosterClips, u as unregisterGame, v as MOVE, x as WORLD_HEIGHT, y as PLAYER_BODY } from "./routes-BPPtKdFo.mjs";
 import { t as phaser_esm_exports } from "../_libs/phaser.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/createGame-DJkv7voi.js
+//#region node_modules/.nitro/vite/services/ssr/assets/createGame-C0wKv1hf.js
+var Phaser$3 = phaser_esm_exports;
+var SPRITE_ATLAS_KEYS = ["sprites-0"];
+var poolMap = /* @__PURE__ */ new WeakMap();
+var WAVE_CLIP = {
+	textureKey: "wave-fx",
+	frames: 4,
+	frameRate: 14,
+	repeat: -1,
+	key: "wave-fx"
+};
+function selectOptimizedRenderer(PhaserLib) {
+	if (typeof window === "undefined") return PhaserLib.AUTO;
+	const nav = window.navigator ?? {};
+	const lowMemory = typeof nav.deviceMemory === "number" && nav.deviceMemory <= 4;
+	const narrowViewport = window.innerWidth <= 640;
+	const embedded = window.self !== window.top;
+	return lowMemory || narrowViewport || embedded ? PhaserLib.CANVAS : PhaserLib.AUTO;
+}
+function optimizedRenderConfig() {
+	return {
+		antialias: false,
+		pixelArt: false,
+		powerPreference: "low-power",
+		roundPixels: true
+	};
+}
+function preloadTextureAtlases(scene) {
+	for (const key of SPRITE_ATLAS_KEYS) {
+		if (scene.textures.exists(key)) continue;
+		scene.load.atlas(key, `/game/atlases/${key}.png`, `/game/atlases/${key}.json`);
+	}
+}
+function preloadFightBackground(scene, level) {
+	const key = backgroundKey(level.id);
+	if (!scene.textures.exists(key)) scene.load.image(key, level.parallax.far);
+	if (!scene.textures.exists("ground")) scene.load.image("ground", "/game/backgrounds/fort-lauderdale/ground.jpg");
+}
+function enforceSteadyFrameRate(scene) {
+	scene.time.timeScale = 1;
+	scene.time.paused = false;
+	if (scene.physics?.world) {
+		scene.physics.world.setFPS?.(60);
+		scene.physics.world.fps = 60;
+	}
+	if (scene.physics) scene.physics.framerate = 60;
+	if (scene.game?.loop) {
+		scene.game.loop.targetFps = 60;
+		scene.game.loop.forceSetTimeOut = true;
+	}
+}
+function backgroundKey(levelId) {
+	return `bg-${levelId}`;
+}
+function createLazyParallaxBackground(scene, level, width) {
+	const key = scene.textures.exists(backgroundKey(level.id)) ? backgroundKey(level.id) : backgroundKey("fort-lauderdale");
+	const bgHeight = level.groundY + 60;
+	const far = scene.add.tileSprite(0, 0, width, bgHeight, key).setOrigin(0, 0).setScrollFactor(0).setDepth(0);
+	const bgScale = bgHeight / (scene.textures.get(key).getSourceImage()?.height || 1080);
+	far.tileScaleY = bgScale;
+	far.tileScaleX = bgScale;
+	return {
+		far,
+		bgScale
+	};
+}
+function atlasKeyForFrame(scene, frameName) {
+	for (const key of SPRITE_ATLAS_KEYS) if (scene.textures.get(key)?.has?.(frameName)) return key;
+	return null;
+}
+function atlasFrameNameForClip(clip, frame = 0) {
+	return `sheet:${clip.textureKey}:${frame}`;
+}
+function atlasFrameNameForImage(key) {
+	return `image:${key}`;
+}
+function resolveClipTexture(scene, clip, frame = 0) {
+	const frameName = atlasFrameNameForClip(clip, frame);
+	const atlasKey = atlasKeyForFrame(scene, frameName);
+	if (atlasKey) return {
+		key: atlasKey,
+		frame: frameName,
+		atlas: true
+	};
+	return {
+		key: clip.textureKey,
+		frame,
+		atlas: false
+	};
+}
+function setSpriteClipFrame(sprite, clip, frame = 0) {
+	const resolved = resolveClipTexture(sprite.scene, clip, frame);
+	sprite.setTexture(resolved.key, resolved.frame);
+}
+function createOptimizedAnimation(scene, clip) {
+	if (scene.anims.exists(clip.key)) return;
+	const atlasKey = atlasKeyForFrame(scene, atlasFrameNameForClip(clip, 0));
+	if (atlasKey) {
+		scene.anims.create({
+			key: clip.key,
+			frames: scene.anims.generateFrameNames(atlasKey, {
+				prefix: `sheet:${clip.textureKey}:`,
+				start: 0,
+				end: clip.frames - 1
+			}),
+			frameRate: clip.frameRate,
+			repeat: clip.repeat
+		});
+		return;
+	}
+	scene.anims.create({
+		key: clip.key,
+		frames: scene.anims.generateFrameNumbers(clip.textureKey, {
+			start: 0,
+			end: clip.frames - 1
+		}),
+		frameRate: clip.frameRate,
+		repeat: clip.repeat
+	});
+}
+function addOptimizedImage(scene, x, y, key) {
+	const frame = atlasFrameNameForImage(key);
+	const atlasKey = atlasKeyForFrame(scene, frame);
+	if (atlasKey) return scene.add.image(x, y, atlasKey, frame);
+	return scene.add.image(x, y, key);
+}
+function createPools(scene) {
+	const pool = {
+		floatTexts: [],
+		sparkLines: [],
+		sparkDots: [],
+		rings: [],
+		projectiles: [],
+		hitboxes: []
+	};
+	for (let i = 0; i < 36; i += 1) pool.floatTexts.push(scene.add.text(0, 0, "", {
+		fontFamily: "Bebas Neue, Impact, sans-serif",
+		fontSize: "32px",
+		color: "#ffffff",
+		stroke: "#0c1a24",
+		strokeThickness: 6
+	}).setOrigin(.5, 1).setDepth(50).setVisible(false).setActive(false));
+	for (let i = 0; i < 96; i += 1) {
+		pool.sparkLines.push(scene.add.line(0, 0, 0, 0, 1, 1, 16777215).setVisible(false).setActive(false));
+		pool.sparkDots.push(scene.add.circle(0, 0, 2, 16777215).setVisible(false).setActive(false));
+	}
+	for (let i = 0; i < 12; i += 1) pool.rings.push(scene.add.circle(0, 0, 4, 16777215, 0).setVisible(false).setActive(false));
+	for (let i = 0; i < 8; i += 1) {
+		const texture = resolveClipTexture(scene, WAVE_CLIP, 0);
+		const projectile = scene.physics.add.sprite(0, 0, texture.key, texture.frame);
+		projectile.setVisible(false).setActive(false);
+		projectile.body?.setEnable(false);
+		projectile.body?.setAllowGravity(false);
+		pool.projectiles.push(projectile);
+	}
+	for (let i = 0; i < 24; i += 1) {
+		const hitbox = scene.add.rectangle(0, 0, 1, 1, 15228236, 0);
+		hitbox.setOrigin(.5, .5).setDepth(23).setVisible(false).setActive(false);
+		scene.physics.add.existing(hitbox);
+		hitbox.body?.setAllowGravity(false);
+		hitbox.body?.setEnable(false);
+		pool.hitboxes.push(hitbox);
+	}
+	scene.events.once("shutdown", () => {
+		for (const items of Object.values(pool)) for (const item of items) item.destroy?.();
+		poolMap.delete(scene);
+	});
+	return pool;
+}
+function initPerformancePools(scene) {
+	if (!poolMap.has(scene)) poolMap.set(scene, createPools(scene));
+	return poolMap.get(scene);
+}
+function acquire(scene, name, factory) {
+	const pool = initPerformancePools(scene);
+	const item = pool[name].find((entry) => !entry.active);
+	if (item) return item;
+	const created = factory();
+	pool[name].push(created);
+	return created;
+}
+function releaseGameObject(obj) {
+	obj.setActive(false).setVisible(false);
+	obj.setAlpha(1).setScale(1);
+	obj.clearTint?.();
+	if (obj.body) {
+		obj.body.stop?.();
+		obj.body.setVelocity?.(0, 0);
+		obj.body.setEnable?.(false);
+	}
+}
+function spawnPooledFloatText(scene, x, y, text, color, size = "32px") {
+	const label = acquire(scene, "floatTexts", () => scene.add.text(0, 0, "", {
+		fontFamily: "Bebas Neue, Impact, sans-serif",
+		fontSize: size,
+		color,
+		stroke: "#0c1a24",
+		strokeThickness: 6
+	}));
+	scene.tweens.killTweensOf(label);
+	label.setText(text).setStyle({
+		fontFamily: "Bebas Neue, Impact, sans-serif",
+		fontSize: size,
+		color,
+		stroke: "#0c1a24",
+		strokeThickness: 6
+	}).setPosition(x, y).setOrigin(.5, 1).setDepth(50).setScale(.7).setAlpha(1).setVisible(true).setActive(true);
+	scene.tweens.add({
+		targets: label,
+		scaleX: 1.15,
+		scaleY: 1.15,
+		y: y - 20,
+		duration: 120,
+		ease: "Back.easeOut",
+		onComplete: () => {
+			scene.tweens.add({
+				targets: label,
+				scaleX: 1,
+				scaleY: 1,
+				y: y - 64,
+				alpha: 0,
+				duration: 480,
+				ease: "Quad.easeIn",
+				onComplete: () => releaseGameObject(label)
+			});
+		}
+	});
+}
+function spawnPooledSparks(scene, x, y, options = {}) {
+	const count = options.count ?? 8;
+	const color = options.color ?? 16770560;
+	const depth = options.depth ?? 45;
+	const len = options.length ?? 14;
+	const lineWidth = options.lineWidth ?? 3;
+	const minSpeed = options.minSpeed ?? 120;
+	const maxSpeed = options.maxSpeed ?? 380;
+	const duration = options.duration ?? 200;
+	const withDots = options.withDots ?? false;
+	for (let i = 0; i < count; i += 1) {
+		const angle = Phaser$3.Math.FloatBetween(0, Math.PI * 2);
+		const speed = Phaser$3.Math.FloatBetween(minSpeed, maxSpeed);
+		const dx = Math.cos(angle);
+		const dy = Math.sin(angle);
+		const sparkColor = Array.isArray(color) ? color[i % color.length] : color;
+		const line = acquire(scene, "sparkLines", () => scene.add.line(0, 0, 0, 0, 1, 1, sparkColor));
+		scene.tweens.killTweensOf(line);
+		line.setPosition(x, y).setTo(0, 0, dx * len, dy * len).setStrokeStyle(lineWidth, sparkColor).setDepth(depth).setAlpha(1).setScale(1).setVisible(true).setActive(true);
+		const targets = [line];
+		let dot = null;
+		if (withDots) {
+			dot = acquire(scene, "sparkDots", () => scene.add.circle(0, 0, lineWidth * 1.2, sparkColor));
+			scene.tweens.killTweensOf(dot);
+			dot.setPosition(x, y).setFillStyle(sparkColor, 1).setDepth(depth + 1).setAlpha(1).setScale(1).setVisible(true).setActive(true);
+			targets.push(dot);
+		}
+		scene.tweens.add({
+			targets,
+			x: x + dx * (speed * .18),
+			y: y + dy * (speed * .18),
+			alpha: 0,
+			scaleX: .15,
+			scaleY: .15,
+			duration,
+			ease: "Quad.easeOut",
+			onComplete: () => {
+				releaseGameObject(line);
+				if (dot) releaseGameObject(dot);
+			}
+		});
+	}
+}
+function spawnPooledRing(scene, x, y, color, options = {}) {
+	const ring = acquire(scene, "rings", () => scene.add.circle(0, 0, 4, color, 0));
+	scene.tweens.killTweensOf(ring);
+	ring.setPosition(x, y).setRadius(4).setFillStyle(color, 0).setStrokeStyle(options.lineWidth ?? 2, color).setDepth(options.depth ?? 45).setScale(1).setAlpha(1).setVisible(true).setActive(true);
+	scene.tweens.add({
+		targets: ring,
+		scaleX: options.scale ?? 3,
+		scaleY: options.scale ?? 3,
+		alpha: 0,
+		duration: options.duration ?? 180,
+		ease: "Quad.easeOut",
+		onComplete: () => releaseGameObject(ring)
+	});
+}
+function acquirePooledProjectile(scene, x, y, facing) {
+	if (!scene.textures.exists("wave-fx") && !atlasKeyForFrame(scene, "sheet:wave-fx:0")) return null;
+	const texture = resolveClipTexture(scene, WAVE_CLIP, 0);
+	const projectile = acquire(scene, "projectiles", () => scene.physics.add.sprite(0, 0, texture.key, texture.frame));
+	scene.tweens.killTweensOf(projectile);
+	projectile.setPosition(x + facing * 42, y - 58).setOrigin(.5, .5).setScale(.95).setFlipX(facing < 0).setDepth(22).setAlpha(1).setVisible(true).setActive(true);
+	setSpriteClipFrame(projectile, WAVE_CLIP, 0);
+	projectile.body?.setEnable(true);
+	projectile.body?.setAllowGravity(false);
+	projectile.setVelocity(facing * 520, 0);
+	if (scene.anims.exists("wave-fx")) projectile.play("wave-fx");
+	scene.time.delayedCall(900, () => releaseProjectile(projectile));
+	return projectile;
+}
+function releaseProjectile(projectile) {
+	if (!projectile?.active) return;
+	releaseGameObject(projectile);
+}
+function acquireHitbox(scene, spec, debug) {
+	const rect = acquire(scene, "hitboxes", () => {
+		const hitbox = scene.add.rectangle(0, 0, 1, 1, 15228236, 0);
+		hitbox.setOrigin(.5, .5).setDepth(23);
+		scene.physics.add.existing(hitbox);
+		hitbox.body?.setAllowGravity(false);
+		return hitbox;
+	});
+	rect.setPosition(spec.x, spec.y).setSize(spec.width, spec.height).setFillStyle(15228236, debug ? .28 : 0).setDepth(23).setAlpha(1).setVisible(debug).setActive(true);
+	rect.body?.setEnable(true);
+	rect.body?.setImmovable(true);
+	rect.body?.setSize(spec.width, spec.height);
+	rect.body?.updateFromGameObject();
+	return rect;
+}
+function releaseHitbox(rect) {
+	rect?.setData?.("hit", void 0);
+	releaseGameObject(rect);
+}
 var STANDARD_SHEET = {
 	frameWidth: 160,
 	frameHeight: 180,
@@ -48,27 +369,26 @@ var BRUISER = {
 	hasSuperArmor: true,
 	animationSet: makeSet("bruiser")
 };
-var BLADE = {
-	id: "blade",
-	name: "Ybor Blade",
-	title: "Agile Knife Duelist",
-	health: 28,
-	speed: 180,
-	damage: 8,
-	attackRange: 82,
-	aggroRange: 460,
-	attackDurationMs: 360,
-	attackCooldownMs: 800,
-	attackDelayMs: 100,
-	knockback: 220,
-	xp: 10,
-	kiReward: 12,
-	behaviorType: "fast",
-	animationSet: makeSet("blade")
-};
 var ENEMIES = [
 	BRUISER,
-	BLADE,
+	{
+		id: "blade",
+		name: "Ybor Blade",
+		title: "Agile Knife Duelist",
+		health: 28,
+		speed: 180,
+		damage: 8,
+		attackRange: 82,
+		aggroRange: 460,
+		attackDurationMs: 360,
+		attackCooldownMs: 800,
+		attackDelayMs: 100,
+		knockback: 220,
+		xp: 10,
+		kiReward: 12,
+		behaviorType: "fast",
+		animationSet: makeSet("blade")
+	},
 	{
 		id: "boss",
 		name: "Syndicate Kingpin",
@@ -90,80 +410,19 @@ var ENEMIES = [
 	}
 ];
 function getEnemy(id) {
-	if (id === "thug") return BRUISER;
-	if (id === "rat") return BLADE;
 	return ENEMIES.find((e) => e.id === id) ?? BRUISER;
 }
 function allEnemyClips() {
 	return ENEMIES.flatMap((enemy) => Object.values(enemy.animationSet));
 }
-function prefersReducedMotion() {
-	return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
 function floatText(scene, x, y, text, color, size = "32px") {
-	const label = scene.add.text(x, y, text, {
-		fontFamily: "Bebas Neue, Impact, sans-serif",
-		fontSize: size,
-		color,
-		stroke: "#0c1a24",
-		strokeThickness: 6
-	}).setOrigin(.5, 1).setDepth(50);
-	label.setScale(.7);
-	scene.tweens.add({
-		targets: label,
-		scaleX: 1.15,
-		scaleY: 1.15,
-		y: y - 20,
-		duration: 120,
-		ease: "Back.easeOut",
-		onComplete: () => {
-			scene.tweens.add({
-				targets: label,
-				scaleX: 1,
-				scaleY: 1,
-				y: y - 64,
-				alpha: 0,
-				duration: 480,
-				ease: "Quad.easeIn",
-				onComplete: () => label.destroy()
-			});
-		}
-	});
-}
-function shakeCamera(scene, intensity = COMBAT.shake, duration = 140) {
-	if (prefersReducedMotion()) return;
-	scene.cameras.main.shake(duration, intensity);
-}
-function cameraZoomPunch(scene, targetZoom = 1.06, duration = 160) {
-	if (prefersReducedMotion()) return;
-	scene.cameras.main.zoomTo(targetZoom, duration * .4, "Quad.easeOut", true, (_cam, progress) => {
-		if (progress === 1) scene.cameras.main.zoomTo(1, duration * .6, "Quad.easeIn");
-	});
+	spawnPooledFloatText(scene, x, y, text, color, size);
 }
 function flashSprite(sprite, tint = 16777215, durationMs = 70) {
 	sprite.setTintFill(tint);
 	sprite.scene.time.delayedCall(durationMs, () => {
 		if (sprite.active) sprite.clearTint();
 	});
-}
-function spawnHitSparks(scene, x, y, color = 16770560, count = 8) {
-	for (let i = 0; i < count; i++) {
-		const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
-		const speed = Phaser.Math.FloatBetween(120, 380);
-		const line = scene.add.line(x, y, 0, 0, Math.cos(angle) * 14, Math.sin(angle) * 14, color);
-		line.setLineWidth(3);
-		line.setDepth(45);
-		scene.tweens.add({
-			targets: line,
-			x: x + Math.cos(angle) * (speed * .15),
-			y: y + Math.sin(angle) * (speed * .15),
-			alpha: 0,
-			scaleX: .2,
-			duration: 200,
-			ease: "Quad.easeOut",
-			onComplete: () => line.destroy()
-		});
-	}
 }
 function applySquashStretch(sprite, baseScaleX, baseScaleY, squashX, squashY, duration = 100) {
 	const currentFacing = Math.sign(baseScaleX) || 1;
@@ -200,7 +459,8 @@ var Enemy = class {
 		this.homeX = x;
 		const isBoss = data.behaviorType === "boss";
 		const scale = isBoss ? ENEMY_DISPLAY_SCALE * 1.3 : ENEMY_DISPLAY_SCALE;
-		this.sprite = scene.physics.add.sprite(x, y, data.animationSet.idle.textureKey, 0);
+		const initialTexture = resolveClipTexture(scene, data.animationSet.idle, 0);
+		this.sprite = scene.physics.add.sprite(x, y, initialTexture.key, initialTexture.frame);
 		this.sprite.setOrigin(.5, 1);
 		this.sprite.setScale(scale);
 		this.sprite.setDepth(18);
@@ -348,7 +608,7 @@ var Enemy = class {
 		const clip = this.data.animationSet[action];
 		if (this.sprite.anims.currentAnim?.key === clip.key) return;
 		this.sprite.anims.stop();
-		this.sprite.setTexture(clip.textureKey, 0);
+		setSpriteClipFrame(this.sprite, clip, 0);
 		this.sprite.play(clip.key, true);
 	}
 	refreshHp() {
@@ -376,9 +636,33 @@ var Enemy = class {
 		});
 	}
 };
+var FX_CLIPS = {
+	slash: {
+		key: "slash-fx",
+		textureKey: "slash-fx",
+		frames: 4,
+		frameRate: 18,
+		repeat: 0
+	},
+	wave: {
+		key: "wave-fx",
+		textureKey: "wave-fx",
+		frames: 4,
+		frameRate: 14,
+		repeat: -1
+	},
+	impact: {
+		key: "impact-fx",
+		textureKey: "impact-fx",
+		frames: 4,
+		frameRate: 18,
+		repeat: 0
+	}
+};
 function playSlash(scene, x, y, facing) {
-	if (!scene.textures.exists("slash-fx")) return;
-	const fx = scene.add.sprite(x + facing * 54, y - 52, "slash-fx", 0);
+	const texture = resolveClipTexture(scene, FX_CLIPS.slash, 0);
+	if (!scene.textures.exists(texture.key)) return;
+	const fx = scene.add.sprite(x + facing * 54, y - 52, texture.key, texture.frame);
 	fx.setOrigin(.5, .5);
 	fx.setScale(1.15);
 	fx.setFlipX(facing < 0);
@@ -387,23 +671,18 @@ function playSlash(scene, x, y, facing) {
 	scene.time.delayedCall(280, () => fx.destroy());
 }
 function playWave(scene, x, y, facing) {
-	if (!scene.textures.exists("wave-fx")) return null;
-	const bolt = scene.physics.add.sprite(x + facing * 42, y - 58, "wave-fx", 0);
-	bolt.setOrigin(.5, .5);
-	bolt.setScale(.95);
-	bolt.setFlipX(facing < 0);
-	bolt.setDepth(22);
-	bolt.setVelocity(facing * 520, 0);
+	const bolt = acquirePooledProjectile(scene, x, y, facing);
+	if (!bolt) return null;
 	bolt.body?.setAllowGravity(false);
-	if (scene.anims.exists("wave-fx")) bolt.play("wave-fx");
 	scene.time.delayedCall(900, () => {
-		if (bolt.active) bolt.destroy();
+		releaseProjectile(bolt);
 	});
 	return bolt;
 }
 function playImpact(scene, x, y) {
-	if (!scene.textures.exists("impact-fx")) return;
-	const fx = scene.add.sprite(x, y, "impact-fx", 0);
+	const texture = resolveClipTexture(scene, FX_CLIPS.impact, 0);
+	if (!scene.textures.exists(texture.key)) return;
+	const fx = scene.add.sprite(x, y, texture.key, texture.frame);
 	fx.setOrigin(.5, .5);
 	fx.setScale(.95);
 	fx.setDepth(25);
@@ -428,33 +707,211 @@ function playClone(scene, source) {
 	});
 }
 function createFxAnimations(scene) {
-	if (scene.textures.exists("slash-fx") && !scene.anims.exists("slash-fx")) scene.anims.create({
-		key: "slash-fx",
-		frames: scene.anims.generateFrameNumbers("slash-fx", {
-			start: 0,
-			end: 3
-		}),
-		frameRate: 18,
-		repeat: 0
+	createOptimizedAnimation(scene, FX_CLIPS.slash);
+	createOptimizedAnimation(scene, FX_CLIPS.wave);
+	createOptimizedAnimation(scene, FX_CLIPS.impact);
+}
+/**
+* CombatJuiciness.ts — South Florida Fighter
+*
+* Centralised "game feel" module. All camera, hitstop, timescale, flash,
+* and particle effects live here. Import and call from CombatSystem.ts;
+* nothing in this file touches FSM states or combo counters.
+*/
+var SPARK_COLORS = {
+	light: [
+		16770560,
+		16747520,
+		16777215
+	],
+	heavy: [
+		15228236,
+		16720384,
+		16770560
+	],
+	super: [
+		13975436,
+		16711935,
+		16777215,
+		61695
+	],
+	parry: [
+		61695,
+		65484,
+		16777215
+	],
+	block: [
+		8965375,
+		4491519,
+		16777215
+	]
+};
+function prefersReducedMotion() {
+	return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+function framesToSec(frames) {
+	return frames / 60;
+}
+function hitstopDuration(tier) {
+	switch (tier) {
+		case "light": return framesToSec(5);
+		case "heavy": return framesToSec(9);
+		case "super": return framesToSec(13);
+		case "parry": return framesToSec(7);
+		case "block": return framesToSec(3);
+	}
+}
+function applyTimescaleRamp(scene, tier) {
+	if (prefersReducedMotion()) return;
+	if (tier === "block") return;
+	scene.time.timeScale = .8;
+	scene.tweens.addCounter({
+		from: .8,
+		to: 1,
+		duration: 83,
+		ease: "Quad.easeOut",
+		onUpdate: (tween) => {
+			scene.time.timeScale = tween.getValue() ?? 1;
+		},
+		onComplete: () => {
+			scene.time.timeScale = 1;
+		}
 	});
-	if (scene.textures.exists("wave-fx") && !scene.anims.exists("wave-fx")) scene.anims.create({
-		key: "wave-fx",
-		frames: scene.anims.generateFrameNumbers("wave-fx", {
-			start: 0,
-			end: 3
-		}),
-		frameRate: 14,
-		repeat: -1
+}
+var ZOOM_PROFILES = {
+	light: {
+		target: 1.03,
+		inMs: 80,
+		ease: "Quad.easeOut"
+	},
+	heavy: {
+		target: 1.08,
+		inMs: 120,
+		ease: "Cubic.easeInOut"
+	},
+	super: {
+		target: 1.15,
+		inMs: 200,
+		ease: "Expo.easeOut"
+	},
+	parry: {
+		target: 1.06,
+		inMs: 100,
+		ease: "Back.easeOut"
+	},
+	block: {
+		target: 1.02,
+		inMs: 60,
+		ease: "Quad.easeOut"
+	}
+};
+function applyCameraZoom(scene, tier) {
+	if (prefersReducedMotion()) return;
+	const { target, inMs, ease } = ZOOM_PROFILES[tier];
+	const cam = scene.cameras.main;
+	cam.zoomTo(target, inMs, ease, true, (_cam, progress) => {
+		if (progress === 1) {
+			const outMs = inMs * (tier === "super" ? 1.8 : 1.4);
+			cam.zoomTo(1, outMs, "Quad.easeIn");
+		}
 	});
-	if (scene.textures.exists("impact-fx") && !scene.anims.exists("impact-fx")) scene.anims.create({
-		key: "impact-fx",
-		frames: scene.anims.generateFrameNumbers("impact-fx", {
-			start: 0,
-			end: 3
-		}),
-		frameRate: 18,
-		repeat: 0
+}
+var SHAKE_PROFILES = {
+	light: {
+		intensity: .003,
+		duration: 60
+	},
+	heavy: {
+		intensity: .008,
+		duration: 120
+	},
+	super: {
+		intensity: .012,
+		duration: 250
+	},
+	parry: {
+		intensity: .006,
+		duration: 100
+	},
+	block: {
+		intensity: .002,
+		duration: 50
+	}
+};
+function applyShake(scene, tier) {
+	if (prefersReducedMotion()) return;
+	const { intensity, duration } = SHAKE_PROFILES[tier];
+	scene.cameras.main.shake(duration, intensity);
+}
+function applyImpactFlash(scene, tier) {
+	if (prefersReducedMotion()) return;
+	if (tier !== "heavy" && tier !== "super") return;
+	const cam = scene.cameras.main;
+	const alpha = tier === "super" ? .14 : .08;
+	const color = tier === "super" ? 13975436 : 16777215;
+	const flash = scene.add.rectangle(cam.scrollX, cam.scrollY, cam.width, cam.height, color, alpha).setOrigin(0, 0).setScrollFactor(0).setDepth(100).setBlendMode(Phaser.BlendModes.ADD);
+	scene.tweens.add({
+		targets: flash,
+		alpha: 0,
+		delay: 16,
+		duration: tier === "super" ? 80 : 48,
+		ease: "Quad.easeOut",
+		onComplete: () => flash.destroy()
 	});
+}
+function applySuperWhiteFlash(scene) {
+	if (prefersReducedMotion()) return;
+	const cam = scene.cameras.main;
+	const wb = scene.add.rectangle(cam.scrollX, cam.scrollY, cam.width, cam.height, 16777215, 1).setOrigin(0, 0).setScrollFactor(0).setDepth(101);
+	scene.tweens.add({
+		targets: wb,
+		alpha: 0,
+		delay: 33,
+		duration: 120,
+		ease: "Expo.easeOut",
+		onComplete: () => wb.destroy()
+	});
+}
+function spawnJuicySparks(scene, x, y, tier, opts = {}) {
+	const palette = SPARK_COLORS[tier];
+	const count = opts.count ?? (tier === "super" ? 18 : tier === "heavy" ? 12 : 8);
+	const baseSpd = tier === "super" ? 500 : tier === "heavy" ? 380 : 240;
+	spawnPooledSparks(scene, x, y, {
+		color: opts.color ?? palette,
+		count,
+		depth: 46,
+		length: tier === "super" ? 22 : tier === "heavy" ? 16 : 10,
+		lineWidth: tier === "super" ? 3.5 : tier === "heavy" ? 2.5 : 2,
+		minSpeed: baseSpd * .4,
+		maxSpeed: baseSpd,
+		duration: tier === "super" ? 300 : 220,
+		withDots: true
+	});
+	if (tier === "heavy" || tier === "super") spawnPooledRing(scene, x, y, tier === "super" ? 13975436 : 16770560, {
+		scale: tier === "super" ? 4.5 : 3,
+		lineWidth: tier === "super" ? 3 : 2,
+		duration: tier === "super" ? 260 : 180,
+		depth: 45
+	});
+}
+var _rampScheduled = false;
+function scheduleTimescaleRamp(scene, freezeSec, tier) {
+	if (prefersReducedMotion()) return;
+	if (_rampScheduled) return;
+	_rampScheduled = true;
+	scene.time.delayedCall(freezeSec * 1e3 + 8, () => {
+		_rampScheduled = false;
+		applyTimescaleRamp(scene, tier);
+	});
+}
+function applyJuiceHit(scene, opts) {
+	const { tier, hitX, hitY, freezeSec, sparkColor } = opts;
+	spawnJuicySparks(scene, hitX, hitY, tier, { color: sparkColor });
+	applyCameraZoom(scene, tier);
+	applyShake(scene, tier);
+	applyImpactFlash(scene, tier);
+	if (tier === "super") applySuperWhiteFlash(scene);
+	scheduleTimescaleRamp(scene, freezeSec, tier);
 }
 function near(ax, ay, aw, ah, bx, by, bw, bh) {
 	return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
@@ -481,18 +938,7 @@ var CombatSystem = class {
 		this.onVictoryCallback = callback;
 	}
 	static preloadAnims(scene) {
-		for (const clip of allEnemyClips()) {
-			if (scene.anims.exists(clip.key)) continue;
-			scene.anims.create({
-				key: clip.key,
-				frames: scene.anims.generateFrameNumbers(clip.textureKey, {
-					start: 0,
-					end: clip.frames - 1
-				}),
-				frameRate: clip.frameRate,
-				repeat: clip.repeat
-			});
-		}
+		for (const clip of allEnemyClips()) createOptimizedAnimation(scene, clip);
 	}
 	bindPlayer(player) {
 		this.player = player;
@@ -505,15 +951,7 @@ var CombatSystem = class {
 		return enemy;
 	}
 	spawnHit(spec) {
-		const rect = this.scene.add.rectangle(spec.x, spec.y, spec.width, spec.height, 15228236, this.debug ? .28 : 0);
-		rect.setOrigin(.5, .5);
-		rect.setDepth(23);
-		this.scene.physics.add.existing(rect);
-		const body = rect.body;
-		body.setAllowGravity(false);
-		body.setImmovable(true);
-		body.setSize(spec.width, spec.height);
-		body.updateFromGameObject();
+		const rect = acquireHitbox(this.scene, spec, this.debug);
 		const data = {
 			...spec,
 			struck: /* @__PURE__ */ new Set()
@@ -522,7 +960,7 @@ var CombatSystem = class {
 		this.hitboxes.add(rect);
 		this.resolveHitbox(rect, data);
 		this.scene.time.delayedCall(spec.durationMs, () => {
-			if (rect.active) rect.destroy();
+			if (rect.active) releaseHitbox(rect);
 		});
 		return rect;
 	}
@@ -541,7 +979,7 @@ var CombatSystem = class {
 		sprite.setData("hit", data);
 		this.hitboxes.add(sprite);
 		this.scene.time.delayedCall(spec.durationMs, () => {
-			if (sprite.active) sprite.destroy();
+			if (sprite.active) releaseProjectile(sprite);
 		});
 	}
 	isFrozen() {
@@ -556,6 +994,7 @@ var CombatSystem = class {
 	update(dt) {
 		for (const obj of this.hitboxes.getChildren()) {
 			const go = obj;
+			if (!go.active) continue;
 			const hit = go.getData("hit");
 			if (hit?.follow && hit.follow.active) {
 				const facing = hit.follow.flipX ? -1 : 1;
@@ -609,22 +1048,25 @@ var CombatSystem = class {
 		const scaling = Math.max(.4, 1 - comboCount * .05);
 		const scaledDamage = Math.max(1, Math.round(hit.damage * scaling));
 		if (!enemy.takeHit(scaledDamage, dir * hit.knockback, hit.knockbackY ?? (hit.level === "overhead" || hit.level === "unblockable" ? -140 : -70))) return;
+		const isSuper = hit.damage >= 45 || hit.level === "unblockable";
+		const isHeavy = hit.damage > 20;
+		const tier = isSuper ? "super" : isHeavy ? "heavy" : "light";
 		const hitX = (player.x + enemy.x) / 2;
 		const hitY = enemy.y - 54;
 		playImpact(this.scene, hitX, hitY);
-		spawnHitSparks(this.scene, hitX, hitY, hit.damage > 25 ? 16729156 : 16770560, 10);
-		const isHeavy = hit.damage > 20;
-		floatText(this.scene, enemy.x, enemy.y - 120, `${scaledDamage}`, isHeavy ? "#e8c45a" : "#f4f7f5", isHeavy ? "36px" : "28px");
-		if (isHeavy) {
-			audioManager.hitHeavy();
-			cameraZoomPunch(this.scene, 1.05, 140);
-			shakeCamera(this.scene, .012, 160);
-			this.hitstop(hit.hitstopFrames ? hit.hitstopFrames * 16 : 90);
-		} else {
-			audioManager.hitLight();
-			shakeCamera(this.scene, COMBAT.shake, 100);
-			this.hitstop(hit.hitstopFrames ? hit.hitstopFrames * 16 : COMBAT.hitstopMs);
-		}
+		floatText(this.scene, enemy.x, enemy.y - 120, `${scaledDamage}`, isSuper ? "#d53f8c" : isHeavy ? "#e8c45a" : "#f4f7f5", isSuper ? "42px" : isHeavy ? "36px" : "28px");
+		if (isSuper) audioManager.finisher();
+		else if (isHeavy) audioManager.hitHeavy();
+		else audioManager.hitLight();
+		const freezeSec = (hit.hitstopFrames ? hit.hitstopFrames / 60 : void 0) ?? hitstopDuration(tier);
+		this.hitstop(freezeSec * 1e3);
+		applyJuiceHit(this.scene, {
+			tier,
+			hitX,
+			hitY,
+			freezeSec,
+			sparkColor: isSuper ? 13975436 : isHeavy ? 15228236 : 16770560
+		});
 		store.addComboHit();
 		audioManager.comboChime(store.comboHits);
 		store.gainKi(8);
@@ -634,8 +1076,12 @@ var CombatSystem = class {
 			store.gainKi(enemy.data.kiReward);
 			floatText(this.scene, enemy.x, enemy.y - 150, "K.O.", "#e85d4c", "44px");
 			audioManager.koAnnounce();
-			cameraZoomPunch(this.scene, 1.08, 300);
-			this.hitstop(160);
+			applyJuiceHit(this.scene, {
+				tier: "super",
+				hitX: enemy.x,
+				hitY: enemy.y - 60,
+				freezeSec: .22
+			});
 			const remaining = this.aliveCount();
 			store.setAliveEnemies(remaining);
 			if (remaining === 0) this.onVictoryCallback?.();
@@ -647,29 +1093,47 @@ var CombatSystem = class {
 		const hitResult = player.receiveIncomingAttack(hit.damage, hit.chipDamage ?? 3, dir * hit.knockback, hit.level ?? "mid");
 		if (hitResult.type === "parry") {
 			audioManager.parry();
-			spawnHitSparks(this.scene, player.x, player.y - 50, 65535, 14);
 			flashSprite(player.sprite, 65535, 140);
 			floatText(this.scene, player.x, player.y - 130, "JUST PARRY!", "#00ffff", "36px");
-			shakeCamera(this.scene, .008, 120);
-			this.hitstop(120);
+			const freezeSec = hitstopDuration("parry");
+			this.hitstop(freezeSec * 1e3);
+			applyJuiceHit(this.scene, {
+				tier: "parry",
+				hitX: player.x,
+				hitY: player.y - 50,
+				freezeSec,
+				sparkColor: 65535
+			});
 			useGameStore.getState().gainKi(25);
 			return;
 		}
 		if (hitResult.type === "block") {
 			audioManager.block();
-			spawnHitSparks(this.scene, player.x, player.y - 50, 8965375, 6);
 			flashSprite(player.sprite, 4491519, 80);
 			floatText(this.scene, player.x, player.y - 130, "GUARD", "#8aa0aa", "26px");
-			shakeCamera(this.scene, .004, 80);
-			this.hitstop(40);
+			const freezeSec = hitstopDuration("block");
+			this.hitstop(freezeSec * 1e3);
+			applyJuiceHit(this.scene, {
+				tier: "block",
+				hitX: player.x,
+				hitY: player.y - 50,
+				freezeSec,
+				sparkColor: 8965375
+			});
 			return;
 		}
 		if (hitResult.type === "hit") {
 			playImpact(this.scene, player.x - dir * 16, player.y - 56);
-			spawnHitSparks(this.scene, player.x, player.y - 56, 15228236, 8);
 			floatText(this.scene, player.x, player.y - 130, `${hit.damage}`, "#e85d4c", "32px");
-			shakeCamera(this.scene, .012, 150);
-			this.hitstop(70);
+			const tier = hit.damage > 20 ? "heavy" : "light";
+			const freezeSec = hitstopDuration(tier);
+			this.hitstop(freezeSec * 1e3);
+			applyJuiceHit(this.scene, {
+				tier,
+				hitX: player.x - dir * 16,
+				hitY: player.y - 56,
+				freezeSec
+			});
 			useGameStore.getState().resetCombo();
 		}
 	}
@@ -1029,7 +1493,8 @@ var Player = class {
 			x,
 			y
 		};
-		this.sprite = scene.physics.add.sprite(x, y, character.animationSet.idle.textureKey, 0);
+		const initialTexture = resolveClipTexture(scene, character.animationSet.idle, 0);
+		this.sprite = scene.physics.add.sprite(x, y, initialTexture.key, initialTexture.frame);
 		this.sprite.setOrigin(.5, 1);
 		this.sprite.setScale(PLAYER_DISPLAY_SCALE);
 		this.sprite.setDepth(20);
@@ -1108,8 +1573,13 @@ var Player = class {
 		this.inputBuffer.push(actions.raw, this.facing);
 		if (this.iFrames > 0) {
 			this.iFrames = Math.max(0, this.iFrames - dt);
-			this.sprite.setAlpha(.45 + .55 * Math.abs(Math.sin(this.iFrames * 28)));
-		} else this.sprite.setAlpha(1);
+			this.sprite.setAlpha(1);
+			if (Math.sin(this.iFrames * 32) > 0) this.sprite.setTint(12447743);
+			else this.sprite.clearTint();
+		} else {
+			this.sprite.setAlpha(1);
+			this.sprite.clearTint();
+		}
 		if (this.stunTimer > 0) {
 			this.stunTimer = Math.max(0, this.stunTimer - dt);
 			if (this.stunTimer === 0 && this.fsm.currentState === "HITSTUN") this.fsm.changeState(onFloor ? "IDLE" : "JUMP_FALL");
@@ -1274,7 +1744,7 @@ var Player = class {
 		});
 		const clip = this.character.animationSet[clipKey];
 		this.sprite.anims.stop();
-		this.sprite.setTexture(clip.textureKey, 0);
+		setSpriteClipFrame(this.sprite, clip, 0);
 		this.sprite.play(clip.key);
 		audioManager.swing(cmd === "LIGHT" ? 1.4 : cmd === "HEAVY" ? .9 : 1.1);
 	}
@@ -1382,7 +1852,7 @@ var Player = class {
 	playHurt() {
 		const clip = this.character.animationSet.hurt;
 		this.sprite.anims.stop();
-		this.sprite.setTexture(clip.textureKey, 0);
+		setSpriteClipFrame(this.sprite, clip, 0);
 		this.sprite.play(clip.key);
 	}
 	knockOut() {
@@ -1411,14 +1881,13 @@ var Player = class {
 		const set = this.character.animationSet;
 		if (this.fsm.isBlocking() || this.fsm.isParrying()) {
 			this.sprite.anims.stop();
-			this.sprite.setTexture(set.idle.textureKey, 0);
+			setSpriteClipFrame(this.sprite, set.idle, 0);
 			return;
 		}
 		if (!onFloor) {
 			const frame = this.vy < -80 ? 1 : 3;
 			this.sprite.anims.stop();
-			if (this.sprite.texture.key !== set.jump.textureKey) this.sprite.setTexture(set.jump.textureKey, frame);
-			else this.sprite.setFrame(frame);
+			setSpriteClipFrame(this.sprite, set.jump, frame);
 			return;
 		}
 		const key = this.fsm.currentState === "WALK_FWD" || this.fsm.currentState === "WALK_BACK" || Math.abs(this.vx) > 28 ? set.run.key : set.idle.key;
@@ -1429,6 +1898,68 @@ var Player = class {
 	}
 };
 var Phaser$2 = phaser_esm_exports;
+var PROP_CALIBRATION = {
+	ftl_surf: {
+		bottomPad: 0,
+		scale: .9
+	},
+	ftl_tiki: {
+		bottomPad: 0,
+		scale: .95
+	},
+	mb_artdeco_lamp: {
+		bottomPad: 1,
+		scale: .92
+	},
+	mb_valet_sign: {
+		bottomPad: 2,
+		scale: .95
+	},
+	palm: {
+		bottomPad: 13,
+		scale: .92
+	},
+	pb_fountain: {
+		bottomPad: 0,
+		scale: .92
+	},
+	pb_lamp: {
+		bottomPad: 1,
+		scale: .92
+	},
+	pb_urn: {
+		bottomPad: 0,
+		scale: .95
+	},
+	tampa_balcony: {
+		bottomPad: 0,
+		scale: .9
+	},
+	tampa_barrel: {
+		bottomPad: 2,
+		scale: .95
+	},
+	tampa_lamp: {
+		bottomPad: 1,
+		scale: .92
+	},
+	tower: {
+		bottomPad: 13,
+		scale: .92
+	},
+	wynwood_crates: {
+		bottomPad: 3,
+		scale: .95
+	},
+	wynwood_hydrant: {
+		bottomPad: 0,
+		scale: .95
+	},
+	wynwood_sign: {
+		bottomPad: 0,
+		scale: .92
+	}
+};
 var PlayScene = class extends Phaser$2.Scene {
 	player;
 	combat;
@@ -1445,43 +1976,9 @@ var PlayScene = class extends Phaser$2.Scene {
 		this.isStageCleared = false;
 	}
 	preload() {
-		for (const lvl of SOUTH_FLORIDA_LEVELS) if (!this.textures.exists(`bg-${lvl.id}`)) this.load.image(`bg-${lvl.id}`, lvl.parallax.far);
-		this.load.image("ground", "/game/backgrounds/fort-lauderdale/ground.jpg");
-		this.load.image("palm", "/game/sprites/props/palm.png");
-		this.load.image("tower", "/game/sprites/props/tower.png");
-		this.load.image("ftl_tiki", "/game/sprites/props/ftl_tiki.png");
-		this.load.image("ftl_surf", "/game/sprites/props/ftl_surf.png");
-		this.load.image("tampa_lamp", "/game/sprites/props/tampa_lamp.png");
-		this.load.image("tampa_balcony", "/game/sprites/props/tampa_balcony.png");
-		this.load.image("tampa_barrel", "/game/sprites/props/tampa_barrel.png");
-		this.load.image("pb_fountain", "/game/sprites/props/pb_fountain.png");
-		this.load.image("pb_lamp", "/game/sprites/props/pb_lamp.png");
-		this.load.image("pb_urn", "/game/sprites/props/pb_urn.png");
-		this.load.image("wynwood_hydrant", "/game/sprites/props/wynwood_hydrant.png");
-		this.load.image("wynwood_crates", "/game/sprites/props/wynwood_crates.png");
-		this.load.image("wynwood_sign", "/game/sprites/props/wynwood_sign.png");
-		this.load.image("mb_artdeco_lamp", "/game/sprites/props/mb_artdeco_lamp.png");
-		this.load.image("mb_valet_sign", "/game/sprites/props/mb_valet_sign.png");
-		this.load.spritesheet("slash-fx", "/game/sprites/fx/slash.png", {
-			frameWidth: 128,
-			frameHeight: 128
-		});
-		this.load.spritesheet("wave-fx", "/game/sprites/fx/wave.png", {
-			frameWidth: 128,
-			frameHeight: 128
-		});
-		this.load.spritesheet("impact-fx", "/game/sprites/fx/impact.png", {
-			frameWidth: 128,
-			frameHeight: 128
-		});
-		for (const clip of allRosterClips()) this.load.spritesheet(clip.textureKey, clip.url, {
-			frameWidth: clip.frameWidth,
-			frameHeight: clip.frameHeight
-		});
-		for (const clip of allEnemyClips()) this.load.spritesheet(clip.textureKey, clip.url, {
-			frameWidth: clip.frameWidth,
-			frameHeight: clip.frameHeight
-		});
+		const levelId = useGameStore.getState().currentLevelId || "fort-lauderdale";
+		preloadFightBackground(this, getLevel(levelId));
+		preloadTextureAtlases(this);
 	}
 	create() {
 		this.isStageCleared = false;
@@ -1490,6 +1987,7 @@ var PlayScene = class extends Phaser$2.Scene {
 		const debug = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("debug");
 		this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 		this.physics.world.gravity.y = 0;
+		enforceSteadyFrameRate(this);
 		if (debug) {
 			this.physics.world.createDebugGraphic();
 			this.physics.world.drawDebug = true;
@@ -1499,16 +1997,19 @@ var PlayScene = class extends Phaser$2.Scene {
 			location: `${level.city} · ${level.name}`,
 			aliveEnemies: level.enemies.length
 		});
-		const bgKey = this.textures.exists(`bg-${level.id}`) ? `bg-${level.id}` : "bg-fort-lauderdale";
-		const bgHeight = level.groundY + 60;
-		this.far = this.add.tileSprite(0, 0, 720, bgHeight, bgKey).setOrigin(0, 0).setScrollFactor(0).setDepth(0);
-		const texHeight = this.textures.get(bgKey).getSourceImage()?.height || 1080;
-		this.bgScale = bgHeight / texHeight;
-		this.far.tileScaleY = this.bgScale;
-		this.far.tileScaleX = this.bgScale;
+		const parallax = createLazyParallaxBackground(this, level, 720);
+		this.far = parallax.far;
+		this.bgScale = parallax.bgScale;
 		const groundH = WORLD_HEIGHT - level.groundY + 120;
 		this.add.tileSprite(WORLD_WIDTH / 2, level.groundY, WORLD_WIDTH, groundH, "ground").setOrigin(.5, 0).setDepth(4);
-		for (const prop of level.props) this.add.image(prop.x, prop.y, prop.key).setOrigin(.5, 1).setScale(prop.scale).setFlipX(Boolean(prop.flipX)).setDepth(prop.depth);
+		for (const prop of level.props) {
+			const calibration = PROP_CALIBRATION[prop.key] ?? {
+				bottomPad: 0,
+				scale: 1
+			};
+			const displayScale = prop.scale * calibration.scale;
+			addOptimizedImage(this, prop.x, prop.y + calibration.bottomPad * displayScale, prop.key).setOrigin(.5, 1).setScale(displayScale).setFlipX(Boolean(prop.flipX)).setDepth(prop.depth);
+		}
 		this.platforms = this.physics.add.staticGroup();
 		const floor = this.add.rectangle(0, level.groundY, WORLD_WIDTH + 40, 72, 0, 0).setOrigin(0, 0).setVisible(false);
 		this.physics.add.existing(floor, true);
@@ -1521,20 +2022,10 @@ var PlayScene = class extends Phaser$2.Scene {
 			this.platforms.add(visual);
 		}
 		this.platforms.refresh();
-		for (const clip of allRosterClips()) {
-			if (this.anims.exists(clip.key)) continue;
-			this.anims.create({
-				key: clip.key,
-				frames: this.anims.generateFrameNumbers(clip.textureKey, {
-					start: 0,
-					end: clip.frames - 1
-				}),
-				frameRate: clip.frameRate,
-				repeat: clip.repeat
-			});
-		}
+		for (const clip of allRosterClips()) createOptimizedAnimation(this, clip);
 		createFxAnimations(this);
 		CombatSystem.preloadAnims(this);
+		initPerformancePools(this);
 		const character = getCharacter(useGameStore.getState().characterId);
 		this.player = new Player(this, level.spawn.x, level.spawn.y, character);
 		this.physics.add.collider(this.player.sprite, this.platforms);
@@ -1552,10 +2043,12 @@ var PlayScene = class extends Phaser$2.Scene {
 		this.cameras.main.setDeadzone(CAMERA.deadzoneW, CAMERA.deadzoneH);
 		this.cameras.main.setFollowOffset(-CAMERA.lookAhead, CAMERA.lookY);
 		this.cameras.main.setRoundPixels(true);
+		inputManager.attachPhaserScene(this);
 		attachControlsTest(this.player, () => this.combat.aliveCount());
 		if (typeof window !== "undefined") window.__playGeneration = (window.__playGeneration ?? 0) + 1;
 		this.events.once("shutdown", () => {
 			this.combat.shutdown();
+			inputManager.detachPhaserScene();
 			detachControlsTest();
 		});
 	}
@@ -1571,13 +2064,7 @@ var PlayScene = class extends Phaser$2.Scene {
 			store.setScreen("victory");
 		});
 	}
-	update(_time, delta) {
-		const dt = Math.min(delta / 1e3, .1);
-		const actions = inputManager.poll();
-		if (actions.pausePressed && useGameStore.getState().playing) {
-			inputManager.enabled = false;
-			useGameStore.getState().setScreen("city-select");
-		}
+	stepSimulation(actions, dt) {
 		if (this.combat.isFrozen()) {
 			this.combat.tickFreeze(dt);
 			this.player.update(actions, 0);
@@ -1591,6 +2078,15 @@ var PlayScene = class extends Phaser$2.Scene {
 		cam.setFollowOffset(current + (look - current) * Math.min(1, 4 * dt), CAMERA.lookY);
 		const scrollX = cam.scrollX;
 		this.far.tilePositionX = scrollX * .18 / Math.max(.1, this.bgScale);
+	}
+	update(_time, delta) {
+		const dt = Math.min(delta / 1e3, .1);
+		const actions = inputManager.poll();
+		if (actions.pausePressed && useGameStore.getState().playing) {
+			inputManager.enabled = false;
+			useGameStore.getState().setScreen("city-select");
+		}
+		this.stepSimulation(actions, dt);
 		this.fpsTimer += dt;
 		if (this.fpsTimer > .25) {
 			this.fpsTimer = 0;
@@ -1604,14 +2100,12 @@ var PlayScene = class extends Phaser$2.Scene {
 var Phaser$1 = phaser_esm_exports;
 function createGame(parent) {
 	const game = new Phaser$1.Game({
-		type: Phaser$1.AUTO,
+		type: selectOptimizedRenderer(Phaser$1),
 		parent,
 		width: 720,
 		height: GAME_HEIGHT,
 		backgroundColor: "#0b6e7a",
-		antialias: true,
-		roundPixels: true,
-		pixelArt: false,
+		...optimizedRenderConfig(),
 		banner: false,
 		physics: {
 			default: "arcade",
@@ -1633,11 +2127,11 @@ function createGame(parent) {
 		},
 		input: {
 			keyboard: true,
-			activePointers: 3
+			activePointers: 5
 		},
 		scene: [PlayScene],
 		audio: { disableWebAudio: true },
-		render: { powerPreference: "high-performance" }
+		render: optimizedRenderConfig()
 	});
 	registerGame(game);
 	game.events.once("destroy", () => unregisterGame(game));

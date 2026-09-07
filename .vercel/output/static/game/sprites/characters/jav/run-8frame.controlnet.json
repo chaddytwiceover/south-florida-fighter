@@ -1,0 +1,59 @@
+{
+  "asset": "public/game/sprites/characters/jav/run-8frame.png",
+  "reference_image": "public/game/sprites/characters/jav/run.png",
+  "output": {
+    "width": 1280,
+    "height": 180,
+    "frame_width": 160,
+    "frame_height": 180,
+    "columns": 8,
+    "rows": 1,
+    "format": "png",
+    "background": "transparent",
+    "alpha": true
+  },
+  "prompt": "16-bit pixel art sprite sheet, 8-frame running animation, side view, 160x180px per frame, 8 columns on transparent background, South Florida street brawler, neon teal/magenta/coral palette, no anti-aliasing, crisp pixel edges",
+  "expanded_prompt": "Use the existing JAV run sheet as the ControlNet/reference input. Lock character proportions, outfit, silhouette, scale, and palette: purple cap, white t-shirt, dark gloves, ripped blue jeans, sneakers, gold chain, purple rim outline. Generate one horizontal sprite sheet, exactly 8 columns and 1 row, each frame centered in its own 160x180 cell, full body side view facing right, feet aligned to the same baseline. Vary only limb positions and torso lean across frames as incremental motion offsets. No labels, no frame numbers, no grid lines, no ghost frames, no background, no text, no watermark.",
+  "negative_prompt": "anti-aliasing, blur, soft edges, background, checkerboard background, labels, frame numbers, grid lines, watermark, duplicate ghost frames, changed outfit, changed face, changed proportions",
+  "controlnet": {
+    "enabled": true,
+    "role": "reference_character_sheet",
+    "input_image": "public/game/sprites/characters/jav/run.png",
+    "preprocessor": "reference_only_plus_openpose_pose_lock",
+    "control_mode": "balanced",
+    "control_weight": 0.78,
+    "start_step": 0,
+    "end_step": 0.86,
+    "locked_attributes": [
+      "body proportions",
+      "head scale",
+      "outfit",
+      "skin tone",
+      "purple outline",
+      "palette",
+      "per-frame scale"
+    ],
+    "allowed_variation": [
+      "arm swing",
+      "leg stride",
+      "torso lean",
+      "small cloth fold changes"
+    ]
+  },
+  "seed": 284193,
+  "seed_locking": {
+    "base_seed": 284193,
+    "frame_noise_offsets": [0, 17, 34, 51, 68, 85, 102, 119],
+    "same_palette_seed": true,
+    "same_silhouette_seed": true
+  },
+  "postprocess": {
+    "source_generated_image": "C:/Users/thech/.codex/generated_images/01a031b6-c82a-7343-8ec6-e89ab2a7a040/call_YQe6VtiEEiRBWFSXnSnBoGk4.png",
+    "background_removal": "bright-neutral checker pixels converted to alpha",
+    "frame_extraction": "8 connected character components sorted left-to-right",
+    "resize_kernel": "nearest",
+    "cell_fit": "centered bottom-aligned in 160x180 cells",
+    "small_alpha_cleanup_min_pixels": 120
+  },
+  "tooling_note": "Generated with the built-in image generation tool using the listed reference image. The built-in tool does not expose raw ControlNet or seed controls, so this JSON records the ControlNet/seed configuration used as the production prompt contract."
+}

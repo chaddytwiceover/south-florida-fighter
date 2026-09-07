@@ -1,10 +1,10 @@
 import { i as __toESM } from "../_runtime.mjs";
 import { I as require_jsx_runtime, L as require_react } from "../_libs/@tanstack/react-router+[...].mjs";
 import { t as create } from "../_libs/zustand.mjs";
-import { a as Sword, c as RotateCcw, d as Flame, f as ChevronRight, l as Play, m as ArrowUp, n as VolumeX, o as Sparkles, p as ChevronLeft, r as Volume2, s as Shield, t as Zap, u as MapPin } from "../_libs/lucide-react.mjs";
+import { a as Sword, c as Settings, d as MapPin, f as Gamepad2, g as ArrowUp, h as ChevronLeft, l as RotateCcw, m as ChevronRight, n as VolumeX, o as Sparkles, p as Flame, r as Volume2, s as Shield, t as Zap, u as Play } from "../_libs/lucide-react.mjs";
 import { t as clsx } from "../_libs/clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-BgoS_53o.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-BPPtKdFo.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var __defProp = Object.defineProperty;
@@ -1301,6 +1301,53 @@ var GAME_CODES = /* @__PURE__ */ new Set([
 	"Escape",
 	"Enter"
 ]);
+var DEFAULT_SETTINGS = {
+	touchSensitivity: 1,
+	gesturesEnabled: true,
+	hapticsEnabled: true,
+	keyboard: {
+		left: ["ArrowLeft", "KeyA"],
+		right: ["ArrowRight", "KeyD"],
+		up: ["ArrowUp", "KeyW"],
+		down: ["ArrowDown", "KeyS"],
+		jump: [
+			"Space",
+			"ArrowUp",
+			"KeyW"
+		],
+		light: ["KeyJ", "KeyZ"],
+		heavy: ["KeyK", "KeyX"],
+		kick: ["KeyL", "KeyC"],
+		special1: ["Digit1", "KeyU"],
+		special2: ["Digit2", "KeyI"],
+		special3: ["Digit3", "KeyO"],
+		finisher: ["Digit4", "KeyP"],
+		guard: [
+			"KeyS",
+			"ShiftLeft",
+			"ShiftRight",
+			"KeyG"
+		],
+		parry: ["KeyF"],
+		dash: ["KeyE"],
+		pause: ["Escape"]
+	},
+	gamepad: {
+		deadzone: .22,
+		light: 0,
+		heavy: 2,
+		kick: 1,
+		special1: 3,
+		special2: 5,
+		special3: 4,
+		finisher: 7,
+		guard: 6,
+		parry: 8,
+		dash: 9,
+		jump: 0,
+		pause: 9
+	}
+};
 var EMPTY = {
 	moveX: 0,
 	moveY: 0,
@@ -1332,6 +1379,35 @@ var EMPTY = {
 		dash: false
 	}
 };
+function cloneSettings(settings) {
+	return {
+		...settings,
+		keyboard: Object.fromEntries(Object.entries(settings.keyboard).map(([key, value]) => [key, [...value]])),
+		gamepad: { ...settings.gamepad }
+	};
+}
+function readSettings() {
+	if (typeof window === "undefined") return cloneSettings(DEFAULT_SETTINGS);
+	try {
+		const saved = window.localStorage.getItem("sff.inputSettings");
+		if (!saved) return cloneSettings(DEFAULT_SETTINGS);
+		const parsed = JSON.parse(saved);
+		return {
+			...cloneSettings(DEFAULT_SETTINGS),
+			...parsed,
+			keyboard: {
+				...cloneSettings(DEFAULT_SETTINGS).keyboard,
+				...parsed.keyboard ?? {}
+			},
+			gamepad: {
+				...DEFAULT_SETTINGS.gamepad,
+				...parsed.gamepad ?? {}
+			}
+		};
+	} catch {
+		return cloneSettings(DEFAULT_SETTINGS);
+	}
+}
 var InputManagerImpl = class {
 	enabled = false;
 	keys = /* @__PURE__ */ new Set();
@@ -1352,6 +1428,7 @@ var InputManagerImpl = class {
 	touchGuard = false;
 	touchParry = false;
 	touchDash = false;
+	settings = readSettings();
 	prevJump = false;
 	prevAttack = false;
 	prevSpecial = false;
@@ -1363,19 +1440,29 @@ var InputManagerImpl = class {
 		false
 	];
 	bound = false;
+	phaserScene = null;
+	phaserHandlers = [];
+	pointers = /* @__PURE__ */ new Map();
+	pointerPool = [];
+	pulse = /* @__PURE__ */ new Map();
+	lastTapAt = 0;
+	pinchDistance = 0;
+	rotateAngle = 0;
 	last = EMPTY;
 	onKeyDown = (event) => {
-		if (GAME_CODES.has(event.code)) event.preventDefault();
+		if (this.isKnownCode(event.code)) event.preventDefault();
 		if (event.repeat) return;
 		this.keys.add(event.code);
 	};
 	onKeyUp = (event) => {
-		if (GAME_CODES.has(event.code)) event.preventDefault();
+		if (this.isKnownCode(event.code)) event.preventDefault();
 		this.keys.delete(event.code);
 	};
 	onBlur = () => {
 		this.keys.clear();
 		this.injected.clear();
+		this.clearTouch();
+		this.pointers.clear();
 	};
 	bind() {
 		if (this.bound || typeof window === "undefined") return;
@@ -1389,21 +1476,7 @@ var InputManagerImpl = class {
 		this.enabled = true;
 		this.keys.clear();
 		this.injected.clear();
-		this.touchLeft = false;
-		this.touchRight = false;
-		this.touchUp = false;
-		this.touchDown = false;
-		this.touchJump = false;
-		this.touchAttack = false;
-		this.touchHeavy = false;
-		this.touchKick = false;
-		this.touchSpecial = false;
-		this.touchSpecial2 = false;
-		this.touchSpecial3 = false;
-		this.touchFinisher = false;
-		this.touchGuard = false;
-		this.touchParry = false;
-		this.touchDash = false;
+		this.clearTouch();
 		this.prevJump = true;
 		this.prevAttack = true;
 		this.prevSpecial = true;
@@ -1422,16 +1495,243 @@ var InputManagerImpl = class {
 		window.removeEventListener("keyup", this.onKeyUp);
 		window.removeEventListener("blur", this.onBlur);
 		document.removeEventListener("visibilitychange", this.onBlur);
+		this.detachPhaserScene();
 		this.keys.clear();
 		this.injected.clear();
+	}
+	attachPhaserScene(scene) {
+		this.detachPhaserScene();
+		this.phaserScene = scene;
+		const input = scene.input;
+		input.addPointer(Math.max(0, 5 - input.manager.pointers.length));
+		const down = (pointer) => this.handlePointerDown(pointer);
+		const move = (pointer) => this.handlePointerMove(pointer);
+		const up = (pointer) => this.handlePointerUp(pointer);
+		this.phaserHandlers = [
+			["pointerdown", down],
+			["pointermove", move],
+			["pointerup", up],
+			["pointerupoutside", up],
+			["pointercancel", up]
+		];
+		for (const [eventName, handler] of this.phaserHandlers) input.on(eventName, handler);
+	}
+	detachPhaserScene() {
+		if (!this.phaserScene) return;
+		for (const [eventName, handler] of this.phaserHandlers) this.phaserScene.input.off(eventName, handler);
+		this.phaserHandlers = [];
+		this.phaserScene = null;
+		this.pointers.clear();
+	}
+	getSettings() {
+		return cloneSettings(this.settings);
+	}
+	updateSettings(next) {
+		this.settings = {
+			...this.settings,
+			...next,
+			keyboard: {
+				...this.settings.keyboard,
+				...next.keyboard ?? {}
+			},
+			gamepad: {
+				...this.settings.gamepad,
+				...next.gamepad ?? {}
+			}
+		};
+		this.settings.touchSensitivity = clamp(this.settings.touchSensitivity, .45, 1.8);
+		if (typeof window !== "undefined") window.localStorage.setItem("sff.inputSettings", JSON.stringify(this.settings));
+	}
+	remapKeyboard(action, codes) {
+		this.updateSettings({ keyboard: {
+			...this.settings.keyboard,
+			[action]: codes
+		} });
+		for (const code of codes) GAME_CODES.add(code);
 	}
 	setInjectedKeys(codes) {
 		this.injected.clear();
 		for (const code of codes) this.injected.add(code);
 	}
+	pressTouchAction(action, pressed, haptic = true) {
+		this[action] = pressed;
+		if (pressed && haptic) this.haptic(12);
+	}
+	haptic(ms = 12) {
+		if (!this.settings.hapticsEnabled || typeof navigator === "undefined") return;
+		navigator.vibrate?.(ms);
+	}
+	isKnownCode(code) {
+		if (GAME_CODES.has(code)) return true;
+		return Object.values(this.settings.keyboard).some((codes) => codes.includes(code));
+	}
+	clearTouch() {
+		this.touchLeft = false;
+		this.touchRight = false;
+		this.touchUp = false;
+		this.touchDown = false;
+		this.touchMoveX = 0;
+		this.touchJump = false;
+		this.touchAttack = false;
+		this.touchHeavy = false;
+		this.touchKick = false;
+		this.touchSpecial = false;
+		this.touchSpecial2 = false;
+		this.touchSpecial3 = false;
+		this.touchFinisher = false;
+		this.touchGuard = false;
+		this.touchParry = false;
+		this.touchDash = false;
+		this.pulse.clear();
+	}
+	downAction(action) {
+		return this.down(...this.settings.keyboard[action]);
+	}
 	down(...codes) {
 		for (const code of codes) if (this.keys.has(code) || this.injected.has(code)) return true;
 		return false;
+	}
+	getPooledPointer(id, x, y, now) {
+		const item = this.pointerPool.pop() ?? {
+			id: 0,
+			startX: 0,
+			startY: 0,
+			x: 0,
+			y: 0,
+			startTime: 0,
+			longPressAt: 0,
+			longPressFired: false
+		};
+		item.id = id;
+		item.startX = x;
+		item.startY = y;
+		item.x = x;
+		item.y = y;
+		item.startTime = now;
+		item.longPressAt = now + 440;
+		item.longPressFired = false;
+		return item;
+	}
+	releasePointer(track) {
+		if (this.pointerPool.length < 12) this.pointerPool.push(track);
+	}
+	handlePointerDown(pointer) {
+		if (!this.enabled) return;
+		const now = performance.now();
+		const track = this.getPooledPointer(pointer.id, pointer.x, pointer.y, now);
+		this.pointers.set(pointer.id, track);
+		this.updatePinchRotateBase();
+		this.haptic(8);
+	}
+	handlePointerMove(pointer) {
+		const track = this.pointers.get(pointer.id);
+		if (!track || !this.enabled) return;
+		track.x = pointer.x;
+		track.y = pointer.y;
+		const dx = (track.x - track.startX) * this.settings.touchSensitivity;
+		const dy = (track.y - track.startY) * this.settings.touchSensitivity;
+		if (Math.abs(dx) > 18) this.touchMoveX = clamp(dx / 80, -1, 1);
+		if (dy < -42) this.pulse.set("touchJump", 2);
+		if (dy > 48) this.touchGuard = true;
+		if (this.settings.gesturesEnabled && !track.longPressFired && performance.now() > track.longPressAt) {
+			track.longPressFired = true;
+			this.pulse.set("touchParry", 3);
+			this.haptic(24);
+		}
+		this.updatePinchRotateGesture();
+	}
+	handlePointerUp(pointer) {
+		const track = this.pointers.get(pointer.id);
+		if (!track) return;
+		const now = performance.now();
+		const dx = (track.x - track.startX) * this.settings.touchSensitivity;
+		const dy = (track.y - track.startY) * this.settings.touchSensitivity;
+		const distance = Math.hypot(dx, dy);
+		const elapsed = now - track.startTime;
+		if (this.settings.gesturesEnabled) {
+			if (elapsed < 220 && distance < 18) {
+				if (now - this.lastTapAt < 260) {
+					this.pulse.set("touchDash", 3);
+					this.haptic(18);
+				} else {
+					this.pulse.set("touchAttack", 2);
+					this.haptic(10);
+				}
+				this.lastTapAt = now;
+			} else if (distance > 54 && elapsed < 480) {
+				if (Math.abs(dx) > Math.abs(dy)) {
+					if (dx < 0) this.pulse.set("touchLeft", 3);
+					else this.pulse.set("touchRight", 3);
+				} else if (dy < 0) this.pulse.set("touchJump", 3);
+				else this.pulse.set("touchGuard", 3);
+				this.haptic(16);
+			}
+		}
+		this.pointers.delete(pointer.id);
+		this.releasePointer(track);
+		this.touchMoveX = 0;
+		this.touchGuard = false;
+		this.updatePinchRotateBase();
+	}
+	activePointers() {
+		return Array.from(this.pointers.values());
+	}
+	updatePinchRotateBase() {
+		const active = this.activePointers();
+		if (active.length < 2) {
+			this.pinchDistance = 0;
+			this.rotateAngle = 0;
+			return;
+		}
+		const [a, b] = active;
+		this.pinchDistance = Math.hypot(b.x - a.x, b.y - a.y);
+		this.rotateAngle = Math.atan2(b.y - a.y, b.x - a.x);
+	}
+	updatePinchRotateGesture() {
+		if (!this.settings.gesturesEnabled) return;
+		const active = this.activePointers();
+		if (active.length < 2 || this.pinchDistance <= 0) return;
+		const [a, b] = active;
+		const nextDistance = Math.hypot(b.x - a.x, b.y - a.y);
+		const distanceDelta = nextDistance - this.pinchDistance;
+		if (Math.abs(distanceDelta) > 42) {
+			this.pulse.set(distanceDelta > 0 ? "touchSpecial2" : "touchSpecial3", 2);
+			this.pinchDistance = nextDistance;
+			this.haptic(12);
+		}
+		const nextAngle = Math.atan2(b.y - a.y, b.x - a.x);
+		const angleDelta = Math.atan2(Math.sin(nextAngle - this.rotateAngle), Math.cos(nextAngle - this.rotateAngle));
+		if (Math.abs(angleDelta) > .38) {
+			this.pulse.set("touchFinisher", 2);
+			this.rotateAngle = nextAngle;
+			this.haptic(20);
+		}
+	}
+	pulseActive(action) {
+		return (this.pulse.get(action) ?? 0) > 0;
+	}
+	decayPulses() {
+		for (const [action, frames] of this.pulse) if (frames <= 1) this.pulse.delete(action);
+		else this.pulse.set(action, frames - 1);
+	}
+	gamepadButton(index) {
+		if (typeof navigator === "undefined" || !navigator.getGamepads) return false;
+		for (const pad of navigator.getGamepads()) {
+			if (!pad) continue;
+			const button = pad.buttons[index];
+			if (button?.pressed || (button?.value ?? 0) > .5) return true;
+		}
+		return false;
+	}
+	gamepadAxis(axisIndex) {
+		if (typeof navigator === "undefined" || !navigator.getGamepads) return 0;
+		let value = 0;
+		for (const pad of navigator.getGamepads()) {
+			if (!pad) continue;
+			const axis = pad.axes[axisIndex] ?? 0;
+			if (Math.abs(axis) > Math.abs(value)) value = axis;
+		}
+		return Math.abs(value) > this.settings.gamepad.deadzone ? value : 0;
 	}
 	poll() {
 		if (!this.enabled) {
@@ -1448,32 +1748,35 @@ var InputManagerImpl = class {
 			this.last = EMPTY;
 			return EMPTY;
 		}
-		const left = this.down("ArrowLeft", "KeyA") || this.touchLeft;
-		const right = this.down("ArrowRight", "KeyD") || this.touchRight;
-		const up = this.down("ArrowUp", "KeyW") || this.touchUp || this.touchJump;
-		const down = this.down("ArrowDown", "KeyS") || this.touchDown;
+		const padX = this.gamepadAxis(0);
+		const padY = this.gamepadAxis(1);
+		const left = this.downAction("left") || this.touchLeft || this.pulseActive("touchLeft") || padX < -this.settings.gamepad.deadzone;
+		const right = this.downAction("right") || this.touchRight || this.pulseActive("touchRight") || padX > this.settings.gamepad.deadzone;
+		const up = this.downAction("up") || this.touchUp || this.touchJump || this.pulseActive("touchJump") || padY < -this.settings.gamepad.deadzone;
+		const down = this.downAction("down") || this.touchDown || this.pulseActive("touchGuard") || padY > this.settings.gamepad.deadzone;
 		let moveX = 0;
 		if (left) moveX -= 1;
 		if (right) moveX += 1;
 		if (moveX === 0 && Math.abs(this.touchMoveX) > .2) moveX = this.touchMoveX;
+		if (moveX === 0 && Math.abs(padX) > this.settings.gamepad.deadzone) moveX = padX;
 		moveX = clamp(moveX, -1, 1);
-		const jump = this.down("Space", "ArrowUp", "KeyW") || this.touchJump;
-		const light = this.down("KeyJ", "KeyZ") || this.touchAttack;
-		const heavy = this.down("KeyK", "KeyX") || this.touchHeavy;
-		const kick = this.down("KeyL", "KeyC") || this.touchKick;
-		const special1 = this.down("Digit1", "KeyU") || this.touchSpecial;
-		const special2 = this.down("Digit2", "KeyI") || this.touchSpecial2;
-		const special3 = this.down("Digit3", "KeyO") || this.touchSpecial3;
-		const finisher = this.down("Digit4", "KeyP") || this.touchFinisher;
-		const guard = this.down("KeyS", "ShiftLeft", "ShiftRight", "KeyG") || this.touchGuard;
-		const parry = this.down("KeyF") || this.touchParry;
-		const dash = this.down("KeyE") || this.touchDash;
-		const pause = this.down("Escape");
+		const jump = this.downAction("jump") || this.touchJump || this.pulseActive("touchJump") || this.gamepadButton(this.settings.gamepad.jump);
+		const light = this.downAction("light") || this.touchAttack || this.pulseActive("touchAttack") || this.gamepadButton(this.settings.gamepad.light);
+		const heavy = this.downAction("heavy") || this.touchHeavy || this.gamepadButton(this.settings.gamepad.heavy);
+		const kick = this.downAction("kick") || this.touchKick || this.gamepadButton(this.settings.gamepad.kick);
+		const special1 = this.downAction("special1") || this.touchSpecial || this.gamepadButton(this.settings.gamepad.special1);
+		const special2 = this.downAction("special2") || this.touchSpecial2 || this.pulseActive("touchSpecial2") || this.gamepadButton(this.settings.gamepad.special2);
+		const special3 = this.downAction("special3") || this.touchSpecial3 || this.pulseActive("touchSpecial3") || this.gamepadButton(this.settings.gamepad.special3);
+		const finisher = this.downAction("finisher") || this.touchFinisher || this.pulseActive("touchFinisher") || this.gamepadButton(this.settings.gamepad.finisher);
+		const guard = this.downAction("guard") || this.touchGuard || this.gamepadButton(this.settings.gamepad.guard);
+		const parry = this.downAction("parry") || this.touchParry || this.pulseActive("touchParry") || this.gamepadButton(this.settings.gamepad.parry);
+		const dash = this.downAction("dash") || this.touchDash || this.pulseActive("touchDash") || this.gamepadButton(this.settings.gamepad.dash);
+		const pause = this.downAction("pause") || this.gamepadButton(this.settings.gamepad.pause);
 		const specialSlotHeld = [
-			this.down("Digit1", "KeyU") || this.touchSpecial,
-			this.down("Digit2", "KeyI") || this.touchSpecial2,
-			this.down("Digit3", "KeyO") || this.touchSpecial3,
-			this.down("Digit4", "KeyP") || this.touchFinisher
+			special1,
+			special2,
+			special3,
+			finisher
 		];
 		let specialSlot = null;
 		for (let i = 0; i < 4; i += 1) if (specialSlotHeld[i] && !this.prevSlot[i]) specialSlot = i;
@@ -1516,6 +1819,7 @@ var InputManagerImpl = class {
 		this.prevSpecial = anySpecial;
 		this.prevPause = pause;
 		this.prevSlot = specialSlotHeld;
+		this.decayPulses();
 		this.last = actions;
 		return actions;
 	}
@@ -2103,14 +2407,20 @@ function holdHandlers(key) {
 		onPointerDown: (event) => {
 			event.preventDefault();
 			event.currentTarget.setPointerCapture(event.pointerId);
-			inputManager[key] = true;
+			inputManager.pressTouchAction(key, true);
 		},
 		onPointerUp: (event) => {
 			event.preventDefault();
-			inputManager[key] = false;
+			inputManager.pressTouchAction(key, false, false);
+		},
+		onPointerLeave: () => {
+			inputManager.pressTouchAction(key, false, false);
 		},
 		onPointerCancel: () => {
-			inputManager[key] = false;
+			inputManager.pressTouchAction(key, false, false);
+		},
+		onLostPointerCapture: () => {
+			inputManager.pressTouchAction(key, false, false);
 		}
 	};
 }
@@ -2119,125 +2429,223 @@ function PadButton({ label, holdKey, className, children }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 		type: "button",
 		"aria-label": label,
-		className: cn("pointer-events-auto select-none touch-none", "flex flex-col items-center justify-center gap-0.5", "border border-foam/20 bg-ink/80 text-foam", "shadow-[0_6px_0_rgba(0,0,0,0.4)] backdrop-blur-sm", "active:translate-y-0.5 active:shadow-[0_2px_0_rgba(0,0,0,0.4)]", "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sand", className),
+		className: cn("touch-button", "pointer-events-auto select-none touch-none", "min-h-11 min-w-11 overflow-hidden", "flex flex-col items-center justify-center gap-0.5", "border border-foam/20 bg-ink/80 text-foam", "shadow-[0_6px_0_rgba(0,0,0,0.4),0_0_0_rgba(232,196,90,0)] backdrop-blur-sm", "transition-[transform,box-shadow,filter] duration-100", "active:translate-y-0.5 active:brightness-125 active:shadow-[0_2px_0_rgba(0,0,0,0.4),0_0_18px_rgba(232,196,90,0.55)]", "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sand", className),
 		...handlers,
 		children
 	});
 }
+var REMAP_OPTIONS = [
+	["light", "Light"],
+	["heavy", "Heavy"],
+	["dash", "Dash"],
+	["parry", "Parry"]
+];
 function TouchControls() {
+	const [settingsOpen, setSettingsOpen] = (0, import_react.useState)(false);
+	const [settings, setSettings] = (0, import_react.useState)(() => inputManager.getSettings());
+	const [remapping, setRemapping] = (0, import_react.useState)(null);
+	(0, import_react.useEffect)(() => {
+		if (!remapping) return;
+		const onKeyDown = (event) => {
+			event.preventDefault();
+			inputManager.remapKeyboard(remapping, [event.code]);
+			setSettings(inputManager.getSettings());
+			setRemapping(null);
+		};
+		window.addEventListener("keydown", onKeyDown, { passive: false });
+		return () => window.removeEventListener("keydown", onKeyDown);
+	}, [remapping]);
+	const updateSettings = (next) => {
+		inputManager.updateSettings(next);
+		setSettings(inputManager.getSettings());
+	};
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "pointer-events-none absolute inset-0 z-20",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "absolute bottom-[max(0.7rem,env(safe-area-inset-bottom))] left-[max(0.6rem,env(safe-area-inset-left))] flex flex-col gap-2",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "flex gap-2",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PadButton, {
-					label: "Dash",
-					holdKey: "touchDash",
-					className: "h-11 w-11 rounded-[0.9rem] bg-ocean/80 text-foam border-ocean-2",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Zap, { className: "size-5 text-amber-300" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-						className: "font-sans text-[0.55rem] font-bold uppercase",
-						children: "Dash"
-					})]
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PadButton, {
-					label: "Guard / Parry",
-					holdKey: "touchParry",
-					className: "h-11 w-11 rounded-[0.9rem] bg-cyan-900/80 text-cyan-200 border-cyan-400/40",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Shield, { className: "size-5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-						className: "font-sans text-[0.55rem] font-bold uppercase",
-						children: "Parry"
-					})]
-				})]
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "flex gap-2",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PadButton, {
-					label: "Move left",
-					holdKey: "touchLeft",
-					className: "h-[3.9rem] w-[3.9rem] rounded-[1.2rem]",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronLeft, {
-						className: "size-7",
-						strokeWidth: 2.5
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-						className: "font-sans text-[0.6rem] font-bold uppercase tracking-wider text-foam/70",
-						children: "Left"
-					})]
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PadButton, {
-					label: "Move right",
-					holdKey: "touchRight",
-					className: "h-[3.9rem] w-[3.9rem] rounded-[1.2rem]",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, {
-						className: "size-7",
-						strokeWidth: 2.5
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-						className: "font-sans text-[0.6rem] font-bold uppercase tracking-wider text-foam/70",
-						children: "Right"
-					})]
-				})]
-			})]
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "absolute bottom-[max(0.7rem,env(safe-area-inset-bottom))] right-[max(0.6rem,env(safe-area-inset-right))] flex items-end gap-2",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "grid grid-cols-2 gap-1.5",
-				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PadButton, {
-						label: "Light Attack",
-						holdKey: "touchAttack",
-						className: "h-13 w-13 rounded-[1rem] bg-coral/90 text-ink shadow-[0_0_10px_rgba(232,93,76,0.5)]",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sword, {
-							className: "size-5",
-							strokeWidth: 2.4
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-							className: "font-sans text-[0.55rem] font-black uppercase",
-							children: "Light"
-						})]
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PadButton, {
-						label: "Heavy Attack",
-						holdKey: "touchHeavy",
-						className: "h-13 w-13 rounded-[1rem] bg-rose-600/90 text-foam border-rose-400",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Flame, {
-							className: "size-5",
-							strokeWidth: 2.4
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-							className: "font-sans text-[0.55rem] font-black uppercase",
-							children: "Heavy"
-						})]
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PadButton, {
-						label: "Special",
-						holdKey: "touchSpecial",
-						className: "h-12 w-12 rounded-[0.95rem] bg-purple-900/80 text-purple-200 border-purple-400/50",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
-							className: "size-4.5",
-							strokeWidth: 2.2
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "absolute top-[max(4.25rem,env(safe-area-inset-top))] right-[max(0.6rem,env(safe-area-inset-right))] flex flex-col items-end gap-2",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					type: "button",
+					"aria-label": "Input settings",
+					onClick: () => setSettingsOpen((value) => !value),
+					className: "touch-button pointer-events-auto flex size-11 items-center justify-center rounded-2xl border border-foam/20 bg-ink/85 text-foam shadow-[0_6px_0_rgba(0,0,0,0.38)] backdrop-blur-sm active:translate-y-0.5 active:shadow-[0_2px_0_rgba(0,0,0,0.38),0_0_18px_rgba(20,145,155,0.55)]",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Settings, { className: "size-5" })
+				}), settingsOpen ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "pointer-events-auto w-[min(17rem,calc(100vw-1.2rem))] rounded-2xl border border-foam/20 bg-ink/92 p-3 text-foam shadow-2xl backdrop-blur-md",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "mb-2 flex items-center justify-between gap-2",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Gamepad2, { className: "size-4 text-sand" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-sans text-xs font-black uppercase tracking-wider",
+									children: "Input"
+								})]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "font-mono text-[0.62rem] text-foam/60",
+								children: [Math.round(settings.touchSensitivity * 100), "%"]
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+							className: "block space-y-1",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "font-sans text-[0.68rem] font-bold uppercase tracking-wider text-sand",
+								children: "Touch sensitivity"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								type: "range",
+								min: "0.45",
+								max: "1.8",
+								step: "0.05",
+								value: settings.touchSensitivity,
+								onChange: (event) => updateSettings({ touchSensitivity: Number(event.currentTarget.value) }),
+								className: "w-full accent-coral"
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "mt-3 grid grid-cols-2 gap-2",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+								className: "flex min-h-11 items-center gap-2 rounded-xl border border-foam/15 bg-ink-2/80 px-2 text-[0.68rem] font-bold uppercase",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "checkbox",
+									checked: settings.gesturesEnabled,
+									onChange: (event) => updateSettings({ gesturesEnabled: event.currentTarget.checked }),
+									className: "accent-coral"
+								}), "Gestures"]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+								className: "flex min-h-11 items-center gap-2 rounded-xl border border-foam/15 bg-ink-2/80 px-2 text-[0.68rem] font-bold uppercase",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "checkbox",
+									checked: settings.hapticsEnabled,
+									onChange: (event) => updateSettings({ hapticsEnabled: event.currentTarget.checked }),
+									className: "accent-coral"
+								}), "Haptics"]
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "mt-3 grid grid-cols-2 gap-2",
+							children: REMAP_OPTIONS.map(([action, label]) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
+								onClick: () => setRemapping(action),
+								className: cn("min-h-11 rounded-xl border border-foam/15 bg-ink-2/85 px-2 text-left font-sans text-[0.66rem] font-black uppercase text-foam active:scale-95", remapping === action && "border-gold text-gold shadow-[0_0_14px_rgba(232,196,90,0.35)]"),
+								children: remapping === action ? "Press key" : `${label}: ${settings.keyboard[action][0].replace("Key", "")}`
+							}, action))
+						})
+					]
+				}) : null]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "absolute bottom-[max(0.7rem,env(safe-area-inset-bottom))] left-[max(0.6rem,env(safe-area-inset-left))] flex flex-col gap-2",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex gap-2",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PadButton, {
+						label: "Dash",
+						holdKey: "touchDash",
+						className: "h-11 w-11 rounded-[0.9rem] bg-ocean/80 text-foam border-ocean-2",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Zap, { className: "size-5 text-amber-300" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 							className: "font-sans text-[0.55rem] font-bold uppercase",
-							children: "Special"
+							children: "Dash"
 						})]
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PadButton, {
-						label: "Super Finisher",
-						holdKey: "touchFinisher",
-						className: "h-12 w-12 rounded-[0.95rem] bg-amber-500/90 text-ink border-amber-300 shadow-[0_0_12px_rgba(232,196,90,0.8)]",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Zap, { className: "size-4.5 fill-ink" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-							className: "font-sans text-[0.55rem] font-black uppercase",
-							children: "Super"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PadButton, {
+						label: "Guard / Parry",
+						holdKey: "touchParry",
+						className: "h-11 w-11 rounded-[0.9rem] bg-cyan-900/80 text-cyan-200 border-cyan-400/40",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Shield, { className: "size-5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "font-sans text-[0.55rem] font-bold uppercase",
+							children: "Parry"
 						})]
-					})
-				]
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PadButton, {
-				label: "Jump",
-				holdKey: "touchJump",
-				className: "h-[4.4rem] w-[4.4rem] rounded-[1.35rem] bg-ink/85 text-foam border-foam/30",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowUp, {
-					className: "size-7",
-					strokeWidth: 2.6
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-					className: "font-sans text-[0.65rem] font-extrabold uppercase tracking-wider",
-					children: "Jump"
+					})]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex gap-2",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PadButton, {
+						label: "Move left",
+						holdKey: "touchLeft",
+						className: "h-[3.9rem] w-[3.9rem] rounded-[1.2rem]",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronLeft, {
+							className: "size-7",
+							strokeWidth: 2.5
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "font-sans text-[0.6rem] font-bold uppercase tracking-wider text-foam/70",
+							children: "Left"
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PadButton, {
+						label: "Move right",
+						holdKey: "touchRight",
+						className: "h-[3.9rem] w-[3.9rem] rounded-[1.2rem]",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, {
+							className: "size-7",
+							strokeWidth: 2.5
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "font-sans text-[0.6rem] font-bold uppercase tracking-wider text-foam/70",
+							children: "Right"
+						})]
+					})]
 				})]
-			})]
-		})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "absolute bottom-[max(0.7rem,env(safe-area-inset-bottom))] right-[max(0.6rem,env(safe-area-inset-right))] flex items-end gap-2",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "grid grid-cols-2 gap-1.5",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PadButton, {
+							label: "Light Attack",
+							holdKey: "touchAttack",
+							className: "h-13 w-13 rounded-[1rem] bg-coral/90 text-ink shadow-[0_0_10px_rgba(232,93,76,0.5)]",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sword, {
+								className: "size-5",
+								strokeWidth: 2.4
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "font-sans text-[0.55rem] font-black uppercase",
+								children: "Light"
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PadButton, {
+							label: "Heavy Attack",
+							holdKey: "touchHeavy",
+							className: "h-13 w-13 rounded-[1rem] bg-rose-600/90 text-foam border-rose-400",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Flame, {
+								className: "size-5",
+								strokeWidth: 2.4
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "font-sans text-[0.55rem] font-black uppercase",
+								children: "Heavy"
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PadButton, {
+							label: "Special",
+							holdKey: "touchSpecial",
+							className: "h-12 w-12 rounded-[0.95rem] bg-purple-900/80 text-purple-200 border-purple-400/50",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+								className: "size-4.5",
+								strokeWidth: 2.2
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "font-sans text-[0.55rem] font-bold uppercase",
+								children: "Special"
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PadButton, {
+							label: "Super Finisher",
+							holdKey: "touchFinisher",
+							className: "h-12 w-12 rounded-[0.95rem] bg-amber-500/90 text-ink border-amber-300 shadow-[0_0_12px_rgba(232,196,90,0.8)]",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Zap, { className: "size-4.5 fill-ink" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "font-sans text-[0.55rem] font-black uppercase",
+								children: "Super"
+							})]
+						})
+					]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PadButton, {
+					label: "Jump",
+					holdKey: "touchJump",
+					className: "h-[4.4rem] w-[4.4rem] rounded-[1.35rem] bg-ink/85 text-foam border-foam/30",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowUp, {
+						className: "size-7",
+						strokeWidth: 2.6
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "font-sans text-[0.65rem] font-extrabold uppercase tracking-wider",
+						children: "Jump"
+					})]
+				})]
+			})
+		]
 	});
 }
 function VictoryScreen() {
@@ -2438,7 +2846,7 @@ function GameApp() {
 		if (!host) return;
 		let game = null;
 		let cancelled = false;
-		import("./createGame-DJkv7voi.mjs").then(({ createGame }) => {
+		import("./createGame-C0wKv1hf.mjs").then(({ createGame }) => {
 			if (cancelled || !host) return;
 			game = createGame(host);
 		});
@@ -2489,4 +2897,4 @@ function Home() {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(GameApp, {});
 }
 //#endregion
-export { WORLD_WIDTH as C, WORLD_HEIGHT as S, GAME_HEIGHT as _, getLevel as a, PLAYER_BODY as b, allRosterClips as c, unregisterGame as d, CAMERA as f, ENEMY_DISPLAY_SCALE as g, ENEMY_BODY as h, SOUTH_FLORIDA_LEVELS as i, getCharacter as l, inputManager as n, approach as o, COMBAT as p, useGameStore as r, audioManager as s, routes_exports as t, registerGame as u, JUMP as v, PLAYER_DISPLAY_SCALE as x, MOVE as y };
+export { WORLD_WIDTH as S, JUMP as _, approach as a, PLAYER_DISPLAY_SCALE as b, getCharacter as c, CAMERA as d, COMBAT as f, GAME_HEIGHT as g, ENEMY_DISPLAY_SCALE as h, getLevel as i, registerGame as l, ENEMY_BODY as m, inputManager as n, audioManager as o, useGameStore as r, allRosterClips as s, routes_exports as t, unregisterGame as u, MOVE as v, WORLD_HEIGHT as x, PLAYER_BODY as y };
