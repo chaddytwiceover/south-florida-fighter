@@ -17,19 +17,17 @@ function prefersReducedMotion() {
 }
 
 export function selectOptimizedRenderer(PhaserLib) {
-  if (typeof window === "undefined") return PhaserLib.AUTO;
-  const nav = window.navigator ?? {};
-  const lowMemory = typeof nav.deviceMemory === "number" && nav.deviceMemory <= 4;
-  const narrowViewport = window.innerWidth <= 640;
-  const embedded = window.self !== window.top;
-  return lowMemory || narrowViewport || embedded ? PhaserLib.CANVAS : PhaserLib.AUTO;
+  // Let Phaser use GPU-accelerated WebGL wherever it is supported.
+  // Forcing Canvas on phones/iframes makes every sprite and parallax layer
+  // render on the CPU, causing particularly severe mobile frame drops.
+  return PhaserLib.AUTO;
 }
 
 export function optimizedRenderConfig() {
   return {
     antialias: false,
     pixelArt: false,
-    powerPreference: "low-power",
+    powerPreference: "high-performance",
     roundPixels: true,
   };
 }
@@ -58,8 +56,10 @@ export function enforceSteadyFrameRate(scene) {
   }
   if (scene.physics) scene.physics.framerate = 60;
   if (scene.game?.loop) {
+    // requestAnimationFrame is paced by the display refresh; forcing
+    // setTimeout introduces frame jitter, particularly on iOS.
     scene.game.loop.targetFps = 60;
-    scene.game.loop.forceSetTimeOut = true;
+    scene.game.loop.forceSetTimeOut = false;
   }
 }
 
