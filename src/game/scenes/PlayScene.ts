@@ -243,7 +243,7 @@ export class PlayScene extends Phaser.Scene {
 
     this.stepSimulation(actions, dt);
 
-    this.fpsTimer += dt;
+    this.fpsTimer += delta / 1000;
     if (this.fpsTimer > 0.25) {
       this.fpsTimer = 0;
       const alive = this.combat.aliveCount();
