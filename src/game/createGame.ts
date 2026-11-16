@@ -18,6 +18,7 @@ export function createGame(parent: HTMLElement): Phaser.Game {
     backgroundColor: "#0b6e7a",
     ...optimizedRenderConfig(),
     banner: false,
+    fps: { target: 60, min: 30, forceSetTimeOut: false, smoothStep: true },
     physics: {
       default: "arcade",
       arcade: {
