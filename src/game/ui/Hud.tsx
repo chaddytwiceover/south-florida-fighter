@@ -19,7 +19,7 @@ export function Hud() {
   const portrait = useGameStore((s) => s.portrait);
   const health = useGameStore((s) => s.health);
   const maxHealth = useGameStore((s) => s.maxHealth);
-  const energy = useGameStore((s) => s.energy);
+  const energy = useGameStore((s) => Math.floor(s.energy));
   const maxEnergy = useGameStore((s) => s.maxEnergy);
   const kos = useGameStore((s) => s.kos);
   const comboHits = useGameStore((s) => s.comboHits);

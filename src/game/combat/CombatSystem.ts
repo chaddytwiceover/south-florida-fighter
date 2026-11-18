@@ -73,7 +73,7 @@ function overlaps(
 export class CombatSystem {
   readonly enemies: Enemy[] = [];
   readonly enemySprites: Phaser.Physics.Arcade.Group;
-  private readonly hitboxes: Phaser.Physics.Arcade.Group;
+  private readonly hitboxes: Phaser.GameObjects.Group;
   private player: Player | null = null;
   private freeze = 0;
   private debug: boolean;
@@ -81,7 +81,8 @@ export class CombatSystem {
 
   constructor(private scene: Phaser.Scene, debug = false) {
     this.debug = debug;
-    this.hitboxes = scene.physics.add.group();
+    // Bodies are configured by the pool. PhysicsGroup.add resets velocity/gravity.
+    this.hitboxes = scene.add.group();
     this.enemySprites = scene.physics.add.group();
   }
 
@@ -114,7 +115,7 @@ export class CombatSystem {
     this.hitboxes.add(rect);
     this.resolveHitbox(rect, data);
     this.scene.time.delayedCall(spec.durationMs, () => {
-      if (rect.active) releaseHitbox(rect);
+      if (rect.active && rect.getData("hit") === data) releaseHitbox(rect);
     });
     return rect;
   }
@@ -138,7 +139,7 @@ export class CombatSystem {
     sprite.setData("hit", data);
     this.hitboxes.add(sprite);
     this.scene.time.delayedCall(spec.durationMs, () => {
-      if (sprite.active) releaseProjectile(sprite);
+      if (sprite.active && sprite.getData("hit") === data) releaseProjectile(sprite);
     });
   }
 

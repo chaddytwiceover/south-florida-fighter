@@ -30,7 +30,7 @@ function pose(action, frame) {
 function svg(f, action, frame) {
   const p=pose(action,frame), boss=f.id==="boss", big=boss?1.13:1;
   const fx=action.startsWith("special")||action==="finisher";
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 160 180">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="-40 -55 250 250">
   <g transform="translate(80 ${153+p.bounce}) scale(${big}) rotate(${p.tilt||0})" stroke="#101827" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
   <path d="M -17 -48 L ${-18+p.legL} -7 L ${-15+p.legL} 0 L -5 0 L 0 -39 Z" fill="${f.pants}"/>
   <path d="M 5 -46 L ${14+p.legR} -6 L ${22+p.legR} 0 L 34 0 L 21 -49 Z" fill="${f.pants}"/>

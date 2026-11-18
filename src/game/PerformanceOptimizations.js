@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment -- Legacy dynamic Phaser helpers retain their existing JS typing boundary.
 // @ts-nocheck
 import * as PhaserNS from "phaser";
 
@@ -400,12 +401,13 @@ export function acquirePooledProjectile(scene, x, y, facing) {
   projectile.body?.setAllowGravity(false);
   projectile.setVelocity(facing * 520, 0);
   if (scene.anims.exists("wave-fx")) projectile.play("wave-fx");
-  scene.time.delayedCall(900, () => releaseProjectile(projectile));
   return projectile;
 }
 
 export function releaseProjectile(projectile) {
   if (!projectile?.active) return;
+  projectile.setData("hit", undefined);
+  projectile.anims?.stop();
   releaseGameObject(projectile);
 }
 

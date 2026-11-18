@@ -1,0 +1,46 @@
+name: Game validation
+on:
+  pull_request:
+  push:
+    branches: [fix/mobile-fps-renderer]
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: sudo mkdir -p /workspace/screenshots && sudo chmod -R 777 /workspace/screenshots
+      - run: npm run build
+      - name: Check development desktop and mobile
+        run: |
+          npm run dev > /tmp/dev.log 2>&1 &
+          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8080/ >/dev/null && break; sleep 1; done
+          node scripts/browser-smoke.mjs http://127.0.0.1:8080 /workspace/screenshots/dev.png
+      - name: Check production desktop and mobile
+        run: |
+          npm run preview > /tmp/preview.log 2>&1 &
+          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8081/ >/dev/null && break; sleep 1; done
+          node scripts/browser-smoke.mjs http://127.0.0.1:8081 /workspace/screenshots/prod.png --baseline /workspace/screenshots/dev.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-results
+          path: /workspace/screenshots/

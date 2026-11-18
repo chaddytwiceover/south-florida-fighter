@@ -95,8 +95,8 @@ export class Enemy {
     this.health = Math.max(0, this.health - damage);
     this.iFrames = this.data.behaviorType === "boss" ? 0.25 : 0.17;
 
-    let isSuperHit = damage >= 45;
-    let resistHitStun = this.data.hasSuperArmor && !isSuperHit;
+    const isSuperHit = damage >= 45;
+    const resistHitStun = this.data.hasSuperArmor && !isSuperHit;
 
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;
 
@@ -106,8 +106,8 @@ export class Enemy {
       this.state = "hurt";
       this.cooldown = Math.max(this.cooldown, 0.35);
 
-      let actualKnockbackX = this.data.behaviorType === "boss" ? knockbackX * 0.4 : knockbackX;
-      let actualKnockbackY = this.data.behaviorType === "boss" ? -40 : knockbackY;
+      const actualKnockbackX = this.data.behaviorType === "boss" ? knockbackX * 0.4 : knockbackX;
+      const actualKnockbackY = this.data.behaviorType === "boss" ? -40 : knockbackY;
       body.setVelocity(actualKnockbackX, actualKnockbackY);
     }
 
