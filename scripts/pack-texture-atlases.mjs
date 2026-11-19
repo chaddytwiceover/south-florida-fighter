@@ -47,6 +47,11 @@ async function makeGroups() {
   const groups = [];
   for (const file of collectPngs(SPRITE_ROOT)) {
     const relativePath = normalizePath(path.relative(SPRITE_ROOT, file));
+    // The live roster is JAV. Alternate characters and source strips are not loaded.
+    if (
+      relativePath.startsWith("characters/") &&
+      (!relativePath.startsWith("characters/jav/") || relativePath.endsWith("-8frame.png"))
+    ) continue;
     const meta = await sharp(file).metadata();
     if (!meta.width || !meta.height) continue;
     const textureKey = textureKeyForSprite(relativePath);
@@ -269,10 +274,12 @@ async function writeAtlas(atlas, index) {
     };
   }
 
+  const width = Math.max(...atlas.frames.map((frame) => frame.x + frame.width));
+  const height = Math.max(...atlas.frames.map((frame) => frame.y + frame.height));
   await sharp({
     create: {
-      width: MAX_ATLAS_SIZE,
-      height: MAX_ATLAS_SIZE,
+      width,
+      height,
       channels: 4,
       background: { r: 0, g: 0, b: 0, alpha: 0 },
     },
@@ -289,7 +296,7 @@ async function writeAtlas(atlas, index) {
         meta: {
           app: "scripts/pack-texture-atlases.mjs",
           image: `${key}.png`,
-          size: { w: MAX_ATLAS_SIZE, h: MAX_ATLAS_SIZE },
+          size: { w: width, h: height },
           scale: "1",
         },
       },
