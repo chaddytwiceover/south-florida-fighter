@@ -12,6 +12,8 @@ export type ControlsProbe = {
   getMoveX: () => number;
   getEnabled: () => boolean;
   getHealth: () => number;
+  getCurrentMove: () => string;
+  getRenderer: () => number;
   getKos: () => number;
   getEnemyCount: () => number;
   getDisplay?: () => { w: number; h: number; frameW: number; frameH: number };
@@ -39,6 +41,8 @@ export function attachControlsTest(player: Player, getEnemyCount: () => number) 
     getMoveX: () => inputManager.snapshot().moveX,
     getEnabled: () => inputManager.enabled,
     getHealth: () => useGameStore.getState().health,
+    getCurrentMove: () => useGameStore.getState().currentMove,
+    getRenderer: () => player.sprite.scene.game.renderer.type,
     getKos: () => useGameStore.getState().kos,
     getEnemyCount,
     getDisplay: () => ({
