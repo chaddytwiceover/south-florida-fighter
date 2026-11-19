@@ -287,12 +287,7 @@ export class Player {
     let vx = body.velocity.x;
 
     if (!isDashing && !isStunned && !isAttacking && !isParrying) {
-      // Guard Check (holding backward or guard button)
-      const movingBack =
-        (this.facing > 0 && actions.moveX < -0.15) ||
-        (this.facing < 0 && actions.moveX > 0.15);
-
-      if (actions.guard || (movingBack && onFloor)) {
+      if (actions.guard) {
         if (actions.moveY > 0.3) {
           this.fsm.changeState("BLOCK_LOW");
         } else {

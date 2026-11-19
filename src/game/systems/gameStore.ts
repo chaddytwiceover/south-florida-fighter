@@ -56,7 +56,7 @@ function readUnlockedLevels(): string[] {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length >= ALL_LEVEL_IDS.length) return parsed;
     }
-  } catch {}
+  } catch { /* Storage may be unavailable in private browsing. */ }
   return ALL_LEVEL_IDS;
 }
 
@@ -64,7 +64,7 @@ function saveUnlockedLevels(levels: string[]) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem("sfs.unlockedLevels", JSON.stringify(levels));
-  } catch {}
+  } catch { /* Storage may be unavailable in private browsing. */ }
 }
 
 const initialChar = JAV;
@@ -126,14 +126,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  setFps: (fps) => set({ fps }),
+  setFps: (fps) => { if (get().fps !== fps) set({ fps }); },
   setHealth: (health) => set({ health }),
-  setAliveEnemies: (aliveEnemies) => set({ aliveEnemies }),
+  setAliveEnemies: (aliveEnemies) => { if (get().aliveEnemies !== aliveEnemies) set({ aliveEnemies }); },
   setFlash: (flash) => set({ flash }),
 
   rechargeKi: (amount) => {
     const { energy, maxEnergy, currentMove } = get();
-    if (currentMove) return;
+    if (currentMove || energy >= maxEnergy || amount <= 0) return;
     set({ energy: Math.min(maxEnergy, energy + amount) });
   },
 

@@ -182,7 +182,19 @@ export class PlayScene extends Phaser.Scene {
       window.__playGeneration = (window.__playGeneration ?? 0) + 1;
     }
 
+    // Menu overlays must also stop gameplay, physics, timers and animations.
+    // Disabling input alone left enemies attacking underneath the title/map.
+    const syncPlaying = (playing: boolean) => {
+      if (playing) this.scene.resume();
+      else this.scene.pause();
+    };
+    const unsubscribe = useGameStore.subscribe((state, previous) => {
+      if (state.playing !== previous.playing) syncPlaying(state.playing);
+    });
+    syncPlaying(useGameStore.getState().playing);
+
     this.events.once("shutdown", () => {
+      unsubscribe();
       this.combat.shutdown();
       inputManager.detachPhaserScene();
       detachControlsTest();
@@ -243,7 +255,7 @@ export class PlayScene extends Phaser.Scene {
 
     this.stepSimulation(actions, dt);
 
-    this.fpsTimer += dt;
+    this.fpsTimer += delta / 1000;
     if (this.fpsTimer > 0.25) {
       this.fpsTimer = 0;
       const alive = this.combat.aliveCount();

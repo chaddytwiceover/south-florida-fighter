@@ -61,7 +61,7 @@ export function Preloader({ onReady }: { onReady: () => void }) {
         </div>
         <div className="flex items-center gap-1.5 text-xs text-foam/70">
           <Zap className="size-3.5 text-gold" />
-          <span className="font-mono text-[0.68rem]">60 FPS LOCKED</span>
+          <span className="font-mono text-[0.68rem]">60 FPS TARGET</span>
         </div>
       </div>
 

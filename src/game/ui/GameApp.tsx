@@ -14,7 +14,7 @@ export function GameApp() {
   const hostRef = useRef<HTMLDivElement>(null);
   const screen = useGameStore((s) => s.screen);
   const health = useGameStore((s) => s.health);
-  const energy = useGameStore((s) => s.energy);
+  const energy = useGameStore((s) => Math.floor(s.energy));
 
   const [isLoading, setIsLoading] = useState(true);
   const [touchReady, setTouchReady] = useState(false);
