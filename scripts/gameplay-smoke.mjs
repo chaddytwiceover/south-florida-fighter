@@ -22,6 +22,10 @@ try {
     try {
       await page.goto(url, {waitUntil:'domcontentloaded'});
       await page.getByRole('button', {name:/enter championship/i}).click();
+      await page.waitForFunction(() => Boolean(window.__controlsTest));
+      const menuHealth = await page.evaluate(() => window.__controlsTest.getHealth());
+      await page.waitForTimeout(1200);
+      assert.equal(await page.evaluate(() => window.__controlsTest.getHealth()), menuHealth, 'health changed behind title');
       await page.getByRole('button', {name:/enter florida circuit/i}).click();
       const generation = await page.evaluate(() => window.__playGeneration || 0);
       await page.getByRole('button', {name:/fight in fort lauderdale/i}).click();
