@@ -43,12 +43,15 @@ try {
       await page.waitForFunction(() => !window.__controlsTest.getGrounded());
       await page.keyboard.up('Space');
       await page.waitForFunction(() => window.__controlsTest.getGrounded());
-      await page.keyboard.press('KeyJ');
+      await page.keyboard.down('KeyJ');
       await page.waitForFunction(() => Boolean(window.__controlsTest.getCurrentMove()));
+      await page.keyboard.up('KeyJ');
       await page.screenshot({path:out+'/'+name+'-attack.png'});
       await page.waitForFunction(() => !window.__controlsTest.getCurrentMove());
       const before = await page.evaluate(() => window.__playGeneration);
-      await page.keyboard.press('Escape');
+      await page.keyboard.down('Escape');
+      await page.getByRole('button', {name:/fight in fort lauderdale/i}).waitFor();
+      await page.keyboard.up('Escape');
       await page.getByRole('button', {name:/fight in fort lauderdale/i}).click();
       await page.waitForFunction(g => window.__playGeneration > g && window.__controlsTest?.getGrounded(), before);
       const state = await page.evaluate(() => ({
@@ -65,7 +68,7 @@ try {
       results.push({name,passed:true,...state});
     } catch(e) {
       await page.screenshot({path:out+'/'+name+'-failure.png'}).catch(()=>{});
-      results.push({name,passed:false,error:String(e),errors});
+      results.push({name,passed:false,error:e.stack || String(e),errors});
       process.exitCode=1;
     } finally { await page.close(); }
   }
