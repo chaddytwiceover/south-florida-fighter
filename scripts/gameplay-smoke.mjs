@@ -65,7 +65,34 @@ try {
       assert.equal(state.overflow, false, 'horizontal overflow');
       assert.equal(errors.length, 0, errors.join('\n'));
       await page.screenshot({path:out+'/'+name+'-play.png'});
-      results.push({name,passed:true,...state});
+      const pad = page.getByRole('button', {name:'Move left', includeHidden:true});
+      await pad.waitFor({state:'attached'});
+      assert.equal(await pad.isVisible(), name === 'mobile');
+      assert.equal(await page.getByText('Rotate to portrait').isVisible(), false);
+      const hud = await page.getByTestId('hud').boundingBox();
+      const canvas = await page.locator('canvas').boundingBox();
+      assert(Math.abs(hud.width - canvas.width) < 2 && Math.abs(hud.x - canvas.x) < 2);
+      const arenas = ['A1A Ocean Boardwalk'];
+      for (const arena of ['Ybor City Neon Strip', 'Worth Avenue Promenade', 'Wynwood Graffiti District', 'Ocean Drive Art Deco Strip']) {
+        await page.getByTestId('circuit-map-button').click();
+        const generation = await page.evaluate(() => window.__playGeneration);
+        await page.getByRole('button', {name:'Play '+arena, exact:true}).click();
+        await page.waitForFunction(g => window.__playGeneration > g && window.__controlsTest?.getGrounded(), generation);
+        await page.getByTestId('hud').getByText(arena, {exact:false}).waitFor();
+        assert(await page.evaluate(() => window.__controlsTest.getEnemyCount() > 0));
+        const start = await page.evaluate(() => window.__controlsTest.getX());
+        await page.keyboard.down('KeyD');
+        await page.waitForFunction(x => window.__controlsTest.getX() > x + 10, start);
+        await page.keyboard.up('KeyD');
+        await page.keyboard.down('KeyJ');
+        await page.waitForFunction(() => Boolean(window.__controlsTest.getCurrentMove()));
+        await page.keyboard.up('KeyJ');
+        arenas.push(arena);
+      }
+      await page.getByTestId('circuit-map-button').click();
+      await page.getByRole('heading', {name:'Choose Your Arena'}).waitFor();
+      assert.equal(errors.length, 0, errors.join('\n'));
+      results.push({name,passed:true,arenas,...state});
     } catch(e) {
       await page.screenshot({path:out+'/'+name+'-failure.png'}).catch(()=>{});
       results.push({name,passed:false,error:e.stack || String(e),errors});

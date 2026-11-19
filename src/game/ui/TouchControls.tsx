@@ -204,7 +204,7 @@ export function TouchControls() {
       </div>
 
       {/* Left Pad: Directional + Dash & Guard/Parry */}
-      <div className="absolute bottom-[max(0.7rem,env(safe-area-inset-bottom))] left-[max(0.6rem,env(safe-area-inset-left))] flex flex-col gap-2">
+      <div className="touch-pad absolute bottom-[max(0.7rem,env(safe-area-inset-bottom))] left-[max(0.6rem,env(safe-area-inset-left))] flex flex-col gap-2">
         <div className="flex gap-2">
           <PadButton
             label="Dash"
@@ -250,7 +250,7 @@ export function TouchControls() {
       </div>
 
       {/* Right Pad: Attack Actions Cluster + Jump */}
-      <div className="absolute bottom-[max(0.7rem,env(safe-area-inset-bottom))] right-[max(0.6rem,env(safe-area-inset-right))] flex items-end gap-2">
+      <div className="touch-pad absolute bottom-[max(0.7rem,env(safe-area-inset-bottom))] right-[max(0.6rem,env(safe-area-inset-right))] flex items-end gap-2">
         {/* Attack Grid */}
         <div className="grid grid-cols-2 gap-1.5">
           {/* Light Attack */}

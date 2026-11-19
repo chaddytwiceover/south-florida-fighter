@@ -100,11 +100,12 @@
   transform: translate(-50%, -50%) scale(2.8);
 }
 
-@media (min-width: 720px) {
-  .game-stage {
-    width: min(100dvw, calc(100dvh * 16 / 9));
-    height: min(100dvh, calc(100dvw * 9 / 16));
-  }
+@media (any-pointer: coarse) and (orientation: landscape) and (max-height: 819px) {
+  .rotate-hint { display: flex; }
+}
+
+@media not all and (any-pointer: coarse) {
+  .game-stage .touch-pad { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
