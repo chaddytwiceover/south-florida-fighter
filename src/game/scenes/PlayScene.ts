@@ -23,6 +23,7 @@ import {
   createLazyParallaxBackground,
   createOptimizedAnimation,
   enforceSteadyFrameRate,
+  groundTextureKey,
   initPerformancePools,
   preloadFightBackground,
   preloadTextureAtlases,
@@ -97,10 +98,12 @@ export class PlayScene extends Phaser.Scene {
     this.far = parallax.far;
     this.bgScale = parallax.bgScale;
 
+    const groundTexture = groundTextureKey(level.id);
+
     // Ground Walkway
     const groundH = WORLD_HEIGHT - level.groundY + 120;
     this.add
-      .tileSprite(WORLD_WIDTH / 2, level.groundY, WORLD_WIDTH, groundH, "ground")
+      .tileSprite(WORLD_WIDTH / 2, level.groundY, WORLD_WIDTH, groundH, groundTexture)
       .setOrigin(0.5, 0)
       .setDepth(4);
 
@@ -128,7 +131,7 @@ export class PlayScene extends Phaser.Scene {
 
     for (const pad of level.platforms) {
       const visual = this.add
-        .tileSprite(pad.x, pad.y, pad.width, pad.height, "ground")
+        .tileSprite(pad.x, pad.y, pad.width, pad.height, groundTexture)
         .setOrigin(0.5, 0)
         .setDepth(9);
       this.physics.add.existing(visual, true);

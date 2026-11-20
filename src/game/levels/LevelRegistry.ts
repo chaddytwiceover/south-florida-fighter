@@ -34,9 +34,7 @@ export type LevelDef = {
   props: PropPlacement[];
   enemies: EnemySpawn[];
   parallax: {
-    sky: string;
     far: string;
-    mid: string;
     ground: string;
   };
   boss?: {
@@ -81,10 +79,8 @@ export const FORT_LAUDERDALE: LevelDef = {
     { id: "bruiser", x: 4200 },
   ],
   parallax: {
-    sky: "/game/backgrounds/fort-lauderdale/far.jpg",
-    far: "/game/backgrounds/fort-lauderdale/far.jpg",
-    mid: "/game/backgrounds/fort-lauderdale/far.jpg",
-    ground: "/game/backgrounds/fort-lauderdale/ground.jpg",
+    far: "/game/backgrounds/fort-lauderdale/arena.webp",
+    ground: "/game/backgrounds/fort-lauderdale/ground.webp",
   },
 };
 
@@ -121,10 +117,8 @@ export const TAMPA: LevelDef = {
     { id: "blade", x: 3800 },
   ],
   parallax: {
-    sky: "/game/backgrounds/tampa/far.jpg",
-    far: "/game/backgrounds/tampa/far.jpg",
-    mid: "/game/backgrounds/tampa/far.jpg",
-    ground: "/game/backgrounds/fort-lauderdale/ground.jpg",
+    far: "/game/backgrounds/tampa/arena.webp",
+    ground: "/game/backgrounds/tampa/ground.webp",
   },
 };
 
@@ -161,10 +155,8 @@ export const PALM_BEACH: LevelDef = {
     { id: "bruiser", x: 3750 },
   ],
   parallax: {
-    sky: "/game/backgrounds/palm-beach/far.jpg",
-    far: "/game/backgrounds/palm-beach/far.jpg",
-    mid: "/game/backgrounds/palm-beach/far.jpg",
-    ground: "/game/backgrounds/fort-lauderdale/ground.jpg",
+    far: "/game/backgrounds/palm-beach/arena.webp",
+    ground: "/game/backgrounds/palm-beach/ground.webp",
   },
 };
 
@@ -201,10 +193,8 @@ export const MIAMI: LevelDef = {
     { id: "blade", x: 4050 },
   ],
   parallax: {
-    sky: "/game/backgrounds/miami/far.jpg",
-    far: "/game/backgrounds/miami/far.jpg",
-    mid: "/game/backgrounds/miami/far.jpg",
-    ground: "/game/backgrounds/fort-lauderdale/ground.jpg",
+    far: "/game/backgrounds/miami/arena.webp",
+    ground: "/game/backgrounds/miami/ground.webp",
   },
 };
 
@@ -245,10 +235,8 @@ export const MIAMI_BEACH: LevelDef = {
     spawnX: 3800,
   },
   parallax: {
-    sky: "/game/backgrounds/miami-beach/far.jpg",
-    far: "/game/backgrounds/miami-beach/far.jpg",
-    mid: "/game/backgrounds/miami-beach/far.jpg",
-    ground: "/game/backgrounds/fort-lauderdale/ground.jpg",
+    far: "/game/backgrounds/miami-beach/arena.webp",
+    ground: "/game/backgrounds/miami-beach/ground.webp",
   },
 };
 

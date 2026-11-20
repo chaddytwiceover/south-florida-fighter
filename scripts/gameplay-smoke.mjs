@@ -113,6 +113,8 @@ try {
         await page.waitForFunction(() => !window.__controlsTest.getCurrentMove());
         const start = await page.evaluate(() => window.__controlsTest.getX());
         await holdInput('KeyD', 'Move right', x => window.__controlsTest.getX() > x + 10, start);
+        const arenaSlug = arena.toLowerCase().replaceAll(' ', '-');
+        await page.screenshot({path:out+'/'+name+'-'+arenaSlug+'.png'});
         arenas.push(arena);
       }
       await activate(page.getByTestId('circuit-map-button'));
