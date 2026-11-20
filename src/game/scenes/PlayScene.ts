@@ -23,30 +23,13 @@ import {
   createLazyParallaxBackground,
   createOptimizedAnimation,
   enforceSteadyFrameRate,
+  groundTextureKey,
   initPerformancePools,
   preloadFightBackground,
   preloadTextureAtlases,
 } from "../PerformanceOptimizations.js";
 
 const Phaser = (PhaserNS as { default?: typeof PhaserNS }).default ?? PhaserNS;
-
-const PROP_CALIBRATION: Record<string, { bottomPad: number; scale: number }> = {
-  ftl_surf: { bottomPad: 0, scale: 0.9 },
-  ftl_tiki: { bottomPad: 0, scale: 0.95 },
-  mb_artdeco_lamp: { bottomPad: 1, scale: 0.92 },
-  mb_valet_sign: { bottomPad: 2, scale: 0.95 },
-  palm: { bottomPad: 13, scale: 0.92 },
-  pb_fountain: { bottomPad: 0, scale: 0.92 },
-  pb_lamp: { bottomPad: 1, scale: 0.92 },
-  pb_urn: { bottomPad: 0, scale: 0.95 },
-  tampa_balcony: { bottomPad: 0, scale: 0.9 },
-  tampa_barrel: { bottomPad: 2, scale: 0.95 },
-  tampa_lamp: { bottomPad: 1, scale: 0.92 },
-  tower: { bottomPad: 13, scale: 0.92 },
-  wynwood_crates: { bottomPad: 3, scale: 0.95 },
-  wynwood_hydrant: { bottomPad: 0, scale: 0.95 },
-  wynwood_sign: { bottomPad: 0, scale: 0.92 },
-};
 
 export class PlayScene extends Phaser.Scene {
   private player!: Player;
@@ -97,20 +80,20 @@ export class PlayScene extends Phaser.Scene {
     this.far = parallax.far;
     this.bgScale = parallax.bgScale;
 
+    const groundTexture = groundTextureKey(level.id);
+
     // Ground Walkway
     const groundH = WORLD_HEIGHT - level.groundY + 120;
     this.add
-      .tileSprite(WORLD_WIDTH / 2, level.groundY, WORLD_WIDTH, groundH, "ground")
+      .tileSprite(WORLD_WIDTH / 2, level.groundY, WORLD_WIDTH, groundH, groundTexture)
       .setOrigin(0.5, 0)
       .setDepth(4);
 
     // Stage Props
     for (const prop of level.props) {
-      const calibration = PROP_CALIBRATION[prop.key] ?? { bottomPad: 0, scale: 1 };
-      const displayScale = prop.scale * calibration.scale;
-      addOptimizedImage(this, prop.x, prop.y + calibration.bottomPad * displayScale, prop.key)
+      addOptimizedImage(this, prop.x, prop.y, prop.key)
         .setOrigin(0.5, 1)
-        .setScale(displayScale)
+        .setScale(prop.scale)
         .setFlipX(Boolean(prop.flipX))
         .setDepth(prop.depth);
     }
@@ -128,7 +111,7 @@ export class PlayScene extends Phaser.Scene {
 
     for (const pad of level.platforms) {
       const visual = this.add
-        .tileSprite(pad.x, pad.y, pad.width, pad.height, "ground")
+        .tileSprite(pad.x, pad.y, pad.width, pad.height, groundTexture)
         .setOrigin(0.5, 0)
         .setDepth(9);
       this.physics.add.existing(visual, true);

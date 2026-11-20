@@ -34,9 +34,7 @@ export type LevelDef = {
   props: PropPlacement[];
   enemies: EnemySpawn[];
   parallax: {
-    sky: string;
     far: string;
-    mid: string;
     ground: string;
   };
   boss?: {
@@ -61,15 +59,12 @@ export const FORT_LAUDERDALE: LevelDef = {
     { x: 2960, y: GROUND_Y - 110, width: 220, height: 22 },
   ],
   props: [
-    { key: "palm", x: 360, y: GROUND_Y + 8, scale: 1.35, depth: 8 },
-    { key: "ftl_tiki", x: 620, y: GROUND_Y + 8, scale: 1.2, depth: 7 },
-    { key: "tower", x: 1080, y: GROUND_Y + 6, scale: 1.2, depth: 7 },
-    { key: "ftl_surf", x: 1480, y: GROUND_Y + 8, scale: 1.25, depth: 8 },
-    { key: "palm", x: 1980, y: GROUND_Y + 8, scale: 1.4, depth: 8 },
-    { key: "ftl_tiki", x: 2420, y: GROUND_Y + 8, scale: 1.2, flipX: true, depth: 7 },
-    { key: "tower", x: 3280, y: GROUND_Y + 6, scale: 1.15, depth: 7 },
-    { key: "ftl_surf", x: 3750, y: GROUND_Y + 8, scale: 1.2, depth: 8 },
-    { key: "palm", x: 4200, y: GROUND_Y + 8, scale: 1.3, flipX: true, depth: 6 },
+    { key: "beach_boards", x: 390, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "beach_chair", x: 780, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "beach_boards", x: 1480, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "beach_chair", x: 2410, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "beach_boards", x: 3260, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "beach_chair", x: 4070, y: GROUND_Y + 2, scale: 1, depth: 7 },
   ],
   enemies: [
     { id: "bruiser", x: 680 },
@@ -81,10 +76,8 @@ export const FORT_LAUDERDALE: LevelDef = {
     { id: "bruiser", x: 4200 },
   ],
   parallax: {
-    sky: "/game/backgrounds/fort-lauderdale/far.jpg",
-    far: "/game/backgrounds/fort-lauderdale/far.jpg",
-    mid: "/game/backgrounds/fort-lauderdale/far.jpg",
-    ground: "/game/backgrounds/fort-lauderdale/ground.jpg",
+    far: "/game/backgrounds/fort-lauderdale/arena.webp",
+    ground: "/game/backgrounds/fort-lauderdale/ground.webp",
   },
 };
 
@@ -103,14 +96,12 @@ export const TAMPA: LevelDef = {
     { x: 2800, y: GROUND_Y - 130, width: 260, height: 24 },
   ],
   props: [
-    { key: "tampa_lamp", x: 380, y: GROUND_Y + 8, scale: 1.25, depth: 7 },
-    { key: "tampa_barrel", x: 750, y: GROUND_Y + 8, scale: 1.25, depth: 8 },
-    { key: "tampa_balcony", x: 1250, y: GROUND_Y + 8, scale: 1.25, depth: 7 },
-    { key: "tampa_lamp", x: 1780, y: GROUND_Y + 8, scale: 1.2, depth: 7 },
-    { key: "tampa_barrel", x: 2350, y: GROUND_Y + 8, scale: 1.3, flipX: true, depth: 8 },
-    { key: "tampa_balcony", x: 2950, y: GROUND_Y + 8, scale: 1.3, depth: 7 },
-    { key: "tampa_lamp", x: 3600, y: GROUND_Y + 8, scale: 1.25, depth: 7 },
-    { key: "tampa_barrel", x: 4150, y: GROUND_Y + 8, scale: 1.2, depth: 8 },
+    { key: "ybor_lamp", x: 410, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "ybor_crate", x: 830, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "ybor_lamp", x: 1510, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "ybor_crate", x: 2370, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "ybor_lamp", x: 3160, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "ybor_crate", x: 4030, y: GROUND_Y + 2, scale: 1, depth: 7 },
   ],
   enemies: [
     { id: "blade", x: 720 },
@@ -121,10 +112,8 @@ export const TAMPA: LevelDef = {
     { id: "blade", x: 3800 },
   ],
   parallax: {
-    sky: "/game/backgrounds/tampa/far.jpg",
-    far: "/game/backgrounds/tampa/far.jpg",
-    mid: "/game/backgrounds/tampa/far.jpg",
-    ground: "/game/backgrounds/fort-lauderdale/ground.jpg",
+    far: "/game/backgrounds/tampa/arena.webp",
+    ground: "/game/backgrounds/tampa/ground.webp",
   },
 };
 
@@ -143,14 +132,12 @@ export const PALM_BEACH: LevelDef = {
     { x: 3100, y: GROUND_Y - 120, width: 250, height: 22 },
   ],
   props: [
-    { key: "pb_lamp", x: 380, y: GROUND_Y + 8, scale: 1.25, depth: 7 },
-    { key: "pb_urn", x: 720, y: GROUND_Y + 8, scale: 1.2, depth: 8 },
-    { key: "pb_fountain", x: 1280, y: GROUND_Y + 8, scale: 1.3, depth: 7 },
-    { key: "palm", x: 1850, y: GROUND_Y + 8, scale: 1.35, depth: 8 },
-    { key: "pb_lamp", x: 2400, y: GROUND_Y + 8, scale: 1.25, depth: 7 },
-    { key: "pb_urn", x: 2850, y: GROUND_Y + 8, scale: 1.2, flipX: true, depth: 8 },
-    { key: "pb_fountain", x: 3450, y: GROUND_Y + 8, scale: 1.3, depth: 7 },
-    { key: "pb_lamp", x: 4100, y: GROUND_Y + 8, scale: 1.25, depth: 7 },
+    { key: "worth_urn", x: 400, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "worth_fountain", x: 840, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "worth_urn", x: 1500, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "worth_fountain", x: 2430, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "worth_urn", x: 3220, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "worth_fountain", x: 4030, y: GROUND_Y + 2, scale: 1, depth: 7 },
   ],
   enemies: [
     { id: "bruiser", x: 650 },
@@ -161,10 +148,8 @@ export const PALM_BEACH: LevelDef = {
     { id: "bruiser", x: 3750 },
   ],
   parallax: {
-    sky: "/game/backgrounds/palm-beach/far.jpg",
-    far: "/game/backgrounds/palm-beach/far.jpg",
-    mid: "/game/backgrounds/palm-beach/far.jpg",
-    ground: "/game/backgrounds/fort-lauderdale/ground.jpg",
+    far: "/game/backgrounds/palm-beach/arena.webp",
+    ground: "/game/backgrounds/palm-beach/ground.webp",
   },
 };
 
@@ -183,13 +168,12 @@ export const MIAMI: LevelDef = {
     { x: 2950, y: GROUND_Y - 130, width: 250, height: 24 },
   ],
   props: [
-    { key: "wynwood_hydrant", x: 420, y: GROUND_Y + 8, scale: 1.25, depth: 8 },
-    { key: "wynwood_crates", x: 920, y: GROUND_Y + 8, scale: 1.25, depth: 8 },
-    { key: "wynwood_sign", x: 1480, y: GROUND_Y + 8, scale: 1.25, depth: 7 },
-    { key: "wynwood_crates", x: 2100, y: GROUND_Y + 8, scale: 1.3, flipX: true, depth: 8 },
-    { key: "wynwood_hydrant", x: 2750, y: GROUND_Y + 8, scale: 1.2, depth: 8 },
-    { key: "wynwood_sign", x: 3350, y: GROUND_Y + 8, scale: 1.25, depth: 7 },
-    { key: "wynwood_crates", x: 3950, y: GROUND_Y + 8, scale: 1.25, depth: 8 },
+    { key: "wynwood_hydrant_new", x: 420, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "wynwood_paint", x: 810, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "wynwood_hydrant_new", x: 1480, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "wynwood_paint", x: 2240, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "wynwood_hydrant_new", x: 2990, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "wynwood_paint", x: 3980, y: GROUND_Y + 2, scale: 1, depth: 7 },
   ],
   enemies: [
     { id: "blade", x: 600 },
@@ -201,10 +185,8 @@ export const MIAMI: LevelDef = {
     { id: "blade", x: 4050 },
   ],
   parallax: {
-    sky: "/game/backgrounds/miami/far.jpg",
-    far: "/game/backgrounds/miami/far.jpg",
-    mid: "/game/backgrounds/miami/far.jpg",
-    ground: "/game/backgrounds/fort-lauderdale/ground.jpg",
+    far: "/game/backgrounds/miami/arena.webp",
+    ground: "/game/backgrounds/miami/ground.webp",
   },
 };
 
@@ -223,13 +205,12 @@ export const MIAMI_BEACH: LevelDef = {
     { x: 2850, y: GROUND_Y - 110, width: 220, height: 22 },
   ],
   props: [
-    { key: "mb_artdeco_lamp", x: 380, y: GROUND_Y + 8, scale: 1.25, depth: 7 },
-    { key: "mb_valet_sign", x: 820, y: GROUND_Y + 8, scale: 1.25, depth: 8 },
-    { key: "palm", x: 1450, y: GROUND_Y + 8, scale: 1.4, depth: 8 },
-    { key: "mb_artdeco_lamp", x: 2050, y: GROUND_Y + 8, scale: 1.25, depth: 7 },
-    { key: "mb_valet_sign", x: 2650, y: GROUND_Y + 8, scale: 1.3, flipX: true, depth: 8 },
-    { key: "palm", x: 3250, y: GROUND_Y + 8, scale: 1.35, flipX: true, depth: 8 },
-    { key: "mb_artdeco_lamp", x: 3950, y: GROUND_Y + 8, scale: 1.3, depth: 7 },
+    { key: "ocean_bollard", x: 410, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "ocean_planter", x: 810, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "ocean_bollard", x: 1510, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "ocean_planter", x: 2350, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "ocean_bollard", x: 3220, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "ocean_planter", x: 4000, y: GROUND_Y + 2, scale: 1, depth: 7 },
   ],
   enemies: [
     { id: "bruiser", x: 620 },
@@ -245,10 +226,8 @@ export const MIAMI_BEACH: LevelDef = {
     spawnX: 3800,
   },
   parallax: {
-    sky: "/game/backgrounds/miami-beach/far.jpg",
-    far: "/game/backgrounds/miami-beach/far.jpg",
-    mid: "/game/backgrounds/miami-beach/far.jpg",
-    ground: "/game/backgrounds/fort-lauderdale/ground.jpg",
+    far: "/game/backgrounds/miami-beach/arena.webp",
+    ground: "/game/backgrounds/miami-beach/ground.webp",
   },
 };
 
