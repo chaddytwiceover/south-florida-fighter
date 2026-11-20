@@ -44,6 +44,7 @@ try {
       }
     }
     const errors = [];
+    let arenaUnderTest = 'A1A Ocean Boardwalk';
     page.on('pageerror', e => errors.push(e.message));
     page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
     page.setDefaultTimeout(20000);
@@ -67,7 +68,7 @@ try {
       await page.waitForFunction(() => window.__controlsTest.getMoveX() === 0);
       await holdInput('Space', 'Jump', () => !window.__controlsTest.getGrounded());
       await page.waitForFunction(() => window.__controlsTest.getGrounded());
-      await holdInput('KeyJ', 'Light Attack', () => Boolean(window.__controlsTest.getCurrentMove()));
+      await holdInput('KeyJ', 'Light Attack', () => window.__controlsTest.getCurrentMove() === 'Street Jab');
       await page.screenshot({path:out+'/'+name+'-attack.png'});
       await page.waitForFunction(() => !window.__controlsTest.getCurrentMove());
       const before = await page.evaluate(() => window.__playGeneration);
@@ -100,15 +101,18 @@ try {
       assert(Math.abs(hud.width - canvas.width) < 2 && Math.abs(hud.x - canvas.x) < 2);
       const arenas = ['A1A Ocean Boardwalk'];
       for (const arena of ['Ybor City Neon Strip', 'Worth Avenue Promenade', 'Wynwood Graffiti District', 'Ocean Drive Art Deco Strip']) {
+        arenaUnderTest = arena;
         await activate(page.getByTestId('circuit-map-button'));
         const generation = await page.evaluate(() => window.__playGeneration);
         await activate(page.getByRole('button', {name:'Play '+arena, exact:true}));
         await page.waitForFunction(g => window.__playGeneration > g && window.__controlsTest?.getGrounded(), generation);
         await page.getByTestId('hud').getByText(arena, {exact:false}).waitFor();
         assert(await page.evaluate(() => window.__controlsTest.getEnemyCount() > 0));
+        // Check the jab from the spawn point before walking toward enemies.
+        await holdInput('KeyJ', 'Light Attack', () => window.__controlsTest.getCurrentMove() === 'Street Jab');
+        await page.waitForFunction(() => !window.__controlsTest.getCurrentMove());
         const start = await page.evaluate(() => window.__controlsTest.getX());
         await holdInput('KeyD', 'Move right', x => window.__controlsTest.getX() > x + 10, start);
-        await holdInput('KeyJ', 'Light Attack', () => Boolean(window.__controlsTest.getCurrentMove()));
         arenas.push(arena);
       }
       await activate(page.getByTestId('circuit-map-button'));
@@ -117,7 +121,7 @@ try {
       results.push({name,input:mobile ? 'touch' : 'keyboard',passed:true,arenas,...state});
     } catch(e) {
       await page.screenshot({path:out+'/'+name+'-failure.png'}).catch(()=>{});
-      results.push({name,passed:false,error:e.stack || String(e),errors});
+      results.push({name,arena:arenaUnderTest,passed:false,error:e.stack || String(e),errors});
       process.exitCode=1;
     } finally { await page.close(); }
   }
