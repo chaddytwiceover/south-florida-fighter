@@ -31,24 +31,6 @@ import {
 
 const Phaser = (PhaserNS as { default?: typeof PhaserNS }).default ?? PhaserNS;
 
-const PROP_CALIBRATION: Record<string, { bottomPad: number; scale: number }> = {
-  ftl_surf: { bottomPad: 0, scale: 0.9 },
-  ftl_tiki: { bottomPad: 0, scale: 0.95 },
-  mb_artdeco_lamp: { bottomPad: 1, scale: 0.92 },
-  mb_valet_sign: { bottomPad: 2, scale: 0.95 },
-  palm: { bottomPad: 13, scale: 0.92 },
-  pb_fountain: { bottomPad: 0, scale: 0.92 },
-  pb_lamp: { bottomPad: 1, scale: 0.92 },
-  pb_urn: { bottomPad: 0, scale: 0.95 },
-  tampa_balcony: { bottomPad: 0, scale: 0.9 },
-  tampa_barrel: { bottomPad: 2, scale: 0.95 },
-  tampa_lamp: { bottomPad: 1, scale: 0.92 },
-  tower: { bottomPad: 13, scale: 0.92 },
-  wynwood_crates: { bottomPad: 3, scale: 0.95 },
-  wynwood_hydrant: { bottomPad: 0, scale: 0.95 },
-  wynwood_sign: { bottomPad: 0, scale: 0.92 },
-};
-
 export class PlayScene extends Phaser.Scene {
   private player!: Player;
   private combat!: CombatSystem;
@@ -109,11 +91,9 @@ export class PlayScene extends Phaser.Scene {
 
     // Stage Props
     for (const prop of level.props) {
-      const calibration = PROP_CALIBRATION[prop.key] ?? { bottomPad: 0, scale: 1 };
-      const displayScale = prop.scale * calibration.scale;
-      addOptimizedImage(this, prop.x, prop.y + calibration.bottomPad * displayScale, prop.key)
+      addOptimizedImage(this, prop.x, prop.y, prop.key)
         .setOrigin(0.5, 1)
-        .setScale(displayScale)
+        .setScale(prop.scale)
         .setFlipX(Boolean(prop.flipX))
         .setDepth(prop.depth);
     }
