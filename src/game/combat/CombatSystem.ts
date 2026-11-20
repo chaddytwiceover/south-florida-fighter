@@ -41,7 +41,8 @@ export type HitSpec = {
   level?: AttackLevel;
   durationMs: number;
   hitstopFrames?: number;
-  follow?: any;
+  follow?: Phaser.Physics.Arcade.Sprite;
+  // Offsets are relative to a right-facing sprite and mirrored at resolution.
   followOffsetX?: number;
   followOffsetY?: number;
 };
@@ -76,6 +77,8 @@ export class CombatSystem {
   private readonly hitboxes: Phaser.GameObjects.Group;
   private player: Player | null = null;
   private freeze = 0;
+  private comboRemaining = 0;
+  private won = false;
   private debug: boolean;
   private onVictoryCallback?: () => void;
 
@@ -156,6 +159,12 @@ export class CombatSystem {
   }
 
   update(dt: number) {
+    if (this.won) return;
+    if (this.comboRemaining > 0) {
+      this.comboRemaining = Math.max(0, this.comboRemaining - dt);
+      if (this.comboRemaining === 0) useGameStore.getState().resetCombo();
+    }
+
     for (const obj of this.hitboxes.getChildren()) {
       const go = obj as Phaser.GameObjects.Rectangle & Phaser.Physics.Arcade.Sprite;
       if (!go.active) continue;
@@ -170,6 +179,7 @@ export class CombatSystem {
         body?.updateFromGameObject();
       }
       if (hit) this.resolveHitbox(go, hit);
+      if (this.won) return;
     }
 
     const player = this.player;
@@ -191,7 +201,7 @@ export class CombatSystem {
 
   private resolveHitbox(go: Phaser.GameObjects.GameObject, hit: HitData) {
     const player = this.player;
-    if (!player) return;
+    if (!player || this.won) return;
     const box = go.body as Phaser.Physics.Arcade.Body | undefined;
     if (!box) return;
 
@@ -226,15 +236,16 @@ export class CombatSystem {
     const scaling = Math.max(0.4, 1.0 - comboCount * 0.05);
     const scaledDamage = Math.max(1, Math.round(hit.damage * scaling));
 
+    const isSuper = hit.damage >= 45 || hit.level === "unblockable";
     const landed = enemy.takeHit(
       scaledDamage,
       dir * hit.knockback,
       hit.knockbackY ?? (hit.level === "overhead" || hit.level === "unblockable" ? -140 : -70),
+      isSuper,
     );
     if (!landed) return;
 
     // Determine Hit Tier
-    const isSuper = hit.damage >= 45 || hit.level === "unblockable";
     const isHeavy = hit.damage > 20;
     const tier: HitTier = isSuper ? "super" : isHeavy ? "heavy" : "light";
 
@@ -275,6 +286,7 @@ export class CombatSystem {
       sparkColor: isSuper ? 0xd53f8c : isHeavy ? 0xe85d4c : 0xffe600,
     });
 
+    this.comboRemaining = COMBAT.comboWindow;
     store.addComboHit();
     audioManager.comboChime(store.comboHits);
     store.gainKi(8);
@@ -295,13 +307,14 @@ export class CombatSystem {
       const remaining = this.aliveCount();
       store.setAliveEnemies(remaining);
       if (remaining === 0) {
+        this.won = true;
         this.onVictoryCallback?.();
       }
     }
   }
 
   private landOnPlayer(player: Player, hit: HitData) {
-    const originX = (hit.follow as any)?.x ?? hit.x;
+    const originX = hit.follow?.x ?? hit.x;
     const dir = player.x < originX ? -1 : 1;
 
     // Check Player Parry & Guard State
@@ -367,6 +380,7 @@ export class CombatSystem {
         freezeSec,
       });
 
+      this.comboRemaining = 0;
       useGameStore.getState().resetCombo();
     }
   }

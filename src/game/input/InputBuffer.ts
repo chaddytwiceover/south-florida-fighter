@@ -1,8 +1,3 @@
-/**
- * Modern Fighting Game Deterministic Input Buffer (8-frame FIFO Queue)
- * Resolves commands with leniency, double-tap dashes, charge/motion inputs, and cancels.
- */
-
 export type RawInputState = {
   left: boolean;
   right: boolean;
@@ -30,20 +25,19 @@ export type BufferedCommand =
   | "FINISHER"
   | "PARRY"
   | "DASH_FWD"
-  | "DASH_BACK"
-  | "JUMP";
+  | "DASH_BACK";
 
-export type BufferEntry = {
+const COMMAND_WINDOW = 10 / 60;
+const DOUBLE_TAP_WINDOW = 14 / 60;
+
+type BufferEntry = {
   command: BufferedCommand;
-  frameCreated: number;
-  consumed: boolean;
+  createdAt: number;
 };
 
 export class InputBuffer {
-  private history: RawInputState[] = [];
   private bufferQueue: BufferEntry[] = [];
-  private currentFrame = 0;
-  private bufferLeniencyFrames = 10; // 10 frames (~160ms) leniency window
+  private time = 0;
 
   private prevRaw: RawInputState = {
     left: false,
@@ -62,22 +56,14 @@ export class InputBuffer {
     dash: false,
   };
 
-  private tapTimes = {
-    fwdTap: -999,
-    backTap: -999,
-  };
+  private lastLeftTap = -Infinity;
+  private lastRightTap = -Infinity;
 
-  push(raw: RawInputState, facing: number) {
-    this.currentFrame++;
-    this.history.push({ ...raw });
-    if (this.history.length > 30) this.history.shift();
-
-    // Clean expired buffer entries
-    this.bufferQueue = this.bufferQueue.filter(
-      (entry) =>
-        !entry.consumed &&
-        this.currentFrame - entry.frameCreated <= this.bufferLeniencyFrames,
-    );
+  push(raw: RawInputState, facing: number, dt: number) {
+    this.time += dt;
+    while (this.bufferQueue.length && this.time - this.bufferQueue[0].createdAt > COMMAND_WINDOW) {
+      this.bufferQueue.shift();
+    }
 
     // Edge triggers (just pressed)
     const justLight = raw.light && !this.prevRaw.light;
@@ -91,37 +77,16 @@ export class InputBuffer {
       (raw.parry && !this.prevRaw.parry) ||
       (raw.guard && justLight);
     const justDash = raw.dash && !this.prevRaw.dash;
-    const justUp = raw.up && !this.prevRaw.up;
+    const justLeft = raw.left && !raw.right && !this.prevRaw.left;
+    const justRight = raw.right && !raw.left && !this.prevRaw.right;
+    const doubleLeft = justLeft && this.time - this.lastLeftTap <= DOUBLE_TAP_WINDOW;
+    const doubleRight = justRight && this.time - this.lastRightTap <= DOUBLE_TAP_WINDOW;
+    if (justLeft) this.lastLeftTap = doubleLeft ? -Infinity : this.time;
+    if (justRight) this.lastRightTap = doubleRight ? -Infinity : this.time;
 
-    const movingFwd = (facing > 0 && raw.right) || (facing < 0 && raw.left);
-    const movingBack = (facing > 0 && raw.left) || (facing < 0 && raw.right);
-    const justFwd = (facing > 0 && raw.right && !this.prevRaw.right) || (facing < 0 && raw.left && !this.prevRaw.left);
-    const justBack = (facing > 0 && raw.left && !this.prevRaw.left) || (facing < 0 && raw.right && !this.prevRaw.right);
-
-    // Double-tap dash detection (within 14 frames)
-    if (justFwd) {
-      if (this.currentFrame - this.tapTimes.fwdTap <= 14) {
-        this.addCommand("DASH_FWD");
-        this.tapTimes.fwdTap = -999;
-      } else {
-        this.tapTimes.fwdTap = this.currentFrame;
-      }
-    }
-    if (justBack) {
-      if (this.currentFrame - this.tapTimes.backTap <= 14) {
-        this.addCommand("DASH_BACK");
-        this.tapTimes.backTap = -999;
-      } else {
-        this.tapTimes.backTap = this.currentFrame;
-      }
-    }
-
-    if (justDash) {
-      if (movingBack) {
-        this.addCommand("DASH_BACK");
-      } else {
-        this.addCommand("DASH_FWD");
-      }
+    if (justDash || doubleLeft || doubleRight) {
+      const movingBack = facing > 0 ? raw.left && !raw.right : raw.right && !raw.left;
+      this.addCommand(movingBack ? "DASH_BACK" : "DASH_FWD");
     }
 
     // Priority insertion (Finisher > Specials > Parry > Heavies > Lights)
@@ -132,45 +97,24 @@ export class InputBuffer {
     if (justParry) this.addCommand("PARRY");
     if (justKick) this.addCommand("KICK");
     if (justHeavy) this.addCommand("HEAVY");
-    if (justLight) this.addCommand("LIGHT");
-    if (justUp) this.addCommand("JUMP");
+    if (justLight && !justParry) this.addCommand("LIGHT");
 
     this.prevRaw = { ...raw };
   }
 
   private addCommand(command: BufferedCommand) {
-    this.bufferQueue.push({
-      command,
-      frameCreated: this.currentFrame,
-      consumed: false,
-    });
+    this.bufferQueue.push({ command, createdAt: this.time });
   }
 
-  peek(): BufferedCommand | null {
-    const entry = this.bufferQueue.find((e) => !e.consumed);
-    return entry ? entry.command : null;
-  }
-
-  consume(command?: BufferedCommand): BufferedCommand | null {
-    if (command) {
-      const idx = this.bufferQueue.findIndex(
-        (e) => !e.consumed && e.command === command,
-      );
-      if (idx !== -1) {
-        this.bufferQueue[idx].consumed = true;
-        return this.bufferQueue[idx].command;
-      }
-      return null;
-    }
-    const entry = this.bufferQueue.find((e) => !e.consumed);
-    if (entry) {
-      entry.consumed = true;
-      return entry.command;
-    }
-    return null;
+  take(canExecute: (command: BufferedCommand) => boolean): BufferedCommand | null {
+    const index = this.bufferQueue.findIndex((entry) => canExecute(entry.command));
+    if (index === -1) return null;
+    return this.bufferQueue.splice(index, 1)[0].command;
   }
 
   clear() {
-    this.bufferQueue = [];
+    this.bufferQueue.length = 0;
+    this.lastLeftTap = -Infinity;
+    this.lastRightTap = -Infinity;
   }
 }

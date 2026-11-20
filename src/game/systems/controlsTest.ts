@@ -1,3 +1,4 @@
+import type { FighterState } from "../combat/CharacterStateMachine";
 import type { Player } from "./Player";
 import { inputManager } from "../input/InputManager";
 import { useGameStore } from "./gameStore";
@@ -8,6 +9,7 @@ export type ControlsProbe = {
   getX: () => number;
   getY: () => number;
   getFacing: () => number;
+  getFighterState: () => FighterState;
   getGrounded: () => boolean;
   getMoveX: () => number;
   getEnabled: () => boolean;
@@ -37,6 +39,7 @@ export function attachControlsTest(player: Player, getEnemyCount: () => number) 
     getX: () => player.x,
     getY: () => player.y,
     getFacing: () => player.facing,
+    getFighterState: () => player.fsm.currentState,
     getGrounded: () => player.grounded,
     getMoveX: () => inputManager.snapshot().moveX,
     getEnabled: () => inputManager.enabled,

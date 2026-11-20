@@ -1,6 +1,6 @@
 import { getLevel, SOUTH_FLORIDA_LEVELS } from "../levels/LevelRegistry";
 import { useGameStore } from "../systems/gameStore";
-import { restartPlayScene } from "../runtime";
+import { startStage } from "../runtime";
 import { audioManager } from "../audio/AudioManager";
 import { ChevronRight, MapPin, RotateCcw, Sparkles, Trophy } from "lucide-react";
 
@@ -38,17 +38,13 @@ export function VictoryScreen() {
     }
     audioManager.unlock();
     audioManager.roundAnnounce();
-    useGameStore.getState().setCurrentLevel(nextLevelId);
-    useGameStore.getState().setScreen("play");
-    window.setTimeout(() => restartPlayScene(), 80);
+    startStage(nextLevelId);
   };
 
   const handleReplay = () => {
     audioManager.unlock();
     audioManager.roundAnnounce();
-    useGameStore.getState().resetRunStats();
-    useGameStore.getState().setScreen("play");
-    window.setTimeout(() => restartPlayScene(), 80);
+    startStage(currentLevelId);
   };
 
   return (

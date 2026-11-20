@@ -60,6 +60,8 @@ try {
       await activate(page.getByRole('button', {name:/fight in fort lauderdale/i}));
       await page.getByTestId('hud').waitFor();
       await page.waitForFunction(g => window.__playGeneration > g && window.__controlsTest?.getGrounded(), generation);
+      await holdInput('ShiftLeft', 'Guard / Parry', () => window.__controlsTest.getFighterState() === 'BLOCK_HIGH');
+      await page.waitForFunction(() => window.__controlsTest.getFighterState() === 'IDLE');
       const x = await page.evaluate(() => window.__controlsTest.getX());
       await holdInput('KeyD', 'Move right', x => window.__controlsTest.getX() > x + 30 && window.__controlsTest.getFacing() === 1, x);
       await page.waitForFunction(() => window.__controlsTest.getMoveX() === 0);

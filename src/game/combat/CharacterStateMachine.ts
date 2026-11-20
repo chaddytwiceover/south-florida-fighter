@@ -17,6 +17,7 @@ export type FighterState =
   | "BLOCK_HIGH"
   | "BLOCK_LOW"
   | "BLOCK_STUN"
+  | "PARRY_STARTUP"
   | "PARRY_ACTIVE"
   | "PARRY_SUCCESS"
   | "PARRY_RECOVERY"
@@ -32,8 +33,16 @@ export class CharacterStateMachine {
   stateFrames = 0;
 
   changeState(newState: FighterState): void {
-    if (this.currentState === "KO") return; // KO is terminal
-    this.currentState = newState;
+    if (this.currentState === "KO" || this.currentState === newState) return;
+    this.enter(newState);
+  }
+
+  reset(): void {
+    this.enter("IDLE");
+  }
+
+  private enter(state: FighterState): void {
+    this.currentState = state;
     this.stateTime = 0;
     this.stateFrames = 0;
   }
@@ -73,8 +82,10 @@ export class CharacterStateMachine {
 
   isParrying(): boolean {
     return (
+      this.currentState === "PARRY_STARTUP" ||
       this.currentState === "PARRY_ACTIVE" ||
-      this.currentState === "PARRY_SUCCESS"
+      this.currentState === "PARRY_SUCCESS" ||
+      this.currentState === "PARRY_RECOVERY"
     );
   }
 

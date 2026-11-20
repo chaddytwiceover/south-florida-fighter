@@ -49,7 +49,7 @@ export const COMBAT = {
   playerIFramesMs: 780,
   enemyIFramesMs: 170,
   shake: 0.007,
-  comboWindow: 0.46,
+  comboWindow: 1.25,
 } as const;
 
 export const DEBUG_QUERY = "debug";

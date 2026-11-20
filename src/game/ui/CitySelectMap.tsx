@@ -1,6 +1,6 @@
 import { SOUTH_FLORIDA_LEVELS, getLevel } from "../levels/LevelRegistry";
 import { useGameStore } from "../systems/gameStore";
-import { restartPlayScene } from "../runtime";
+import { startStage } from "../runtime";
 import { audioManager } from "../audio/AudioManager";
 import { cn } from "@/lib/utils";
 import { ChevronRight, MapPin, Play, Sparkles, Trophy, Zap } from "lucide-react";
@@ -14,20 +14,10 @@ export function CitySelectMap() {
     useGameStore.getState().setCurrentLevel(levelId);
   };
 
-  const handleDeploy = () => {
-    audioManager.unlock();
-    audioManager.roundAnnounce();
-    useGameStore.getState().resetRunStats();
-    useGameStore.getState().setScreen("play");
-    window.setTimeout(() => restartPlayScene(), 80);
-  };
-
   const handleDirectLaunch = (levelId: string) => {
     audioManager.unlock();
     audioManager.roundAnnounce();
-    useGameStore.getState().setCurrentLevel(levelId);
-    useGameStore.getState().setScreen("play");
-    window.setTimeout(() => restartPlayScene(), 80);
+    startStage(levelId);
   };
 
   return (
@@ -142,7 +132,7 @@ export function CitySelectMap() {
         {/* Deploy Button */}
         <button
           type="button"
-          onClick={handleDeploy}
+          onClick={() => handleDirectLaunch(selectedLevel.id)}
           className="flex h-13 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-coral via-sand to-gold px-8 font-sans text-base font-black uppercase tracking-[0.18em] text-ink shadow-[0_0_25px_rgba(232,93,76,0.6)] transition-all hover:scale-[1.01] active:scale-[0.98]"
         >
           <Play className="size-5 fill-ink" />

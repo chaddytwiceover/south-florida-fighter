@@ -4,9 +4,9 @@ import { Play, Sparkles, Shield, Zap, MapPin } from "lucide-react";
 
 const TIPS = [
   "Tip: Cancel Normal Attacks (Light/Heavy/Kick) into Specials or Super Finishers on hit!",
-  "Tip: Tap Parry (F / Shield) right before an impact for a Frame-1 Just Parry and +25 KI!",
+  "Tip: Tap Parry (F / Shield) just before impact to gain 25 KI on a successful parry.",
   "Tip: Double-tap Forward or press Dash (E) to phase through attacks with invulnerability!",
-  "Tip: Hold Guard (S / Shift) to block overhead strikes; crouch guard to block low sweeps!",
+  "Tip: Hold Shift or the Shield button to guard. On keyboard, hold S to block low attacks.",
   "Tip: At 100% KI, unleash your Unblockable Seismic Crown Slam (P / 4) for massive damage!",
   "Tip: Master all 5 South Florida city arenas from Fort Lauderdale to Miami Beach!",
 ];
