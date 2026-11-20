@@ -1,4 +1,5 @@
 import type { Game } from "phaser";
+import { useGameStore } from "./systems/gameStore";
 
 let current: Game | null = null;
 let restartTimer: number | null = null;
@@ -19,4 +20,10 @@ export function restartPlayScene() {
     const scene = current?.scene.getScene("play");
     if (scene) scene.scene.restart();
   }, 50);
+}
+
+export function startStage(levelId: string) {
+  useGameStore.getState().setCurrentLevel(levelId);
+  useGameStore.setState({ screen: "play", playing: false });
+  restartPlayScene();
 }

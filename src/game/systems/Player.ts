@@ -2,7 +2,6 @@ import type { CharacterData } from "../characters/CharacterData";
 import type { CombatSystem } from "../combat/CombatSystem";
 import {
   CharacterStateMachine,
-  type FighterState,
 } from "../combat/CharacterStateMachine";
 import {
   type CharacterFrameKit,
@@ -63,13 +62,12 @@ export class Player {
   private currentAttack: AttackFrameData | null = null;
   private attackPhase: "startup" | "active" | "recovery" | null = null;
   private attackPhaseTimer = 0;
-  private hitHasConnected = false;
 
   private iFrames = 0;
   private stunTimer = 0;
   private dashTimer = 0;
   private parryTimer = 0;
-  private parryWindow = 0;
+  private lowGuard = false;
   private recovering = false;
 
   constructor(
@@ -142,25 +140,19 @@ export class Player {
     }
 
     // 1. Check Just-Parry
-    if (this.parryWindow > 0) {
+    if (this.fsm.currentState === "PARRY_ACTIVE") {
       this.fsm.changeState("PARRY_SUCCESS");
-      this.parryTimer = 0.28;
+      this.parryTimer = this.frameKit.parry.advantageFrames / 60;
       this.iFrames = 0.35;
       this.clearAttack();
       return { type: "parry" };
     }
 
     // 2. Check Guard / Block
-    const isGuarding =
-      this.fsm.currentState === "BLOCK_HIGH" ||
-      this.fsm.currentState === "BLOCK_LOW";
-
-    if (isGuarding && attackLevel !== "unblockable") {
-      const isCrouchGuarding = this.fsm.currentState === "BLOCK_LOW";
-      // High/Low mixup: Overhead beats low block, Low beats high block
+    if (this.fsm.isBlocking() && attackLevel !== "unblockable") {
       const guardBroken =
-        (attackLevel === "overhead" && isCrouchGuarding) ||
-        (attackLevel === "low" && !isCrouchGuarding);
+        (attackLevel === "overhead" && this.lowGuard) ||
+        (attackLevel === "low" && !this.lowGuard);
 
       if (!guardBroken) {
         const store = useGameStore.getState();
@@ -170,6 +162,7 @@ export class Player {
         this.stunTimer = 0.16;
         const body = this.sprite.body as Phaser.Physics.Arcade.Body;
         body.setVelocity(knockbackX * 0.4, 0);
+        if (health === 0) this.knockOut();
         return { type: "block" };
       }
     }
@@ -181,6 +174,7 @@ export class Player {
 
     this.iFrames = COMBAT.playerIFramesMs / 1000;
     this.stunTimer = 0.34;
+    this.dashTimer = 0;
     this.fsm.changeState("HITSTUN");
     this.clearAttack();
 
@@ -200,6 +194,14 @@ export class Player {
   }
 
   update(actions: GameActions, dt: number) {
+    this.inputBuffer.push(actions.raw, this.facing, dt);
+    if (actions.jumpPressed) {
+      this.buffer = JUMP.bufferMs / 1000;
+      this.jumpHeld = true;
+    }
+    if (!actions.jump) this.jumpHeld = false;
+    if (dt === 0) return;
+
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;
     const vyNow = body.velocity.y;
     const onFloor =
@@ -209,9 +211,6 @@ export class Player {
         this.sprite.y >= GROUND_Y - 4 &&
         this.sprite.y <= GROUND_Y + 18);
     this.grounded = onFloor;
-
-    // Push into input buffer
-    this.inputBuffer.push(actions.raw, this.facing);
 
     // Update timers & iFrames
     if (this.iFrames > 0) {
@@ -229,20 +228,12 @@ export class Player {
 
     if (this.stunTimer > 0) {
       this.stunTimer = Math.max(0, this.stunTimer - dt);
-      if (this.stunTimer === 0 && this.fsm.currentState === "HITSTUN") {
+      if (this.stunTimer === 0 && !this.recovering) {
         this.fsm.changeState(onFloor ? "IDLE" : "JUMP_FALL");
       }
     }
 
-    if (this.parryWindow > 0) {
-      this.parryWindow = Math.max(0, this.parryWindow - dt);
-    }
-    if (this.parryTimer > 0) {
-      this.parryTimer = Math.max(0, this.parryTimer - dt);
-      if (this.parryTimer === 0 && this.fsm.isParrying()) {
-        this.fsm.changeState(onFloor ? "IDLE" : "JUMP_FALL");
-      }
-    }
+    this.updateParry(dt, onFloor);
 
     if (this.dashTimer > 0) {
       this.dashTimer = Math.max(0, this.dashTimer - dt);
@@ -255,17 +246,12 @@ export class Player {
     if (onFloor) this.coyote = JUMP.coyoteMs / 1000;
     else this.coyote = Math.max(0, this.coyote - dt);
 
-    if (actions.jumpPressed) this.buffer = JUMP.bufferMs / 1000;
-    else this.buffer = Math.max(0, this.buffer - dt);
+    if (!actions.jumpPressed) this.buffer = Math.max(0, this.buffer - dt);
 
-    if (actions.jumpPressed) this.jumpHeld = true;
-    if (!actions.jump) this.jumpHeld = false;
-
-    // Movement & physics update
     this.fsm.tick(dt);
-    this.updateMovement(actions, onFloor, dt);
     this.updateAttackPhase(dt);
-    this.processInputQueue(actions);
+    this.processInputQueue();
+    this.updateMovement(actions, onFloor, dt);
 
     useGameStore.getState().rechargeKi(9 * dt);
     this.updateAnimation(onFloor);
@@ -288,11 +274,8 @@ export class Player {
 
     if (!isDashing && !isStunned && !isAttacking && !isParrying) {
       if (actions.guard) {
-        if (actions.moveY > 0.3) {
-          this.fsm.changeState("BLOCK_LOW");
-        } else {
-          this.fsm.changeState("BLOCK_HIGH");
-        }
+        this.lowGuard = actions.moveY > 0.3;
+        this.fsm.changeState(this.lowGuard ? "BLOCK_LOW" : "BLOCK_HIGH");
         vx = approach(vx, 0, friction * dt);
       } else {
         if (Math.abs(actions.moveX) > 0.12) {
@@ -300,9 +283,7 @@ export class Player {
           if (actions.moveX > 0.15) this.facing = 1;
           else if (actions.moveX < -0.15) this.facing = -1;
 
-          if (onFloor) {
-            this.fsm.changeState(actions.moveX * this.facing > 0 ? "WALK_FWD" : "WALK_BACK");
-          }
+          if (onFloor) this.fsm.changeState("WALK_FWD");
         } else {
           vx = approach(vx, 0, friction * dt);
           if (onFloor && this.fsm.currentState !== "IDLE") {
@@ -368,35 +349,23 @@ export class Player {
     this.wasGrounded = onFloor;
   }
 
-  private processInputQueue(actions: GameActions) {
+  private processInputQueue() {
     if (this.stunTimer > 0 || this.recovering) return;
 
-    const cmd = this.inputBuffer.peek();
+    const neutral = this.fsm.isNeutral();
+    const canCancel = this.fsm.canCancel();
+    const cmd = this.inputBuffer.take((command) => {
+      if (command === "PARRY") return neutral || this.fsm.isBlocking();
+      return neutral || (canCancel && this.canCancelCurrentAttack(command));
+    });
     if (!cmd) return;
 
-    // Check Parry Trigger
-    if (cmd === "PARRY" && this.fsm.isNeutral()) {
-      this.inputBuffer.consume("PARRY");
+    if (cmd === "PARRY") {
       this.startParry();
-      return;
-    }
-
-    // Check Dash Triggers
-    if (
-      (cmd === "DASH_FWD" || cmd === "DASH_BACK") &&
-      this.fsm.isNeutral()
-    ) {
-      this.inputBuffer.consume(cmd);
+    } else if (cmd === "DASH_FWD" || cmd === "DASH_BACK") {
+      if (this.currentAttack) this.clearAttack();
       this.startDash(cmd === "DASH_FWD");
-      return;
-    }
-
-    // Check Attack Triggers & Cancel Rules
-    const canStartAttack =
-      this.fsm.isNeutral() ||
-      (this.fsm.canCancel() && this.canCancelCurrentAttack(cmd));
-
-    if (canStartAttack) {
+    } else {
       this.executeAttackCommand(cmd);
     }
   }
@@ -462,7 +431,6 @@ export class Player {
       return;
     }
 
-    this.inputBuffer.consume(cmd);
     if (attackData.kiCost) {
       store.spendKi(attackData.kiCost);
       store.gainXp(15);
@@ -471,7 +439,6 @@ export class Player {
     this.currentAttack = attackData;
     this.attackPhase = "startup";
     this.attackPhaseTimer = attackData.startupFrames / 60;
-    this.hitHasConnected = false;
     this.fsm.changeState("ATTACK_STARTUP");
 
     if (attackData.iFrames) {
@@ -584,13 +551,26 @@ export class Player {
   }
 
   private startParry() {
-    this.fsm.changeState("PARRY_ACTIVE");
-    this.parryWindow = this.frameKit.parry.activeFrames / 60;
-    this.parryTimer =
-      (this.frameKit.parry.activeFrames + this.frameKit.parry.recoveryFrames) /
-      60;
+    const { startupFrames, activeFrames, recoveryFrames } = this.frameKit.parry;
+    this.fsm.changeState(startupFrames ? "PARRY_STARTUP" : "PARRY_ACTIVE");
+    this.parryTimer = (startupFrames + activeFrames + recoveryFrames) / 60;
     flashSprite(this.sprite, 0x00ffff, 90);
     audioManager.swing(2.0);
+  }
+
+  private updateParry(dt: number, onFloor: boolean) {
+    if (!this.fsm.isParrying()) return;
+    this.parryTimer = Math.max(0, this.parryTimer - dt);
+    if (this.parryTimer === 0) {
+      this.fsm.changeState(onFloor ? "IDLE" : "JUMP_FALL");
+    } else if (this.fsm.currentState !== "PARRY_SUCCESS") {
+      const { activeFrames, recoveryFrames } = this.frameKit.parry;
+      if (this.parryTimer <= recoveryFrames / 60) {
+        this.fsm.changeState("PARRY_RECOVERY");
+      } else if (this.parryTimer <= (activeFrames + recoveryFrames) / 60) {
+        this.fsm.changeState("PARRY_ACTIVE");
+      }
+    }
   }
 
   private startDash(forward: boolean) {
@@ -618,8 +598,11 @@ export class Player {
   private knockOut() {
     this.recovering = true;
     this.clearAttack();
+    this.inputBuffer.clear();
+    this.dashTimer = 0;
     this.fsm.changeState("KO");
     this.stunTimer = 1.2;
+    useGameStore.getState().resetCombo();
     useGameStore.setState({ flash: "K.O. - RECOVERING" });
     audioManager.defeat();
 
@@ -628,11 +611,18 @@ export class Player {
       this.sprite.setPosition(this.spawn.x, this.spawn.y);
       const body = this.sprite.body as Phaser.Physics.Arcade.Body;
       body.setVelocity(0, 0);
+      body.updateFromGameObject();
+      this.inputBuffer.clear();
+      this.coyote = 0;
+      this.buffer = 0;
+      this.jumpHeld = false;
+      this.jumping = false;
+      this.wasGrounded = false;
       useGameStore.getState().setHealth(this.character.health);
       this.iFrames = 1.5;
       this.stunTimer = 0;
       this.recovering = false;
-      this.fsm.changeState("IDLE");
+      this.fsm.reset();
       useGameStore.setState({ flash: "" });
     });
   }

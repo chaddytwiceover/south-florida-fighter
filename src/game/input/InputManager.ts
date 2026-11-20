@@ -682,6 +682,7 @@ class InputManagerImpl {
     const guard =
       this.downAction("guard") ||
       this.touchGuard ||
+      this.touchParry ||
       this.gamepadButton(this.settings.gamepad.guard);
     const parry =
       this.downAction("parry") ||

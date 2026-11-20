@@ -56,7 +56,7 @@ export function TitleOverlay() {
         </div>
 
         <p className="mx-auto mt-2 max-w-sm font-sans text-xs leading-relaxed text-muted">
-          Fight across Fort Lauderdale, Tampa, Palm Beach, Miami, and Miami Beach. Master frame-1 parries, launcher air juggles, and seismic finishers.
+          Fight across Fort Lauderdale, Tampa, Palm Beach, Miami, and Miami Beach. Master timed parries, launcher air juggles, and seismic finishers.
         </p>
 
         {/* Enter Circuit Button */}

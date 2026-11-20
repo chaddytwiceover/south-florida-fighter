@@ -43,7 +43,6 @@ type GameStore = {
   addComboHit: () => void;
   resetCombo: () => void;
   setFlash: (flash: string) => void;
-  resetRunStats: () => void;
 };
 
 const ALL_LEVEL_IDS = ["fort-lauderdale", "tampa", "palm-beach", "miami", "miami-beach"];
@@ -161,15 +160,4 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   resetCombo: () => set({ comboHits: 0 }),
-
-  resetRunStats: () =>
-    set({
-      health: initialChar.health,
-      energy: 50,
-      kos: 0,
-      comboHits: 0,
-      maxCombo: 0,
-      currentMove: "",
-      flash: "",
-    }),
 }));

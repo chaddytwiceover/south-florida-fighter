@@ -188,6 +188,8 @@ export class PlayScene extends Phaser.Scene {
       if (playing) this.scene.resume();
       else this.scene.pause();
     };
+    const store = useGameStore.getState();
+    store.setPlaying(store.screen === "play");
     const unsubscribe = useGameStore.subscribe((state, previous) => {
       if (state.playing !== previous.playing) syncPlaying(state.playing);
     });
@@ -206,6 +208,7 @@ export class PlayScene extends Phaser.Scene {
     this.isStageCleared = true;
 
     const store = useGameStore.getState();
+    const clearedLevelId = store.currentLevelId;
     store.setFlash("STAGE COMPLETE!");
     audioManager.roundAnnounce();
 
@@ -219,7 +222,7 @@ export class PlayScene extends Phaser.Scene {
     );
 
     this.time.delayedCall(1200, () => {
-      store.markLevelComplete(store.currentLevelId);
+      store.markLevelComplete(clearedLevelId);
       store.setScreen("victory");
     });
   }
@@ -246,11 +249,13 @@ export class PlayScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number) {
+    if (!useGameStore.getState().playing || this.isStageCleared) return;
     const dt = Math.min(delta / 1000, 0.1);
     const actions = inputManager.poll();
-    if (actions.pausePressed && useGameStore.getState().playing) {
+    if (actions.pausePressed) {
       inputManager.enabled = false;
       useGameStore.getState().setScreen("city-select");
+      return;
     }
 
     this.stepSimulation(actions, dt);

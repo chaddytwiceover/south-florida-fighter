@@ -28,7 +28,7 @@ export class Enemy {
   private patrolDir = 1;
   private hpBg: Phaser.GameObjects.Rectangle;
   private hpFill: Phaser.GameObjects.Rectangle;
-  private struck = false;
+  private attackWindup: Phaser.Time.TimerEvent | null = null;
   private phase2 = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, data: EnemyData) {
@@ -90,17 +90,17 @@ export class Enemy {
     return this.sprite.y;
   }
 
-  takeHit(damage: number, knockbackX: number, knockbackY = -80) {
+  takeHit(damage: number, knockbackX: number, knockbackY = -80, breaksArmor = damage >= 45) {
     if (this.dead || this.iFrames > 0) return false;
     this.health = Math.max(0, this.health - damage);
     this.iFrames = this.data.behaviorType === "boss" ? 0.25 : 0.17;
 
-    const isSuperHit = damage >= 45;
-    const resistHitStun = this.data.hasSuperArmor && !isSuperHit;
+    const resistHitStun = this.data.hasSuperArmor && !breaksArmor;
 
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;
 
     if (!resistHitStun) {
+      this.cancelAttackWindup();
       this.hurtLock = this.data.behaviorType === "boss" ? 0.18 : 0.28;
       this.attackLock = 0;
       this.state = "hurt";
@@ -132,6 +132,7 @@ export class Enemy {
 
     if (this.data.behaviorType === "boss" && this.health <= this.data.health * 0.5 && !this.phase2 && !this.dead) {
       this.phase2 = true;
+      this.cancelAttackWindup();
       this.hurtLock = 1.0;
       this.attackLock = 0;
       this.state = "attack";
@@ -159,9 +160,9 @@ export class Enemy {
     }
 
     const hpOffset = this.data.behaviorType === "boss" ? -145 : -128;
-    this.hpBg.setPosition(this.x, this.y + hpOffset);
+    if (!this.dead) this.hpBg.setPosition(this.x, this.y + hpOffset);
     const hpW = this.data.behaviorType === "boss" ? 70 : 42;
-    this.hpFill.setPosition(this.x - hpW / 2, this.y + hpOffset);
+    if (!this.dead) this.hpFill.setPosition(this.x - hpW / 2, this.y + hpOffset);
 
     if (this.iFrames > 0) this.iFrames = Math.max(0, this.iFrames - dt);
     if (this.hurtLock > 0) this.hurtLock = Math.max(0, this.hurtLock - dt);
@@ -258,17 +259,18 @@ export class Enemy {
     this.state = "attack";
     this.attackLock = this.data.attackDurationMs / 1000;
     this.cooldown = this.data.attackCooldownMs / 1000;
-    this.struck = false;
     this.sprite.setFlipX(this.facing < 0);
     this.playClip("attack");
 
     const isBoss = this.data.behaviorType === "boss";
-    this.sprite.scene.time.delayedCall(this.data.attackDelayMs, () => {
-      if (this.dead || this.hurtLock > 0) return;
+    const reach = isBoss ? 58 : 42;
+    this.attackWindup = this.sprite.scene.time.delayedCall(this.data.attackDelayMs, () => {
+      this.attackWindup = null;
+      if (this.dead || !this.sprite.active) return;
       audioManager.swing(isBoss ? 0.7 : 1.1);
       const effectiveDamage = this.phase2 ? this.data.damage * 1.5 : this.data.damage;
       combat.spawnHit({
-        x: this.x + this.facing * (isBoss ? 58 : 42),
+        x: this.x + this.facing * reach,
         y: this.y - 48,
         width: isBoss ? 110 : 78,
         height: isBoss ? 96 : 74,
@@ -278,15 +280,20 @@ export class Enemy {
         level: isBoss ? "overhead" : "mid",
         durationMs: 140,
         follow: this.sprite,
-        followOffsetX: this.facing * (isBoss ? 58 : 42),
+        followOffsetX: reach,
         followOffsetY: -48,
       });
     });
   }
 
+  private cancelAttackWindup() {
+    this.attackWindup?.remove(false);
+    this.attackWindup = null;
+  }
+
   private playClip(action: "idle" | "run" | "attack" | "hurt") {
     const clip = this.data.animationSet[action];
-    if (this.sprite.anims.currentAnim?.key === clip.key) return;
+    if (this.sprite.anims.currentAnim?.key === clip.key && this.sprite.anims.isPlaying) return;
     this.sprite.anims.stop();
     setSpriteClipFrame(this.sprite, clip, 0);
     this.sprite.play(clip.key, true);
@@ -300,6 +307,7 @@ export class Enemy {
 
   private defeat() {
     this.dead = true;
+    this.cancelAttackWindup();
     this.state = "dead";
     this.hpBg.destroy();
     this.hpFill.destroy();
