@@ -13,7 +13,6 @@ export type PlatformDef = {
   x: number;
   y: number;
   width: number;
-  height: number;
 };
 
 export type EnemySpawn = {
@@ -30,6 +29,7 @@ export type LevelDef = {
   worldHeight: number;
   groundY: number;
   spawn: { x: number; y: number };
+  platformArt: string;
   platforms: PlatformDef[];
   props: PropPlacement[];
   enemies: EnemySpawn[];
@@ -53,16 +53,18 @@ export const FORT_LAUDERDALE: LevelDef = {
   worldHeight: WORLD_HEIGHT,
   groundY: GROUND_Y,
   spawn: { x: 220, y: GROUND_Y },
+  platformArt: "/game/backgrounds/fort-lauderdale/platform.webp",
   platforms: [
-    { x: 1480, y: GROUND_Y - 110, width: 220, height: 22 },
-    { x: 2180, y: GROUND_Y - 200, width: 180, height: 22 },
-    { x: 2960, y: GROUND_Y - 110, width: 220, height: 22 },
+    { x: 490, y: GROUND_Y - 62, width: 310 },
+    { x: 1770, y: GROUND_Y - 72, width: 280 },
+    { x: 2070, y: GROUND_Y - 134, width: 234 },
+    { x: 3510, y: GROUND_Y - 78, width: 350 },
   ],
   props: [
-    { key: "beach_boards", x: 390, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "beach_boards", x: 374, y: GROUND_Y - 62, scale: 1, depth: 7 },
     { key: "beach_chair", x: 780, y: GROUND_Y + 2, scale: 1, depth: 7 },
     { key: "beach_boards", x: 1480, y: GROUND_Y + 2, scale: 1, depth: 7 },
-    { key: "beach_chair", x: 2410, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "beach_chair", x: 2135, y: GROUND_Y - 134, scale: 1, depth: 7 },
     { key: "beach_boards", x: 3260, y: GROUND_Y + 2, scale: 1, depth: 7 },
     { key: "beach_chair", x: 4070, y: GROUND_Y + 2, scale: 1, depth: 7 },
   ],
@@ -90,16 +92,18 @@ export const TAMPA: LevelDef = {
   worldHeight: WORLD_HEIGHT,
   groundY: GROUND_Y,
   spawn: { x: 220, y: GROUND_Y },
+  platformArt: "/game/backgrounds/tampa/platform.webp",
   platforms: [
-    { x: 1380, y: GROUND_Y - 120, width: 240, height: 24 },
-    { x: 2050, y: GROUND_Y - 210, width: 200, height: 24 },
-    { x: 2800, y: GROUND_Y - 130, width: 260, height: 24 },
+    { x: 510, y: GROUND_Y - 72, width: 344 },
+    { x: 1815, y: GROUND_Y - 68, width: 250 },
+    { x: 2110, y: GROUND_Y - 132, width: 284 },
+    { x: 3340, y: GROUND_Y - 82, width: 330 },
   ],
   props: [
-    { key: "ybor_lamp", x: 410, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "ybor_lamp", x: 372, y: GROUND_Y - 72, scale: 1, depth: 7 },
     { key: "ybor_crate", x: 830, y: GROUND_Y + 2, scale: 1, depth: 7 },
     { key: "ybor_lamp", x: 1510, y: GROUND_Y + 2, scale: 1, depth: 7 },
-    { key: "ybor_crate", x: 2370, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "ybor_crate", x: 2200, y: GROUND_Y - 132, scale: 1, depth: 7 },
     { key: "ybor_lamp", x: 3160, y: GROUND_Y + 2, scale: 1, depth: 7 },
     { key: "ybor_crate", x: 4030, y: GROUND_Y + 2, scale: 1, depth: 7 },
   ],
@@ -126,16 +130,18 @@ export const PALM_BEACH: LevelDef = {
   worldHeight: WORLD_HEIGHT,
   groundY: GROUND_Y,
   spawn: { x: 220, y: GROUND_Y },
+  platformArt: "/game/backgrounds/palm-beach/platform.webp",
   platforms: [
-    { x: 1500, y: GROUND_Y - 110, width: 230, height: 22 },
-    { x: 2250, y: GROUND_Y - 190, width: 200, height: 22 },
-    { x: 3100, y: GROUND_Y - 120, width: 250, height: 22 },
+    { x: 490, y: GROUND_Y - 58, width: 280 },
+    { x: 1520, y: GROUND_Y - 70, width: 300 },
+    { x: 1820, y: GROUND_Y - 126, width: 260 },
+    { x: 3370, y: GROUND_Y - 64, width: 340 },
   ],
   props: [
-    { key: "worth_urn", x: 400, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "worth_urn", x: 378, y: GROUND_Y - 58, scale: 1, depth: 7 },
     { key: "worth_fountain", x: 840, y: GROUND_Y + 2, scale: 1, depth: 7 },
     { key: "worth_urn", x: 1500, y: GROUND_Y + 2, scale: 1, depth: 7 },
-    { key: "worth_fountain", x: 2430, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "worth_fountain", x: 1860, y: GROUND_Y - 126, scale: 1, depth: 7 },
     { key: "worth_urn", x: 3220, y: GROUND_Y + 2, scale: 1, depth: 7 },
     { key: "worth_fountain", x: 4030, y: GROUND_Y + 2, scale: 1, depth: 7 },
   ],
@@ -162,16 +168,18 @@ export const MIAMI: LevelDef = {
   worldHeight: WORLD_HEIGHT,
   groundY: GROUND_Y,
   spawn: { x: 220, y: GROUND_Y },
+  platformArt: "/game/backgrounds/miami/platform.webp",
   platforms: [
-    { x: 1400, y: GROUND_Y - 120, width: 240, height: 24 },
-    { x: 2150, y: GROUND_Y - 210, width: 190, height: 24 },
-    { x: 2950, y: GROUND_Y - 130, width: 250, height: 24 },
+    { x: 492, y: GROUND_Y - 68, width: 312 },
+    { x: 1950, y: GROUND_Y - 74, width: 250 },
+    { x: 2220, y: GROUND_Y - 138, width: 228 },
+    { x: 3450, y: GROUND_Y - 80, width: 314 },
   ],
   props: [
-    { key: "wynwood_hydrant_new", x: 420, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "wynwood_hydrant_new", x: 306, y: GROUND_Y + 2, scale: 1, depth: 7 },
     { key: "wynwood_paint", x: 810, y: GROUND_Y + 2, scale: 1, depth: 7 },
     { key: "wynwood_hydrant_new", x: 1480, y: GROUND_Y + 2, scale: 1, depth: 7 },
-    { key: "wynwood_paint", x: 2240, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "wynwood_paint", x: 2298, y: GROUND_Y - 138, scale: 1, depth: 7 },
     { key: "wynwood_hydrant_new", x: 2990, y: GROUND_Y + 2, scale: 1, depth: 7 },
     { key: "wynwood_paint", x: 3980, y: GROUND_Y + 2, scale: 1, depth: 7 },
   ],
@@ -199,16 +207,18 @@ export const MIAMI_BEACH: LevelDef = {
   worldHeight: WORLD_HEIGHT,
   groundY: GROUND_Y,
   spawn: { x: 220, y: GROUND_Y },
+  platformArt: "/game/backgrounds/miami-beach/platform.webp",
   platforms: [
-    { x: 1450, y: GROUND_Y - 110, width: 220, height: 22 },
-    { x: 2100, y: GROUND_Y - 200, width: 180, height: 22 },
-    { x: 2850, y: GROUND_Y - 110, width: 220, height: 22 },
+    { x: 510, y: GROUND_Y - 58, width: 340 },
+    { x: 2140, y: GROUND_Y - 64, width: 310 },
+    { x: 2470, y: GROUND_Y - 120, width: 280 },
+    { x: 3480, y: GROUND_Y - 72, width: 338 },
   ],
   props: [
-    { key: "ocean_bollard", x: 410, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "ocean_bollard", x: 378, y: GROUND_Y - 58, scale: 1, depth: 7 },
     { key: "ocean_planter", x: 810, y: GROUND_Y + 2, scale: 1, depth: 7 },
     { key: "ocean_bollard", x: 1510, y: GROUND_Y + 2, scale: 1, depth: 7 },
-    { key: "ocean_planter", x: 2350, y: GROUND_Y + 2, scale: 1, depth: 7 },
+    { key: "ocean_planter", x: 2560, y: GROUND_Y - 120, scale: 1, depth: 7 },
     { key: "ocean_bollard", x: 3220, y: GROUND_Y + 2, scale: 1, depth: 7 },
     { key: "ocean_planter", x: 4000, y: GROUND_Y + 2, scale: 1, depth: 7 },
   ],

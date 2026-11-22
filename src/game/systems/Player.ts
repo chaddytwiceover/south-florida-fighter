@@ -17,13 +17,13 @@ import {
 } from "../combat/Juice";
 import {
   COMBAT,
-  GROUND_Y,
   JUMP,
   MOVE,
   PLAYER_BODY,
   PLAYER_DISPLAY_SCALE,
   WORLD_WIDTH,
 } from "../config";
+import { surfaceBelow, type StageSurfaces } from "../levels/surfaces";
 import type { GameActions } from "../input/InputManager";
 import { InputBuffer, type BufferedCommand } from "../input/InputBuffer";
 import { playClone, playSlash, playWave } from "./CombatFx";
@@ -77,6 +77,7 @@ export class Player {
     x: number,
     y: number,
     character: CharacterData,
+    private readonly stage: StageSurfaces,
   ) {
     this.character = character;
     this.frameKit = getFrameKit(character.id);
@@ -201,13 +202,8 @@ export class Player {
 
   update(actions: GameActions, dt: number) {
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;
-    const vyNow = body.velocity.y;
-    const onFloor =
-      body.blocked.down ||
-      body.touching.down ||
-      (vyNow >= -12 &&
-        this.sprite.y >= GROUND_Y - 4 &&
-        this.sprite.y <= GROUND_Y + 18);
+    const onFloor = body.velocity.y === 0 &&
+      this.y === surfaceBelow(this.stage, this.x, this.y);
     this.grounded = onFloor;
 
     // Push into input buffer
@@ -348,24 +344,26 @@ export class Player {
     if (Math.abs(vy) < JUMP.apexWindow) gravity *= JUMP.apexHang;
     vy = Math.min(vy + gravity * dt, JUMP.terminal);
 
-    if (onFloor) {
-      if (vy > 0) vy = 0;
-      this.jumping = false;
-      if (!this.wasGrounded && this.vy > 120) {
+    const surface = surfaceBelow(this.stage, this.x, this.y);
+    const nextY = this.y + vy * dt;
+    this.grounded = vy >= 0 && nextY >= surface;
+    if (this.grounded) {
+      this.sprite.y = surface;
+      if (!this.wasGrounded && vy > 120) {
         audioManager.land();
         applySquashStretch(this.sprite, PLAYER_DISPLAY_SCALE, PLAYER_DISPLAY_SCALE, 1.3, 0.75, 100);
       }
+      vy = 0;
+      this.jumping = false;
     } else {
+      this.sprite.y = nextY;
       if (vy > 0 && this.fsm.currentState === "JUMP_RISE") {
         this.fsm.changeState("JUMP_FALL");
       }
     }
-
-    this.sprite.y += vy * dt;
-    if (onFloor && this.sprite.y > GROUND_Y) this.sprite.y = GROUND_Y;
     body.setVelocityY(vy);
     body.updateFromGameObject();
-    this.wasGrounded = onFloor;
+    this.wasGrounded = this.grounded;
   }
 
   private processInputQueue(actions: GameActions) {

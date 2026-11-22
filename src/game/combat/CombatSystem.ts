@@ -1,3 +1,4 @@
+import type { StageSurfaces } from "../levels/surfaces";
 import { audioManager } from "../audio/AudioManager";
 import { getCharacter } from "../characters/CharacterData";
 import { COMBAT, GAME_WIDTH } from "../config";
@@ -101,8 +102,8 @@ export class CombatSystem {
     player.bindCombat(this);
   }
 
-  spawnEnemy(id: string, x: number, y: number) {
-    const enemy = new Enemy(this.scene, x, y, getEnemy(id));
+  spawnEnemy(id: string, x: number, y: number, stage: StageSurfaces) {
+    const enemy = new Enemy(this.scene, x, y, getEnemy(id), stage);
     this.enemies.push(enemy);
     this.enemySprites.add(enemy.sprite);
     return enemy;

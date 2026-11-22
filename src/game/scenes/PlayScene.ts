@@ -24,6 +24,7 @@ import {
   createOptimizedAnimation,
   enforceSteadyFrameRate,
   groundTextureKey,
+  platformTextureKey,
   initPerformancePools,
   preloadFightBackground,
   preloadTextureAtlases,
@@ -35,7 +36,6 @@ export class PlayScene extends Phaser.Scene {
   private player!: Player;
   private combat!: CombatSystem;
   private far!: Phaser.GameObjects.TileSprite;
-  private platforms!: Phaser.Physics.Arcade.StaticGroup;
   private bgScale = 1;
   private fpsTimer = 0;
   private isStageCleared = false;
@@ -98,28 +98,12 @@ export class PlayScene extends Phaser.Scene {
         .setDepth(prop.depth);
     }
 
-    // Platforms & Collision Floor
-    this.platforms = this.physics.add.staticGroup();
-    const floor = this.add
-      .rectangle(0, level.groundY, WORLD_WIDTH + 40, 72, 0x000000, 0)
-      .setOrigin(0, 0)
-      .setVisible(false);
-    this.physics.add.existing(floor, true);
-    const floorBody = floor.body as Phaser.Physics.Arcade.StaticBody;
-    floorBody.updateFromGameObject();
-    this.platforms.add(floor);
-
     for (const pad of level.platforms) {
-      const visual = this.add
-        .tileSprite(pad.x, pad.y, pad.width, pad.height, groundTexture)
+      this.add.image(pad.x, pad.y, platformTextureKey(level.id))
         .setOrigin(0.5, 0)
+        .setDisplaySize(pad.width, level.groundY - pad.y)
         .setDepth(9);
-      this.physics.add.existing(visual, true);
-      const padBody = visual.body as Phaser.Physics.Arcade.StaticBody;
-      padBody.updateFromGameObject();
-      this.platforms.add(visual);
     }
-    this.platforms.refresh();
 
     // Create Animations
     for (const clip of allRosterClips()) {
@@ -131,15 +115,13 @@ export class PlayScene extends Phaser.Scene {
 
     // Player Spawn
     const character = getCharacter(useGameStore.getState().characterId);
-    this.player = new Player(this, level.spawn.x, level.spawn.y, character);
-    this.physics.add.collider(this.player.sprite, this.platforms);
+    this.player = new Player(this, level.spawn.x, level.spawn.y, character, level);
 
     // Combat System & Enemies Spawn
     this.combat = new CombatSystem(this, debug);
     this.combat.bindPlayer(this.player);
     for (const spawn of level.enemies) {
-      const enemy = this.combat.spawnEnemy(spawn.id, spawn.x, level.groundY);
-      this.physics.add.collider(enemy.sprite, this.platforms);
+      this.combat.spawnEnemy(spawn.id, spawn.x, level.groundY, level);
     }
 
     // Direct Victory Callback

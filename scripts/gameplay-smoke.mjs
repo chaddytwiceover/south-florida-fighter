@@ -43,6 +43,12 @@ try {
         await page.keyboard.up(code);
       }
     }
+    async function landOnFirstPlatform() {
+      const floor = await page.evaluate(() => window.__controlsTest.getY());
+      await holdInput('KeyD', 'Move right', () => window.__controlsTest.getX() >= 370);
+      await holdInput('Space', 'Jump', floorY =>
+        window.__controlsTest.getGrounded() && window.__controlsTest.getY() < floorY - 45, floor);
+    }
     const errors = [];
     let arenaUnderTest = 'A1A Ocean Boardwalk';
     page.on('pageerror', e => errors.push(e.message));
@@ -91,6 +97,7 @@ try {
       assert(state.enemies > 0, 'restart has no enemies');
       assert.equal(state.overflow, false, 'horizontal overflow');
       assert.equal(errors.length, 0, errors.join('\n'));
+      await landOnFirstPlatform();
       await page.screenshot({path:out+'/'+name+'-play.png'});
       const pad = page.getByRole('button', {name:'Move left', includeHidden:true});
       await pad.waitFor({state:'attached'});
@@ -111,8 +118,7 @@ try {
         // Check the jab from the spawn point before walking toward enemies.
         await holdInput('KeyJ', 'Light Attack', () => window.__controlsTest.getCurrentMove() === 'Street Jab');
         await page.waitForFunction(() => !window.__controlsTest.getCurrentMove());
-        const start = await page.evaluate(() => window.__controlsTest.getX());
-        await holdInput('KeyD', 'Move right', x => window.__controlsTest.getX() > x + 10, start);
+        await landOnFirstPlatform();
         const arenaSlug = arena.toLowerCase().replaceAll(' ', '-');
         await page.screenshot({path:out+'/'+name+'-'+arenaSlug+'.png'});
         arenas.push(arena);
