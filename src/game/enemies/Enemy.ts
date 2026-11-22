@@ -1,6 +1,7 @@
+import { surfaceBelow, type StageSurfaces } from "../levels/surfaces";
 import type { CombatSystem } from "../combat/CombatSystem";
 import { flashSprite, spawnHitSparks } from "../combat/Juice";
-import { ENEMY_BODY, ENEMY_DISPLAY_SCALE, GROUND_Y, JUMP } from "../config";
+import { ENEMY_BODY, ENEMY_DISPLAY_SCALE, JUMP } from "../config";
 import { audioManager } from "../audio/AudioManager";
 import type { EnemyData } from "./EnemyData";
 import { approach } from "../utils/math";
@@ -31,7 +32,13 @@ export class Enemy {
   private struck = false;
   private phase2 = false;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, data: EnemyData) {
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    data: EnemyData,
+    private readonly stage: StageSurfaces,
+  ) {
     this.data = data;
     this.id = `${data.id}-${Math.round(x)}-${Math.round(Math.random() * 999)}`;
     this.health = data.health;
@@ -169,31 +176,14 @@ export class Enemy {
     if (this.cooldown > 0) this.cooldown = Math.max(0, this.cooldown - dt);
 
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;
-    const vyNow = body.velocity.y;
-    const onFloor =
-      body.blocked.down ||
-      body.touching.down ||
-      (vyNow >= -12 &&
-        this.sprite.y >= GROUND_Y - 4 &&
-        this.sprite.y <= GROUND_Y + 18);
-    let vy = vyNow;
-    vy = Math.min(vy + JUMP.fallGravity * dt, JUMP.terminal);
-    if (onFloor && vy > 0) vy = 0;
-
     if (this.dead) {
-      this.sprite.y += vy * dt;
-      body.setVelocity(body.velocity.x, vy);
-      body.updateFromGameObject();
+      this.move(0, dt);
       return;
     }
 
     if (this.hurtLock > 0) {
       const vx = approach(body.velocity.x, 0, 1800 * dt);
-      this.sprite.x += vx * dt;
-      this.sprite.y += vy * dt;
-      if (onFloor && this.sprite.y > GROUND_Y) this.sprite.y = GROUND_Y;
-      body.setVelocity(vx, vy);
-      body.updateFromGameObject();
+      this.move(vx, dt);
       return;
     }
 
@@ -202,11 +192,7 @@ export class Enemy {
 
     if (this.attackLock > 0) {
       const vx = approach(body.velocity.x, 0, 1800 * dt);
-      this.sprite.x += vx * dt;
-      this.sprite.y += vy * dt;
-      if (onFloor && this.sprite.y > GROUND_Y) this.sprite.y = GROUND_Y;
-      body.setVelocity(vx, vy);
-      body.updateFromGameObject();
+      this.move(vx, dt);
       return;
     }
 
@@ -222,11 +208,7 @@ export class Enemy {
       const effectiveSpeed = this.phase2 ? this.data.speed * 1.5 : this.data.speed;
       const targetVx = dir * effectiveSpeed;
       const vx = approach(body.velocity.x, targetVx, 1600 * dt);
-      this.sprite.x += vx * dt;
-      this.sprite.y += vy * dt;
-      if (onFloor && this.sprite.y > GROUND_Y) this.sprite.y = GROUND_Y;
-      body.setVelocity(vx, vy);
-      body.updateFromGameObject();
+      this.move(vx, dt);
       this.sprite.setFlipX(this.facing < 0);
       this.playClip("run");
       return;
@@ -245,13 +227,20 @@ export class Enemy {
       this.patrolDir * (effectiveSpeed * 0.45),
       800 * dt,
     );
-    this.sprite.x += vx * dt;
-    this.sprite.y += vy * dt;
-    if (onFloor && this.sprite.y > GROUND_Y) this.sprite.y = GROUND_Y;
-    body.setVelocity(vx, vy);
-    body.updateFromGameObject();
+    this.move(vx, dt);
     this.sprite.setFlipX(this.facing < 0);
     this.playClip("idle");
+  }
+
+  private move(vx: number, dt: number) {
+    const body = this.sprite.body as Phaser.Physics.Arcade.Body;
+    const vy = Math.min(body.velocity.y + JUMP.fallGravity * dt, JUMP.terminal);
+    this.sprite.x += vx * dt;
+    const surface = surfaceBelow(this.stage, this.x, this.y);
+    const nextY = this.y + vy * dt;
+    this.sprite.y = Math.min(nextY, surface);
+    body.setVelocity(vx, nextY >= surface ? 0 : vy);
+    body.updateFromGameObject();
   }
 
   private startAttack(combat: CombatSystem) {

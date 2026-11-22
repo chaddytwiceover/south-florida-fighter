@@ -43,9 +43,10 @@ export function preloadTextureAtlases(scene) {
 export function preloadFightBackground(scene, level) {
   const key = backgroundKey(level.id);
   if (!scene.textures.exists(key)) scene.load.image(key, level.parallax.far);
-  if (!scene.textures.exists("ground")) {
-    scene.load.image("ground", "/game/backgrounds/fort-lauderdale/ground.jpg");
-  }
+  const platform = platformTextureKey(level.id);
+  if (!scene.textures.exists(platform)) scene.load.image(platform, level.platformArt);
+  const ground = groundTextureKey(level.id);
+  if (!scene.textures.exists(ground)) scene.load.image(ground, level.parallax.ground);
 }
 
 export function enforceSteadyFrameRate(scene) {
@@ -66,6 +67,14 @@ export function enforceSteadyFrameRate(scene) {
 
 export function backgroundKey(levelId) {
   return `bg-${levelId}`;
+}
+
+export function platformTextureKey(levelId) {
+  return `platform-${levelId}`;
+}
+
+export function groundTextureKey(levelId) {
+  return `ground-${levelId}`;
 }
 
 export function createLazyParallaxBackground(scene, level, width) {

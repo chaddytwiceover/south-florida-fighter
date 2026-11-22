@@ -4,7 +4,7 @@ import { chromium } from 'playwright';
 import { checkedUrl, checkedOutputPath } from './browser-guard.mjs';
 
 const url = checkedUrl(process.argv[2] || 'http://127.0.0.1:8080');
-const out = checkedOutputPath(process.argv[3] || '/workspace/screenshots/gameplay', ['/workspace']);
+const out = checkedOutputPath(process.argv[3] || 'test-results/gameplay', [process.cwd() + '/test-results']);
 await mkdir(out, { recursive: true });
 const browser = await chromium.launch({
   executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined,
@@ -42,6 +42,20 @@ try {
       } finally {
         await page.keyboard.up(code);
       }
+    }
+    async function enterArena(arena) {
+      await activate(page.getByTestId('circuit-map-button'));
+      const generation = await page.evaluate(() => window.__playGeneration);
+      await activate(page.getByRole('button', {name:'Play '+arena, exact:true}));
+      await page.waitForFunction(g => window.__playGeneration > g && window.__controlsTest?.getGrounded(), generation);
+      await page.getByTestId('hud').getByText(arena, {exact:false}).waitFor();
+      assert(await page.evaluate(() => window.__controlsTest.getEnemyCount() > 0));
+    }
+    async function landOnFirstPlatform() {
+      const floor = await page.evaluate(() => window.__controlsTest.getY());
+      await holdInput('KeyD', 'Move right', () => window.__controlsTest.getX() >= 370);
+      await holdInput('Space', 'Jump', floorY =>
+        window.__controlsTest.getGrounded() && window.__controlsTest.getY() < floorY - 45, floor);
     }
     const errors = [];
     let arenaUnderTest = 'A1A Ocean Boardwalk';
@@ -91,6 +105,7 @@ try {
       assert(state.enemies > 0, 'restart has no enemies');
       assert.equal(state.overflow, false, 'horizontal overflow');
       assert.equal(errors.length, 0, errors.join('\n'));
+      await landOnFirstPlatform();
       await page.screenshot({path:out+'/'+name+'-play.png'});
       const pad = page.getByRole('button', {name:'Move left', includeHidden:true});
       await pad.waitFor({state:'attached'});
@@ -102,17 +117,14 @@ try {
       const arenas = ['A1A Ocean Boardwalk'];
       for (const arena of ['Ybor City Neon Strip', 'Worth Avenue Promenade', 'Wynwood Graffiti District', 'Ocean Drive Art Deco Strip']) {
         arenaUnderTest = arena;
-        await activate(page.getByTestId('circuit-map-button'));
-        const generation = await page.evaluate(() => window.__playGeneration);
-        await activate(page.getByRole('button', {name:'Play '+arena, exact:true}));
-        await page.waitForFunction(g => window.__playGeneration > g && window.__controlsTest?.getGrounded(), generation);
-        await page.getByTestId('hud').getByText(arena, {exact:false}).waitFor();
-        assert(await page.evaluate(() => window.__controlsTest.getEnemyCount() > 0));
-        // Check the jab from the spawn point before walking toward enemies.
+        await enterArena(arena);
         await holdInput('KeyJ', 'Light Attack', () => window.__controlsTest.getCurrentMove() === 'Street Jab');
         await page.waitForFunction(() => !window.__controlsTest.getCurrentMove());
-        const start = await page.evaluate(() => window.__controlsTest.getX());
-        await holdInput('KeyD', 'Move right', x => window.__controlsTest.getX() > x + 10, start);
+        // Start each input check outside combat so enemy hitstun cannot mask it.
+        await enterArena(arena);
+        await landOnFirstPlatform();
+        const arenaSlug = arena.toLowerCase().replaceAll(' ', '-');
+        await page.screenshot({path:out+'/'+name+'-'+arenaSlug+'.png'});
         arenas.push(arena);
       }
       await activate(page.getByTestId('circuit-map-button'));

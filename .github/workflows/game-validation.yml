@@ -2,7 +2,7 @@ name: Game validation
 on:
   pull_request:
   push:
-    branches: [fix/mobile-fps-renderer]
+    branches: [main, fix/mobile-fps-renderer]
 permissions:
   contents: read
 jobs:
@@ -27,22 +27,21 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: sudo mkdir -p /workspace/screenshots && sudo chmod -R 777 /workspace/screenshots
       - run: npm run build
       - name: Check development desktop and mobile
         run: |
-          npm run dev > /tmp/dev.log 2>&1 &
-          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8080/ >/dev/null && break; sleep 1; done
-          node scripts/browser-smoke.mjs http://127.0.0.1:8080 /workspace/screenshots/dev.png
-          node scripts/gameplay-smoke.mjs http://127.0.0.1:8080 /workspace/screenshots/gameplay-dev
+          npm run dev -- --host 127.0.0.1 > /tmp/dev.log 2>&1 &
+          curl -fs --retry 60 --retry-connrefused --retry-delay 1 http://127.0.0.1:8080/ >/dev/null || { cat /tmp/dev.log; exit 1; }
+          node scripts/browser-smoke.mjs http://127.0.0.1:8080 test-results/dev.png
+          node scripts/gameplay-smoke.mjs http://127.0.0.1:8080 test-results/gameplay-dev
       - name: Check production desktop and mobile
         run: |
-          npm run preview > /tmp/preview.log 2>&1 &
-          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8081/ >/dev/null && break; sleep 1; done
-          node scripts/browser-smoke.mjs http://127.0.0.1:8081 /workspace/screenshots/prod.png --baseline /workspace/screenshots/dev.json
-          node scripts/gameplay-smoke.mjs http://127.0.0.1:8081 /workspace/screenshots/gameplay-prod
+          npm run preview -- --host 127.0.0.1 > /tmp/preview.log 2>&1 &
+          curl -fs --retry 60 --retry-connrefused --retry-delay 1 http://127.0.0.1:8081/ >/dev/null || { cat /tmp/preview.log; exit 1; }
+          node scripts/browser-smoke.mjs http://127.0.0.1:8081 test-results/prod.png --baseline test-results/dev.json
+          node scripts/gameplay-smoke.mjs http://127.0.0.1:8081 test-results/gameplay-prod
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: browser-results
-          path: /workspace/screenshots/
+          path: test-results/

@@ -23,6 +23,8 @@ import {
   createLazyParallaxBackground,
   createOptimizedAnimation,
   enforceSteadyFrameRate,
+  groundTextureKey,
+  platformTextureKey,
   initPerformancePools,
   preloadFightBackground,
   preloadTextureAtlases,
@@ -30,29 +32,10 @@ import {
 
 const Phaser = (PhaserNS as { default?: typeof PhaserNS }).default ?? PhaserNS;
 
-const PROP_CALIBRATION: Record<string, { bottomPad: number; scale: number }> = {
-  ftl_surf: { bottomPad: 0, scale: 0.9 },
-  ftl_tiki: { bottomPad: 0, scale: 0.95 },
-  mb_artdeco_lamp: { bottomPad: 1, scale: 0.92 },
-  mb_valet_sign: { bottomPad: 2, scale: 0.95 },
-  palm: { bottomPad: 13, scale: 0.92 },
-  pb_fountain: { bottomPad: 0, scale: 0.92 },
-  pb_lamp: { bottomPad: 1, scale: 0.92 },
-  pb_urn: { bottomPad: 0, scale: 0.95 },
-  tampa_balcony: { bottomPad: 0, scale: 0.9 },
-  tampa_barrel: { bottomPad: 2, scale: 0.95 },
-  tampa_lamp: { bottomPad: 1, scale: 0.92 },
-  tower: { bottomPad: 13, scale: 0.92 },
-  wynwood_crates: { bottomPad: 3, scale: 0.95 },
-  wynwood_hydrant: { bottomPad: 0, scale: 0.95 },
-  wynwood_sign: { bottomPad: 0, scale: 0.92 },
-};
-
 export class PlayScene extends Phaser.Scene {
   private player!: Player;
   private combat!: CombatSystem;
   private far!: Phaser.GameObjects.TileSprite;
-  private platforms!: Phaser.Physics.Arcade.StaticGroup;
   private bgScale = 1;
   private fpsTimer = 0;
   private isStageCleared = false;
@@ -97,46 +80,30 @@ export class PlayScene extends Phaser.Scene {
     this.far = parallax.far;
     this.bgScale = parallax.bgScale;
 
+    const groundTexture = groundTextureKey(level.id);
+
     // Ground Walkway
     const groundH = WORLD_HEIGHT - level.groundY + 120;
     this.add
-      .tileSprite(WORLD_WIDTH / 2, level.groundY, WORLD_WIDTH, groundH, "ground")
+      .tileSprite(WORLD_WIDTH / 2, level.groundY, WORLD_WIDTH, groundH, groundTexture)
       .setOrigin(0.5, 0)
       .setDepth(4);
 
     // Stage Props
     for (const prop of level.props) {
-      const calibration = PROP_CALIBRATION[prop.key] ?? { bottomPad: 0, scale: 1 };
-      const displayScale = prop.scale * calibration.scale;
-      addOptimizedImage(this, prop.x, prop.y + calibration.bottomPad * displayScale, prop.key)
+      addOptimizedImage(this, prop.x, prop.y, prop.key)
         .setOrigin(0.5, 1)
-        .setScale(displayScale)
+        .setScale(prop.scale)
         .setFlipX(Boolean(prop.flipX))
         .setDepth(prop.depth);
     }
 
-    // Platforms & Collision Floor
-    this.platforms = this.physics.add.staticGroup();
-    const floor = this.add
-      .rectangle(0, level.groundY, WORLD_WIDTH + 40, 72, 0x000000, 0)
-      .setOrigin(0, 0)
-      .setVisible(false);
-    this.physics.add.existing(floor, true);
-    const floorBody = floor.body as Phaser.Physics.Arcade.StaticBody;
-    floorBody.updateFromGameObject();
-    this.platforms.add(floor);
-
     for (const pad of level.platforms) {
-      const visual = this.add
-        .tileSprite(pad.x, pad.y, pad.width, pad.height, "ground")
+      this.add.image(pad.x, pad.y, platformTextureKey(level.id))
         .setOrigin(0.5, 0)
+        .setDisplaySize(pad.width, level.groundY - pad.y)
         .setDepth(9);
-      this.physics.add.existing(visual, true);
-      const padBody = visual.body as Phaser.Physics.Arcade.StaticBody;
-      padBody.updateFromGameObject();
-      this.platforms.add(visual);
     }
-    this.platforms.refresh();
 
     // Create Animations
     for (const clip of allRosterClips()) {
@@ -148,15 +115,13 @@ export class PlayScene extends Phaser.Scene {
 
     // Player Spawn
     const character = getCharacter(useGameStore.getState().characterId);
-    this.player = new Player(this, level.spawn.x, level.spawn.y, character);
-    this.physics.add.collider(this.player.sprite, this.platforms);
+    this.player = new Player(this, level.spawn.x, level.spawn.y, character, level);
 
     // Combat System & Enemies Spawn
     this.combat = new CombatSystem(this, debug);
     this.combat.bindPlayer(this.player);
     for (const spawn of level.enemies) {
-      const enemy = this.combat.spawnEnemy(spawn.id, spawn.x, level.groundY);
-      this.physics.add.collider(enemy.sprite, this.platforms);
+      this.combat.spawnEnemy(spawn.id, spawn.x, level.groundY, level);
     }
 
     // Direct Victory Callback
