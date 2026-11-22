@@ -4,7 +4,7 @@ import { chromium } from 'playwright';
 import { checkedUrl, checkedOutputPath } from './browser-guard.mjs';
 
 const url = checkedUrl(process.argv[2] || 'http://127.0.0.1:8080');
-const out = checkedOutputPath(process.argv[3] || '/workspace/screenshots/gameplay', ['/workspace']);
+const out = checkedOutputPath(process.argv[3] || 'test-results/gameplay', [process.cwd() + '/test-results']);
 await mkdir(out, { recursive: true });
 const browser = await chromium.launch({
   executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined,
@@ -115,10 +115,11 @@ try {
         await page.waitForFunction(g => window.__playGeneration > g && window.__controlsTest?.getGrounded(), generation);
         await page.getByTestId('hud').getByText(arena, {exact:false}).waitFor();
         assert(await page.evaluate(() => window.__controlsTest.getEnemyCount() > 0));
-        // Check the jab from the spawn point before walking toward enemies.
+        // Exercise the jump immediately, before a nearby enemy can interrupt
+        // its startup while the test waits for a jab animation to finish.
+        await landOnFirstPlatform();
         await holdInput('KeyJ', 'Light Attack', () => window.__controlsTest.getCurrentMove() === 'Street Jab');
         await page.waitForFunction(() => !window.__controlsTest.getCurrentMove());
-        await landOnFirstPlatform();
         const arenaSlug = arena.toLowerCase().replaceAll(' ', '-');
         await page.screenshot({path:out+'/'+name+'-'+arenaSlug+'.png'});
         arenas.push(arena);

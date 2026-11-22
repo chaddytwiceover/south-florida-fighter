@@ -8,3 +8,4 @@ node_modules/
 .output/
 dist/
 assets/sprite-refresh-preview/
+test-results/

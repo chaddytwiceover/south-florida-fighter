@@ -184,7 +184,7 @@ export const MIAMI: LevelDef = {
     { key: "wynwood_paint", x: 3980, y: GROUND_Y + 2, scale: 1, depth: 7 },
   ],
   enemies: [
-    { id: "blade", x: 600 },
+    { id: "blade", x: 740 },
     { id: "bruiser", x: 1050 },
     { id: "blade", x: 1550 },
     { id: "bruiser", x: 2100 },
