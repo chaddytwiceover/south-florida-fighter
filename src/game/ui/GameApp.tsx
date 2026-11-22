@@ -17,6 +17,8 @@ export function GameApp() {
   const energy = useGameStore((s) => Math.floor(s.energy));
 
   const [isLoading, setIsLoading] = useState(true);
+  const [arenaReady, setArenaReady] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [touchReady, setTouchReady] = useState(false);
 
   // Initialize iframe bridge
@@ -46,8 +48,8 @@ export function GameApp() {
 
     void import("../createGame").then(({ createGame }) => {
       if (cancelled || !host) return;
-      game = createGame(host);
-    });
+      game = createGame(host, () => { if (!cancelled) setArenaReady(true); }, () => { if (!cancelled) setLoadFailed(true); });
+    }).catch(() => { if (!cancelled) setLoadFailed(true); });
 
     return () => {
       cancelled = true;
@@ -80,7 +82,7 @@ export function GameApp() {
         <div ref={hostRef} id="sf-game" className="game-canvas" />
 
         {isLoading ? (
-          <Preloader onReady={() => setIsLoading(false)} />
+          <Preloader ready={arenaReady} failed={loadFailed} onReady={() => setIsLoading(false)} />
         ) : (
           <>
             {screen === "play" ? <Hud /> : null}

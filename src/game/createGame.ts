@@ -9,7 +9,7 @@ import { PlayScene } from "./scenes/PlayScene";
 
 const Phaser = (PhaserNS as { default?: typeof PhaserNS }).default ?? PhaserNS;
 
-export function createGame(parent: HTMLElement): Phaser.Game {
+export function createGame(parent: HTMLElement, onReady: () => void, onLoadError: () => void): Phaser.Game {
   const game = new Phaser.Game({
     type: selectOptimizedRenderer(Phaser),
     parent,
@@ -38,7 +38,7 @@ export function createGame(parent: HTMLElement): Phaser.Game {
       keyboard: true,
       activePointers: 5,
     },
-    scene: [PlayScene],
+    scene: [new PlayScene(onReady, onLoadError)],
     audio: { disableWebAudio: true },
     render: optimizedRenderConfig(),
   });
