@@ -43,6 +43,14 @@ try {
         await page.keyboard.up(code);
       }
     }
+    async function enterArena(arena) {
+      await activate(page.getByTestId('circuit-map-button'));
+      const generation = await page.evaluate(() => window.__playGeneration);
+      await activate(page.getByRole('button', {name:'Play '+arena, exact:true}));
+      await page.waitForFunction(g => window.__playGeneration > g && window.__controlsTest?.getGrounded(), generation);
+      await page.getByTestId('hud').getByText(arena, {exact:false}).waitFor();
+      assert(await page.evaluate(() => window.__controlsTest.getEnemyCount() > 0));
+    }
     async function landOnFirstPlatform() {
       const floor = await page.evaluate(() => window.__controlsTest.getY());
       await holdInput('KeyD', 'Move right', () => window.__controlsTest.getX() >= 370);
@@ -109,17 +117,12 @@ try {
       const arenas = ['A1A Ocean Boardwalk'];
       for (const arena of ['Ybor City Neon Strip', 'Worth Avenue Promenade', 'Wynwood Graffiti District', 'Ocean Drive Art Deco Strip']) {
         arenaUnderTest = arena;
-        await activate(page.getByTestId('circuit-map-button'));
-        const generation = await page.evaluate(() => window.__playGeneration);
-        await activate(page.getByRole('button', {name:'Play '+arena, exact:true}));
-        await page.waitForFunction(g => window.__playGeneration > g && window.__controlsTest?.getGrounded(), generation);
-        await page.getByTestId('hud').getByText(arena, {exact:false}).waitFor();
-        assert(await page.evaluate(() => window.__controlsTest.getEnemyCount() > 0));
-        // Exercise the jump immediately, before a nearby enemy can interrupt
-        // its startup while the test waits for a jab animation to finish.
-        await landOnFirstPlatform();
+        await enterArena(arena);
         await holdInput('KeyJ', 'Light Attack', () => window.__controlsTest.getCurrentMove() === 'Street Jab');
         await page.waitForFunction(() => !window.__controlsTest.getCurrentMove());
+        // Start each input check outside combat so enemy hitstun cannot mask it.
+        await enterArena(arena);
+        await landOnFirstPlatform();
         const arenaSlug = arena.toLowerCase().replaceAll(' ', '-');
         await page.screenshot({path:out+'/'+name+'-'+arenaSlug+'.png'});
         arenas.push(arena);
