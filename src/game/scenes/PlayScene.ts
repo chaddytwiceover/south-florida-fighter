@@ -40,7 +40,7 @@ export class PlayScene extends Phaser.Scene {
   private fpsTimer = 0;
   private isStageCleared = false;
 
-  constructor() {
+  constructor(private onInitialReady?: () => void, private onInitialError?: () => void) {
     super({ key: "play" });
   }
 
@@ -50,6 +50,7 @@ export class PlayScene extends Phaser.Scene {
   }
 
   preload() {
+    if (this.onInitialError) this.load.once("loaderror", this.onInitialError);
     const levelId = useGameStore.getState().currentLevelId || "fort-lauderdale";
     preloadFightBackground(this, getLevel(levelId));
     preloadTextureAtlases(this);
@@ -142,6 +143,9 @@ export class PlayScene extends Phaser.Scene {
     this.cameras.main.setRoundPixels(true);
 
     inputManager.attachPhaserScene(this);
+    if (this.onInitialError) this.load.off("loaderror", this.onInitialError);
+    this.onInitialReady?.();
+    this.onInitialReady = this.onInitialError = undefined;
     attachControlsTest(this.player, () => this.combat.aliveCount());
     if (typeof window !== "undefined") {
       window.__playGeneration = (window.__playGeneration ?? 0) + 1;
